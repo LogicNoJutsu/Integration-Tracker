@@ -151,7 +151,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:35:53.549Z",
-      "updatedAt": "2026-05-07T16:35:53.549Z",
+      "updatedAt": "2026-05-07T17:31:15.368Z",
       "sections": [
         {
           "id": "test_instance",
@@ -263,7 +263,13 @@
         }
       ],
       "docs": [],
-      "globalComments": []
+      "globalComments": [
+        {
+          "author": "VG",
+          "text": "MS: Also, I forgot to include, in order to get the action information (work order closing notes), you need to use this endpoint.\n \n{baseURL}/odata/EmployeeLabor?$filter=WorkOrderID eq 1234\n \nYou need to work order ID in order to filter on a single work order to get the Action text",
+          "timestamp": "May 7, 2026, 1:31 PM"
+        }
+      ]
     },
     {
       "id": "c_1778171797004",
