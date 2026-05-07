@@ -151,7 +151,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:35:53.549Z",
-      "updatedAt": "2026-05-07T17:32:16.669Z",
+      "updatedAt": "2026-05-07T17:32:29.638Z",
       "sections": [
         {
           "id": "test_instance",
@@ -273,6 +273,13 @@
         {
           "type": "id",
           "name": "id",
+          "link": "aims",
+          "notes": "",
+          "date": "5/7/2026"
+        },
+        {
+          "type": "password",
+          "name": "password",
           "link": "aims",
           "notes": "",
           "date": "5/7/2026"
