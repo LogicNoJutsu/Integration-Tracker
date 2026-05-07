@@ -1,0 +1,133 @@
+{
+  "clients": [
+    {
+      "id": "c_1778167727055",
+      "name": "Tidal Health",
+      "cmmsType": "TMS",
+      "crxConsultant": "Kevin, Clay",
+      "clientPoc": "Glenn",
+      "overallStatus": "Active",
+      "startDate": "2026-03-02",
+      "createdAt": "2026-05-07T15:28:47.055Z",
+      "updatedAt": "2026-05-07T15:29:21.557Z",
+      "sections": [
+        {
+          "id": "test_instance",
+          "label": "CMMS Test Instance Integration",
+          "phases": [
+            {
+              "id": "test_p1",
+              "label": "Phase 1:",
+              "tasks": [
+                {
+                  "id": "t1",
+                  "name": "Initial Requirement",
+                  "status": "completed",
+                  "comments": []
+                },
+                {
+                  "id": "t2",
+                  "name": "Organizational Setup",
+                  "status": "in-progress",
+                  "comments": [
+                    {
+                      "author": "VG",
+                      "text": "Shared the asset mapping for Nanticoke and Peninsula with Dev team. They will start working on the mapping and sycning the locations. For nanticoke there is an issue where the buildings are getting listed in the Campus API. Need to convey the same with the client.",
+                      "timestamp": "May 7, 2026, 11:29 AM"
+                    }
+                  ]
+                },
+                {
+                  "id": "t3",
+                  "name": "Asset Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "t4",
+                  "name": "Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            },
+            {
+              "id": "test_p2",
+              "label": "Phase 2: Advanced Setup",
+              "tasks": [
+                {
+                  "id": "t5",
+                  "name": "PM Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "t6",
+                  "name": "Automated Asset Reports",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "live_instance",
+          "label": "CMMS Live Instance Integration",
+          "phases": [
+            {
+              "id": "live_p1",
+              "label": "Phase 1:",
+              "tasks": [
+                {
+                  "id": "l1",
+                  "name": "Initial Requirement",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l2",
+                  "name": "Organizational Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l3",
+                  "name": "Asset Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l4",
+                  "name": "Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            },
+            {
+              "id": "live_p2",
+              "label": "Phase 2: Advanced Setup",
+              "tasks": [
+                {
+                  "id": "l5",
+                  "name": "PM Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l6",
+                  "name": "Automated Asset Reports",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "docs": [],
+      "globalComments": []
+    }
+  ]
+}
