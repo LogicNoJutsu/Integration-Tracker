@@ -9,6 +9,7 @@
 <!-- Aptos fallback via Noto Sans which is the closest available on Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   /* Aptos is a Microsoft font; use it if installed, otherwise Noto Sans is the closest match */
   :root {
@@ -415,6 +416,30 @@
   .client-check-meta { font-size: 11px; color: var(--text2); margin-top: 1px; }
   .pdf-select-all { display: flex; gap: 8px; margin-bottom: 8px; }
 
+  /* ─── EXCEL MODAL ─── */
+  .excel-modal .modal { width: 580px; }
+  .excel-section-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--text3); margin: 18px 0 8px;
+  }
+  .status-filter-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 4px;
+  }
+  .status-filter-item {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border); border-radius: 7px;
+    padding: 7px 10px; cursor: pointer; transition: border-color 0.15s;
+    font-size: 12px; font-weight: 500;
+  }
+  .status-filter-item:hover { border-color: var(--accent); }
+  .status-filter-item input[type=checkbox] { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+  .sfi-ns  { background: var(--ns);  color: var(--ns-text);  border-color: rgba(136,146,176,0.25); }
+  .sfi-ip  { background: var(--ip);  color: var(--ip-text);  border-color: rgba(90,174,255,0.3); }
+  .sfi-done{ background: var(--done);color: var(--done-text);border-color: rgba(0,212,138,0.3); }
+  .sfi-pfc { background: var(--pfc); color: var(--pfc-text); border-color: rgba(255,176,32,0.3); }
+  .sfi-cbd { background: var(--cbd); color: var(--cbd-text); border-color: rgba(255,79,79,0.3); }
+  .sfi-nr  { background: var(--nr);  color: var(--nr-text);  border-color: rgba(112,112,200,0.3); }
+
   /* ─── SCROLLBAR ─── */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -493,6 +518,7 @@
       </div>
       <div class="dash-actions">
         <button class="btn btn-accent2" onclick="openPdfModal(null)">↓ Export All PDF</button>
+        <button class="btn btn-ghost" onclick="openExcelModal(null)" style="color:#00c853;border-color:#00c853;">↓ Export Excel</button>
         <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>
       </div>
     </div>
@@ -515,6 +541,7 @@
           <span class="last-updated-badge" id="detailUpdated">—</span>
           <button class="btn btn-ghost btn-sm" onclick="openEditClientModal()">Edit Info</button>
           <button class="btn btn-accent2 btn-sm" onclick="openPdfModal('current')">↓ PDF</button>
+          <button class="btn btn-sm" style="color:#00c853;border-color:#00c853;background:transparent;" onclick="openExcelModal('current')">↓ Excel</button>
           <button class="btn btn-danger btn-sm" onclick="confirmDeleteClient()">Delete</button>
         </div>
       </div>
@@ -699,6 +726,53 @@
       <button class="btn btn-ghost" onclick="closeModal('githubModal')">Cancel</button>
       <button class="btn btn-ghost" onclick="clearGithubConfig()">Clear Config</button>
       <button class="btn btn-primary" onclick="saveGithubConfig()">Save &amp; Test Connection</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ EXCEL EXPORT MODAL ═══════════════════ -->
+<div class="modal-overlay excel-modal" id="excelModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('excelModal')">×</button>
+    <div class="modal-title">↓ Export to Excel</div>
+    <p style="font-size:13px;color:var(--text2);">Each selected client gets its own worksheet. Sheet 1 is always a summary overview of all selected clients.</p>
+
+    <div class="excel-section-label">Select Clients</div>
+    <div class="pdf-select-all">
+      <button class="btn btn-ghost btn-xs" onclick="excelSelectAll('client', true)">Select All</button>
+      <button class="btn btn-ghost btn-xs" onclick="excelSelectAll('client', false)">Deselect All</button>
+    </div>
+    <div class="client-checklist" id="excelClientList"></div>
+
+    <div class="excel-section-label">Filter by Status <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0;">(applies to client sheets only — overview always shows all)</span></div>
+    <div class="pdf-select-all">
+      <button class="btn btn-ghost btn-xs" onclick="excelSelectAll('status', true)">Select All</button>
+      <button class="btn btn-ghost btn-xs" onclick="excelSelectAll('status', false)">Deselect All</button>
+    </div>
+    <div class="status-filter-grid">
+      <label class="status-filter-item sfi-ns">
+        <input type="checkbox" name="excelStatus" value="not-started" checked> Not Started
+      </label>
+      <label class="status-filter-item sfi-ip">
+        <input type="checkbox" name="excelStatus" value="in-progress" checked> In Progress
+      </label>
+      <label class="status-filter-item sfi-done">
+        <input type="checkbox" name="excelStatus" value="completed" checked> Completed
+      </label>
+      <label class="status-filter-item sfi-pfc">
+        <input type="checkbox" name="excelStatus" value="pending-client" checked> Pending From Client
+      </label>
+      <label class="status-filter-item sfi-cbd">
+        <input type="checkbox" name="excelStatus" value="cannot-be-done" checked> Cannot Be Done
+      </label>
+      <label class="status-filter-item sfi-nr">
+        <input type="checkbox" name="excelStatus" value="not-required" checked> Not Required
+      </label>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('excelModal')">Cancel</button>
+      <button class="btn btn-sm" style="background:#00c853;color:#fff;border-color:#00c853;" onclick="generateExcel()">↓ Generate Excel</button>
     </div>
   </div>
 </div>
@@ -1364,7 +1438,224 @@ function buildPDF(clients) {
 }
 
 // ═══════════════════════════════════════════════
-// TABS / MODALS / UTILS
+// EXCEL EXPORT
+// ═══════════════════════════════════════════════
+function openExcelModal(mode) {
+  const db = loadDB();
+  const currentOnly = mode === 'current';
+  const list = document.getElementById('excelClientList');
+  list.innerHTML = db.clients.map(c => `
+    <label class="client-check-item">
+      <input type="checkbox" name="excelClient" value="${c.id}" ${(!currentOnly || c.id === currentClientId) ? 'checked' : ''}>
+      <div>
+        <div class="client-check-name">${esc(c.name)}</div>
+        <div class="client-check-meta">${esc(c.cmmsType||'—')} · ${esc(c.overallStatus||'Active')}</div>
+      </div>
+    </label>`).join('');
+  // reset status filters to all checked
+  document.querySelectorAll('#excelModal input[name=excelStatus]').forEach(cb => cb.checked = true);
+  openModal('excelModal');
+}
+
+function excelSelectAll(type, val) {
+  const name = type === 'client' ? 'excelClient' : 'excelStatus';
+  document.querySelectorAll(`#excelModal input[name=${name}]`).forEach(cb => cb.checked = val);
+}
+
+function generateExcel() {
+  const db = loadDB();
+  const selectedClients = [...document.querySelectorAll('#excelModal input[name=excelClient]:checked')].map(cb => cb.value);
+  const selectedStatuses = [...document.querySelectorAll('#excelModal input[name=excelStatus]:checked')].map(cb => cb.value);
+
+  if (!selectedClients.length) { showToast('Select at least one client.', 'error'); return; }
+  if (!selectedStatuses.length) { showToast('Select at least one status to include.', 'error'); return; }
+
+  const clients = db.clients.filter(c => selectedClients.includes(c.id));
+  closeModal('excelModal');
+
+  const wb = XLSX.utils.book_new();
+
+  // ── PALETTE: hex fills for each status ──
+  const STATUS_FILL = {
+    'not-started':    { fgColor: { rgb: '2E3350' } },
+    'in-progress':    { fgColor: { rgb: '0F2D5E' } },
+    'completed':      { fgColor: { rgb: '0A2E20' } },
+    'pending-client': { fgColor: { rgb: '332500' } },
+    'cannot-be-done': { fgColor: { rgb: '2E1010' } },
+    'not-required':   { fgColor: { rgb: '16163A' } },
+  };
+  const STATUS_FONT_COLOR = {
+    'not-started':    '8892B0',
+    'in-progress':    '5AAEFF',
+    'completed':      '00D48A',
+    'pending-client': 'FFB020',
+    'cannot-be-done': 'FF4F4F',
+    'not-required':   '7070C8',
+  };
+
+  // helper: make a styled cell
+  function cell(v, opts = {}) {
+    const c = { v, t: typeof v === 'number' ? 'n' : 's' };
+    const style = {};
+    if (opts.bold || opts.headerBg || opts.statusKey || opts.infoBg) {
+      style.font = { bold: !!opts.bold, color: { rgb: opts.fontColor || (opts.statusKey ? STATUS_FONT_COLOR[opts.statusKey] : opts.headerBg ? 'FFFFFF' : opts.infoBg ? 'C0C8E0' : '000000') } };
+      style.fill = opts.headerBg ? { fgColor: { rgb: opts.headerBg } }
+                 : opts.statusKey ? STATUS_FILL[opts.statusKey]
+                 : opts.infoBg ? { fgColor: { rgb: opts.infoBg } }
+                 : { fgColor: { rgb: 'FFFFFF' } };
+      style.alignment = { vertical: 'center', wrapText: !!opts.wrap };
+      style.border = {
+        top: { style:'thin', color:{ rgb:'3A4060' } },
+        bottom: { style:'thin', color:{ rgb:'3A4060' } },
+        left: { style:'thin', color:{ rgb:'3A4060' } },
+        right: { style:'thin', color:{ rgb:'3A4060' } }
+      };
+      c.s = style;
+    }
+    return c;
+  }
+
+  // ════════════════════════════════
+  // SHEET 1 — OVERVIEW
+  // ════════════════════════════════
+  const ovRows = [];
+
+  // Title row
+  ovRows.push([
+    cell('CRx Integration Tracker — Overview', { bold: true, headerBg: '0F1828', fontColor: '4F7CFF' }),
+    cell(''), cell(''), cell(''), cell(''), cell(''), cell(''), cell(''), cell('')
+  ]);
+  ovRows.push([
+    cell(`Generated: ${new Date().toLocaleString()}`, { infoBg: '1C2030' }),
+    cell(''), cell(''), cell(''), cell(''), cell(''), cell(''), cell(''), cell('')
+  ]);
+  ovRows.push(Array(9).fill(cell(''))); // spacer
+
+  // Header row
+  const ovHeaders = ['Client Name','CMMS Type','CRx Consultant','Client POC','Overall Status','In Progress','Completed %','Last Updated','Expected Completion'];
+  ovRows.push(ovHeaders.map(h => cell(h, { bold: true, headerBg: '222840', fontColor: '00E5C0' })));
+
+  // Data rows
+  clients.forEach(c => {
+    const stats = computeStats(c);
+    const pct = stats.total ? Math.round(stats.completed / stats.total * 100) : 0;
+    const lastUpd = c.updatedAt || c.createdAt;
+    ovRows.push([
+      cell(c.name, { bold: true, infoBg: '151820' }),
+      cell(c.cmmsType || '—', { infoBg: '151820' }),
+      cell(c.crxConsultant || '—', { infoBg: '151820' }),
+      cell(c.clientPoc || '—', { infoBg: '151820' }),
+      cell(c.overallStatus || 'Active', { infoBg: '151820' }),
+      cell(stats.inProgress, { infoBg: '151820' }),
+      cell(pct + '%', { infoBg: '151820' }),
+      cell(lastUpd ? new Date(lastUpd).toLocaleDateString() : '—', { infoBg: '151820' }),
+      cell(c.expectedDate || '—', { infoBg: '151820' }),
+    ]);
+  });
+
+  const ovWS = XLSX.utils.aoa_to_sheet(ovRows);
+  ovWS['!cols'] = [28,18,22,22,16,14,14,18,20].map(w => ({ wch: w }));
+  ovWS['!rows'] = [{ hpt: 22 }, { hpt: 16 }, { hpt: 6 }, { hpt: 18 }];
+  // Merge title across all columns
+  ovWS['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:8} },
+    { s:{r:1,c:0}, e:{r:1,c:8} },
+    { s:{r:2,c:0}, e:{r:2,c:8} },
+  ];
+  XLSX.utils.book_append_sheet(wb, ovWS, 'Overview');
+
+  // ════════════════════════════════
+  // CLIENT SHEETS
+  // ════════════════════════════════
+  clients.forEach(c => {
+    const rows = [];
+
+    // Client info block
+    rows.push([cell('Client Name', { bold:true, headerBg:'222840', fontColor:'00E5C0' }), cell(c.name, { bold:true, infoBg:'151820' }), cell(''), cell(''), cell(''), cell(''), cell('')]);
+    rows.push([cell('CMMS Type',   { bold:true, headerBg:'222840', fontColor:'00E5C0' }), cell(c.cmmsType||'—', { infoBg:'151820' }), cell(''), cell(''), cell(''), cell(''), cell('')]);
+    rows.push([cell('CRx Consultant',{ bold:true, headerBg:'222840', fontColor:'00E5C0' }), cell(c.crxConsultant||'—', { infoBg:'151820' }), cell(''), cell(''), cell(''), cell(''), cell('')]);
+    rows.push([cell('Client POC',  { bold:true, headerBg:'222840', fontColor:'00E5C0' }), cell(c.clientPoc||'—', { infoBg:'151820' }), cell(''), cell(''), cell(''), cell(''), cell('')]);
+    rows.push([cell('Overall Status',{ bold:true, headerBg:'222840', fontColor:'00E5C0' }), cell(c.overallStatus||'Active', { infoBg:'151820' }), cell(''), cell(''), cell(''), cell(''), cell('')]);
+    rows.push([cell('Expected Completion',{ bold:true, headerBg:'222840', fontColor:'00E5C0' }), cell(c.expectedDate||'—', { infoBg:'151820' }), cell(''), cell(''), cell(''), cell(''), cell('')]);
+    rows.push([cell('Last Updated',{ bold:true, headerBg:'222840', fontColor:'00E5C0' }), cell(c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : '—', { infoBg:'151820' }), cell(''), cell(''), cell(''), cell(''), cell('')]);
+    rows.push(Array(7).fill(cell(''))); // spacer
+
+    // Task table header
+    rows.push(['Section','Phase','Task','Status','Latest Comment','Comment By','Comment Date']
+      .map(h => cell(h, { bold:true, headerBg:'1C2030', fontColor:'4F7CFF' })));
+
+    // Task rows
+    const allCommentHistory = []; // collect for comment history section
+
+    c.sections.forEach(sec => {
+      sec.phases.forEach(ph => {
+        ph.tasks.forEach(t => {
+          if (!selectedStatuses.includes(t.status)) return;
+          const comments = t.comments || [];
+          const latest = comments.length ? comments[comments.length - 1] : null;
+          rows.push([
+            cell(sec.label, { infoBg: '1A1E2E' }),
+            cell(ph.label,  { infoBg: '1A1E2E' }),
+            cell(t.name,    { infoBg: '1A1E2E' }),
+            cell(statusLabel(t.status), { statusKey: t.status }),
+            cell(latest ? latest.text : '', { infoBg: '1A1E2E', wrap: true }),
+            cell(latest ? (latest.author||'') : '', { infoBg: '1A1E2E' }),
+            cell(latest ? latest.timestamp : '', { infoBg: '1A1E2E' }),
+          ]);
+
+          // Collect all comments for the history section
+          comments.forEach(cm => {
+            allCommentHistory.push({ section: sec.label, phase: ph.label, task: t.name, ...cm });
+          });
+        });
+      });
+    });
+
+    // ── Comment History Section ──
+    if (allCommentHistory.length) {
+      rows.push(Array(7).fill(cell(''))); // spacer
+      rows.push([
+        cell('FULL COMMENT HISTORY', { bold:true, headerBg:'0A2030', fontColor:'00E5C0' }),
+        cell(''), cell(''), cell(''), cell(''), cell(''), cell('')
+      ]);
+      rows.push(['Section','Phase','Task','Author','Comment','Date/Time','']
+        .map(h => cell(h, { bold:true, headerBg:'1C2030', fontColor:'8892B0' })));
+      allCommentHistory.forEach(cm => {
+        rows.push([
+          cell(cm.section, { infoBg:'111828' }),
+          cell(cm.phase,   { infoBg:'111828' }),
+          cell(cm.task,    { infoBg:'111828' }),
+          cell(cm.author||'Anonymous', { bold:true, infoBg:'111828', fontColor:'4F7CFF' }),
+          cell(cm.text,    { infoBg:'111828', wrap:true }),
+          cell(cm.timestamp||'', { infoBg:'111828' }),
+          cell('', { infoBg:'111828' }),
+        ]);
+      });
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [28, 20, 28, 22, 40, 18, 22].map(w => ({ wch: w }));
+
+    // Merge the client info label+value rows across remaining cols
+    ws['!merges'] = [];
+    for (let i = 0; i < 7; i++) {
+      ws['!merges'].push({ s:{r:i,c:1}, e:{r:i,c:6} });
+    }
+
+    // Sheet name: max 31 chars, no special chars
+    const sheetName = c.name.replace(/[:\\\/\?\*\[\]]/g, '').substring(0, 31);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+
+  const filename = clients.length === 1
+    ? `${clients[0].name.replace(/\s+/g,'_')}_integration.xlsx`
+    : `CRx_Integration_Report_${new Date().toLocaleDateString().replace(/\//g,'-')}.xlsx`;
+
+  XLSX.writeFile(wb, filename);
+  showToast(`Excel exported (${clients.length} client${clients.length > 1 ? 's' : ''} · ${clients.length + 1} sheets).`, 'success');
+}
+
+// ═══════════════════════════════════════════════
 // ═══════════════════════════════════════════════
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
