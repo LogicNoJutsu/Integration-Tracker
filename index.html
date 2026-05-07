@@ -129,7 +129,7 @@
 
   .client-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 18px;
   }
 
@@ -137,7 +137,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 22px 24px;
+    padding: 16px 18px;
     cursor: pointer;
     transition: all 0.18s;
     position: relative;
@@ -154,12 +154,12 @@
   .client-card:hover::before { opacity: 1; }
 
   .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-  .card-name { font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+  .card-name { font-family: var(--font-display); font-size: 14px; font-weight: 700; }
   .card-cmms {
     font-size: 11px; background: var(--surface3); color: var(--accent);
     padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border); white-space: nowrap;
   }
-  .card-meta { color: var(--text2); font-size: 12px; margin-bottom: 12px; line-height: 1.9; }
+  .card-meta { color: var(--text2); font-size: 11px; margin-bottom: 12px; line-height: 1.9; }
   .card-meta strong { color: var(--text); }
   .card-last-updated {
     font-size: 11px; color: var(--text3);
@@ -517,6 +517,7 @@
         <div class="dash-sub">All active client integrations · Click a card to manage</div>
       </div>
       <div class="dash-actions">
+        <button class="btn btn-sm" style="background:transparent;color:#ff9800;border-color:#ff9800;font-family:var(--font-body);font-size:13px;padding:7px 14px;border-radius:7px;border:1px solid;cursor:pointer;font-weight:500;" onclick="showTaskView()">📋 View Tasks</button>
         <button class="btn btn-accent2" onclick="openPdfModal(null)">↓ Export All PDF</button>
         <button class="btn btn-ghost" onclick="openExcelModal(null)" style="color:#00c853;border-color:#00c853;">↓ Export Excel</button>
         <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>
@@ -545,10 +546,11 @@
           <button class="btn btn-danger btn-sm" onclick="confirmDeleteClient()">Delete</button>
         </div>
       </div>
-      <div class="detail-meta-grid">
+      <div class="detail-meta-grid" style="grid-template-columns:repeat(6,1fr);">
         <div class="meta-item"><label>CMMS Type</label><div class="val" id="detailCmms">—</div></div>
         <div class="meta-item"><label>CRx Consultant</label><div class="val" id="detailCrx">—</div></div>
         <div class="meta-item"><label>Client POC</label><div class="val" id="detailPoc">—</div></div>
+        <div class="meta-item"><label>POC Email</label><div class="val" id="detailPocEmail" style="font-size:12px;">—</div></div>
         <div class="meta-item"><label>Overall Status</label><div class="val" id="detailStatus">—</div></div>
         <div class="meta-item"><label>Expected Completion</label><div class="val" id="detailExpected">—</div></div>
       </div>
@@ -556,7 +558,8 @@
 
     <div class="tabs">
       <button class="tab active" onclick="switchTab('tabIntegration', this)">Integration Status</button>
-      <button class="tab" onclick="switchTab('tabDocs', this)">Documents</button>
+      <button class="tab" onclick="switchTab('tabClientInfo', this)">Client Information</button>
+      <button class="tab" onclick="switchTab('tabNotifications', this)">Client Notifications</button>
       <button class="tab" onclick="switchTab('tabComments', this)">Client Notes</button>
     </div>
 
@@ -565,18 +568,35 @@
       <div id="integrationSections"></div>
     </div>
 
-    <div id="tabDocs" class="tab-content">
+    <div id="tabClientInfo" class="tab-content">
       <div class="docs-panel">
         <div class="docs-toolbar">
-          <button class="btn btn-primary btn-sm" onclick="openAddDocModal()">+ Add Document</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddDocModal()">+ Add Entry</button>
         </div>
         <table class="docs-table">
           <thead>
-            <tr><th>Doc Type</th><th>Document Name / Link</th><th>Date Added</th><th>Notes</th><th></th></tr>
+            <tr><th>Information Type</th><th>Name / Link</th><th>Date Added</th><th>Notes</th><th></th></tr>
           </thead>
           <tbody id="docsTableBody"></tbody>
         </table>
-        <div id="docsEmpty" class="no-comments" style="display:none;">No documents added yet.</div>
+        <div id="docsEmpty" class="no-comments" style="display:none;">No entries added yet.</div>
+      </div>
+    </div>
+
+    <div id="tabNotifications" class="tab-content">
+      <div class="global-chat" style="border-color:rgba(255,176,32,0.3);">
+        <div class="chat-messages" id="notifMessages" style="background:rgba(51,37,0,0.15);">
+          <div class="no-comments">No notifications yet.</div>
+        </div>
+        <div class="chat-input-area">
+          <div class="chat-row">
+            <input type="text" id="notifAuthor" placeholder="Your name">
+            <textarea id="notifText" placeholder="Add a client notification to send or log..."></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <button class="btn btn-sm" style="background:#ff9800;color:#fff;border-color:#ff9800;" onclick="addNotification()">Post Notification</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -590,7 +610,10 @@
             <input type="text" id="globalAuthor" placeholder="Your name" style="flex:0 0 200px;">
             <textarea id="globalComment" placeholder="Add a note or update..." style="flex:1;min-height:48px;"></textarea>
           </div>
-          <div style="display:flex;justify-content:flex-end;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400;cursor:pointer;">
+              <input type="checkbox" id="globalIsTask" style="width:14px;height:14px;accent-color:#ff9800;cursor:pointer;"> Mark as Task
+            </label>
             <button class="btn btn-primary btn-sm" onclick="addGlobalComment()">Post Note</button>
           </div>
         </div>
@@ -620,6 +643,10 @@
       <div class="form-group">
         <label>Client POC</label>
         <input type="text" id="fClientPoc" placeholder="Client contact name">
+      </div>
+      <div class="form-group full">
+        <label>Client POC Email</label>
+        <input type="email" id="fClientPocEmail" placeholder="poc@clientcompany.com">
       </div>
       <div class="form-group">
         <label>Overall Status</label>
@@ -667,14 +694,14 @@
 <div class="modal-overlay" id="docModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('docModal')">×</button>
-    <div class="modal-title">Add Document</div>
-    <div class="form-group"><label>Doc Type</label><input type="text" id="fDocType" placeholder="e.g. SRS, Meeting Notes, Config"></div>
+    <div class="modal-title">Add Client Information</div>
+    <div class="form-group"><label>Information Type</label><select id="fDocType"><option value="Document">Document</option><option value="Login Credentials">Login Credentials</option><option value="API Documentation">API Documentation</option><option value="Notes">Notes</option><option value="Additional Documents">Additional Documents</option></select></div>
     <div class="form-group"><label>Document Name</label><input type="text" id="fDocName" placeholder="Document title / description"></div>
     <div class="form-group"><label>Document Link (URL)</label><input type="url" id="fDocLink" placeholder="https://..."></div>
     <div class="form-group"><label>Notes</label><textarea id="fDocNotes" placeholder="Any notes about this document..."></textarea></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('docModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDoc()">Add Document</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Save Entry</button>
     </div>
   </div>
 </div>
@@ -964,6 +991,53 @@ function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
+
+function showTaskView() {
+  renderTaskView();
+  showView('viewTasks');
+}
+
+function renderTaskView() {
+  const db = loadDB();
+  const cf = document.getElementById('tvFilterClient');
+  if (!cf) return;
+  const prevVal = cf.value;
+  cf.innerHTML = '<option value="">All Clients</option>' +
+    db.clients.map(cc => '<option value="' + cc.id + '">' + esc(cc.name) + '</option>').join('');
+  cf.value = prevVal;
+  const filterClient = cf.value;
+  const filterStatus = document.getElementById('tvFilterStatus').value;
+  const rows = [];
+  db.clients.forEach(cc => {
+    if (filterClient && cc.id !== filterClient) return;
+    cc.sections.forEach(sec => sec.phases.forEach(ph => ph.tasks.forEach(t => {
+      (t.comments || []).filter(cm => cm.isTask).forEach(cm => {
+        if (filterStatus && t.status !== filterStatus) return;
+        rows.push({ clientName: cc.name, clientId: cc.id, task: t.name, status: t.status, date: cm.timestamp, comment: cm.text, author: cm.author, source: 'Integration' });
+      });
+    })));
+    (cc.globalComments || []).filter(cm => cm.isTask).forEach(cm => {
+      rows.push({ clientName: cc.name, clientId: cc.id, task: 'Client Note', status: '—', date: cm.timestamp, comment: cm.text, author: cm.author, source: 'Client Notes' });
+    });
+  });
+  const tbody = document.getElementById('taskViewBody');
+  const empty = document.getElementById('taskViewEmpty');
+  const countEl = document.getElementById('tvCount');
+  if (countEl) countEl.textContent = rows.length + ' task' + (rows.length !== 1 ? 's' : '');
+  if (!rows.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = rows.map(function(r) {
+    var statusCell = r.status === '\u2014' ? '<span style="color:var(--text3)">\u2014</span>' : '<span class="pill ' + statusClass(r.status) + '">' + statusLabel(r.status) + '</span>';
+    return '<tr>' +
+      '<td><a style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="showDetail(\'' + r.clientId + '\')">' + esc(r.clientName) + '</a></td>' +
+      '<td class="task-name">' + esc(r.task) + '<div style="font-size:10px;color:var(--text3);">' + esc(r.source) + '</div></td>' +
+      '<td>' + statusCell + '</td>' +
+      '<td style="font-size:11px;color:var(--text3);">' + esc(r.date) + '</td>' +
+      '<td style="font-size:12px;"><span style="color:var(--accent);font-weight:600;">' + esc(r.author || 'Anon') + ':</span> ' + esc(r.comment) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
 function showDashboard() {
   currentClientId = null;
   renderDashboard();
@@ -1060,10 +1134,11 @@ function renderDetail() {
   document.getElementById('detailCmms').textContent = c.cmmsType || '—';
   document.getElementById('detailCrx').textContent = c.crxConsultant || '—';
   document.getElementById('detailPoc').textContent = c.clientPoc || '—';
+  document.getElementById('detailPocEmail').textContent = c.clientPocEmail || '—';
   document.getElementById('detailStatus').textContent = c.overallStatus || 'Active';
   document.getElementById('detailExpected').textContent = c.expectedDate || '—';
   document.getElementById('detailUpdated').textContent = 'Updated: ' + new Date(c.updatedAt || c.createdAt).toLocaleDateString();
-  renderStats(c); renderSections(c); renderDocs(c); renderGlobalComments(c);
+  renderStats(c); renderSections(c); renderDocs(c); renderNotifications(c); renderGlobalComments(c);
 }
 
 function renderStats(c) {
@@ -1104,7 +1179,7 @@ function renderSections(c) {
                 const cc = comments.length;
                 const latest = cc > 0 ? comments[comments.length - 1] : null;
                 const previewHtml = latest
-                  ? `<div class="comment-preview visible"><span class="comment-preview-author">${esc(latest.author||'Anon')}:</span>${esc(latest.text)}</div>`
+                  ? `<div class="comment-preview visible"><span class="comment-preview-author">${esc(latest.author||'Anon')}:</span>${esc(latest.text)}${latest.isTask ? ' <span class="task-badge-inline">TASK</span>' : ''}</div>`
                   : '';
                 return `<tr>
                   <td class="task-name">${esc(t.name)}</td>
@@ -1116,7 +1191,7 @@ function renderSections(c) {
                   </td>
                   <td>
                     <div class="comment-cell">
-                      <button class="comment-btn" onclick="openCommentModal('${sec.id}','${ph.id}','${t.id}','${esc(t.name).replace(/'/g,"\\'")}')">
+                      <button class="comment-btn" onclick="openCommentModal('${sec.id}','${ph.id}','${t.id}')">
                         💬 ${cc > 0 ? `<span class="comment-count">${cc}</span>` : 'Add comment'}
                       </button>
                       ${previewHtml}
@@ -1153,8 +1228,8 @@ function renderGlobalComments(c) {
   const comments = c.globalComments || [];
   if (!comments.length) { msgs.innerHTML = '<div class="no-comments">No notes yet.</div>'; return; }
   msgs.innerHTML = comments.map(cm => `
-    <div class="comment-bubble">
-      <div class="comment-meta"><span class="comment-author">${esc(cm.author||'Anonymous')}</span><span>${esc(cm.timestamp)}</span></div>
+    <div class="comment-bubble" style="${cm.isTask?'border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);':''}">
+      <div class="comment-meta"><span class="comment-author">${esc(cm.author||'Anonymous')}</span><span>${esc(cm.timestamp)}${cm.isTask ? ' <span class="task-badge-inline">TASK</span>' : ''}</span></div>
       <div class="comment-text">${esc(cm.text)}</div>
     </div>`).join('');
   msgs.scrollTop = msgs.scrollHeight;
@@ -1195,7 +1270,7 @@ function openAddClientModal() {
   editingClientId = null;
   document.getElementById('clientModalTitle').textContent = 'New Client Integration';
   document.getElementById('clientModalSaveBtn').textContent = 'Create Client';
-  ['fClientName','fCmmsType','fCrxConsultant','fClientPoc','fStartDate','fExpectedDate'].forEach(id => document.getElementById(id).value = '');
+  ['fClientName','fCmmsType','fCrxConsultant','fClientPoc','fClientPocEmail','fStartDate','fExpectedDate'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('fOverallStatus').value = 'Active';
   openModal('clientModal');
 }
@@ -1212,6 +1287,7 @@ function openEditClientModal() {
   document.getElementById('fOverallStatus').value = c.overallStatus || 'Active';
   document.getElementById('fStartDate').value = c.startDate || '';
   document.getElementById('fExpectedDate').value = c.expectedDate || '';
+  document.getElementById('fClientPocEmail').value = c.clientPocEmail || '';
   openModal('clientModal');
 }
 function saveClient() {
@@ -1223,6 +1299,7 @@ function saveClient() {
     cmmsType: document.getElementById('fCmmsType').value.trim(),
     crxConsultant: document.getElementById('fCrxConsultant').value.trim(),
     clientPoc: document.getElementById('fClientPoc').value.trim(),
+    clientPocEmail: document.getElementById('fClientPocEmail').value.trim(),
     overallStatus: document.getElementById('fOverallStatus').value,
     startDate: document.getElementById('fStartDate').value,
     expectedDate: document.getElementById('fExpectedDate').value,
@@ -1233,7 +1310,7 @@ function saveClient() {
   } else {
     db.clients.push({ id: 'c_' + Date.now(), ...fields,
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-      sections: defaultSections(), docs: [], globalComments: [] });
+      sections: defaultSections(), docs: [], globalComments: [], notifications: [] });
   }
   saveDB(db);
   closeModal('clientModal');
@@ -1244,9 +1321,25 @@ function saveClient() {
 
 // ─── TASK COMMENTS ───
 function openCommentModal(secId, phId, taskId, taskName) {
+  // If taskName not passed, look it up from data
+  if (!taskName) {
+    const db = loadDB();
+    const c = db.clients.find(x => x.id === currentClientId);
+    if (c) {
+      const sec = c.sections.find(s => s.id === secId);
+      if (sec) {
+        const ph = sec.phases.find(p => p.id === phId);
+        if (ph) {
+          const t = ph.tasks.find(t => t.id === taskId);
+          if (t) taskName = t.name;
+        }
+      }
+    }
+  }
   commentContext = { secId, phId, taskId };
   document.getElementById('commentModalTitle').textContent = '💬 ' + taskName;
   document.getElementById('commentText').value = '';
+  if(document.getElementById('commentIsTask')) document.getElementById('commentIsTask').checked = false;
   renderCommentThread();
   openModal('commentModal');
 }
@@ -1258,8 +1351,8 @@ function renderCommentThread() {
   const thread = document.getElementById('commentThread');
   if (!task.comments || !task.comments.length) { thread.innerHTML = '<div class="no-comments">No comments yet.</div>'; return; }
   thread.innerHTML = task.comments.map(cm => `
-    <div class="comment-bubble">
-      <div class="comment-meta"><span class="comment-author">${esc(cm.author||'Anonymous')}</span><span>${esc(cm.timestamp)}</span></div>
+    <div class="comment-bubble" style="${cm.isTask?'border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);':''}">
+      <div class="comment-meta"><span class="comment-author">${esc(cm.author||'Anonymous')}</span><span>${esc(cm.timestamp)}${cm.isTask ? ' <span class="task-badge-inline">TASK</span>' : ''}</span></div>
       <div class="comment-text">${esc(cm.text)}</div>
     </div>`).join('');
   thread.scrollTop = thread.scrollHeight;
@@ -1268,15 +1361,17 @@ function saveComment() {
   const text = document.getElementById('commentText').value.trim();
   if (!text) return;
   const author = document.getElementById('commentAuthor').value.trim() || 'Anonymous';
+  const isTask = document.getElementById('commentIsTask') ? document.getElementById('commentIsTask').checked : false;
   const db = loadDB();
   const c = db.clients.find(x => x.id === currentClientId);
   const { secId, phId, taskId } = commentContext;
   const task = c.sections.find(s=>s.id===secId).phases.find(p=>p.id===phId).tasks.find(t=>t.id===taskId);
   if (!task.comments) task.comments = [];
-  task.comments.push({ author, text, timestamp: fmtTime() });
+  task.comments.push({ author, text, timestamp: fmtTime(), isTask });
   c.updatedAt = new Date().toISOString();
   saveDB(db);
   document.getElementById('commentText').value = '';
+  if(document.getElementById('commentIsTask')) document.getElementById('commentIsTask').checked = false;
   renderCommentThread();
   renderSections(c);
 }
@@ -1286,14 +1381,55 @@ function addGlobalComment() {
   const text = document.getElementById('globalComment').value.trim();
   if (!text) return;
   const author = document.getElementById('globalAuthor').value.trim() || 'Anonymous';
+  const isTask = document.getElementById('globalIsTask') ? document.getElementById('globalIsTask').checked : false;
   const db = loadDB();
   const c = db.clients.find(x => x.id === currentClientId);
   if (!c.globalComments) c.globalComments = [];
-  c.globalComments.push({ author, text, timestamp: fmtTime() });
+  c.globalComments.push({ author, text, timestamp: fmtTime(), isTask, _ts: Date.now() });
   c.updatedAt = new Date().toISOString();
   saveDB(db);
   document.getElementById('globalComment').value = '';
+  if(document.getElementById('globalIsTask')) document.getElementById('globalIsTask').checked = false;
   renderGlobalComments(c);
+}
+
+
+// ─── NOTIFICATIONS ───
+function addNotification() {
+  const text = document.getElementById('notifText').value.trim();
+  if (!text) return;
+  const author = document.getElementById('notifAuthor').value.trim() || 'Anonymous';
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  if (!c.notifications) c.notifications = [];
+  c.notifications.push({ author, text, timestamp: fmtTime(), _ts: Date.now() });
+  c.updatedAt = new Date().toISOString();
+  saveDB(db);
+  document.getElementById('notifText').value = '';
+  renderNotifications(c);
+}
+
+function renderNotifications(c) {
+  const msgs = document.getElementById('notifMessages');
+  if (!msgs) return;
+  const notifs = c.notifications || [];
+  // Also pull task-flagged items from global comments and task comments
+  const extras = [];
+  (c.globalComments || []).filter(cm => cm.isTask).forEach(cm => extras.push({...cm, _source: 'Client Notes'}));
+  c.sections.forEach(s => s.phases.forEach(p => p.tasks.forEach(t =>
+    (t.comments || []).filter(cm => cm.isTask).forEach(cm => extras.push({...cm, _source: t.name}))
+  )));
+  const all = [...notifs, ...extras].sort((a, b) => (b._ts || 0) - (a._ts || 0));
+  if (!all.length) { msgs.innerHTML = '<div class="no-comments">No notifications yet. Add one below, or flag a comment as a Task to have it appear here automatically.</div>'; return; }
+  msgs.innerHTML = all.map(n => `
+    <div class="comment-bubble" style="border-color:rgba(255,176,32,0.3);background:rgba(51,37,0,0.2);">
+      <div class="comment-meta">
+        <span style="color:var(--pfc-text);font-weight:600;">${esc(n.author||'Anonymous')}${n._source ? ` <span style="color:var(--text3);font-weight:400;">· ${esc(n._source)}</span>` : ''}</span>
+        <span>${esc(n.timestamp||'')}</span>
+      </div>
+      <div class="comment-text">${esc(n.text)}</div>
+    </div>`).join('');
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
 // ─── DOCS ───
