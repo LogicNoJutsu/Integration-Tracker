@@ -518,7 +518,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:49.957Z",
-      "updatedAt": "2026-05-07T16:50:11.762Z",
+      "updatedAt": "2026-05-07T16:51:09.046Z",
       "sections": [
         {
           "id": "test_instance",
@@ -561,6 +561,11 @@
                       "author": "VG",
                       "text": "We have requested client to add CRXS type code for the work order request and work order creation. They asked to reach out to TMA team.",
                       "timestamp": "May 7, 2026, 12:50 PM"
+                    },
+                    {
+                      "author": "VG",
+                      "text": "Joey Replied back on that email confirming if Iowa team wants To add CRX or any other text",
+                      "timestamp": "May 7, 2026, 12:51 PM"
                     }
                   ]
                 }
