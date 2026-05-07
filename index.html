@@ -528,6 +528,49 @@
 </div>
 
 <!-- ═══════════════════ CLIENT DETAIL ═══════════════════ -->
+<!-- ═══════════════════ TASK VIEW ═══════════════════ -->
+<div id="viewTasks" class="view">
+  <div class="dashboard">
+    <div class="dash-top">
+      <div>
+        <div class="dash-title">&#128203; Task View</div>
+        <div class="dash-sub">All comments and notes flagged as tasks across all clients</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="showDashboard()">&#8592; Dashboard</button>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="padding:12px 16px;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;">
+        <select id="tvFilterClient" onchange="renderTaskView()" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-family:var(--font-body);font-size:13px;outline:none;">
+          <option value="">All Clients</option>
+        </select>
+        <select id="tvFilterStatus" onchange="renderTaskView()" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-family:var(--font-body);font-size:13px;outline:none;">
+          <option value="">All Statuses</option>
+          <option value="not-started">Not Started</option>
+          <option value="in-progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="pending-client">Pending From Client</option>
+          <option value="cannot-be-done">Cannot Be Done</option>
+          <option value="not-required">Not Required</option>
+        </select>
+        <span id="tvCount" style="font-size:12px;color:var(--text3);"></span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:16%">Client</th>
+            <th style="width:22%">Task / Source</th>
+            <th style="width:16%">Status</th>
+            <th style="width:14%">Date</th>
+            <th>Comment / Note</th>
+          </tr>
+        </thead>
+        <tbody id="taskViewBody"></tbody>
+      </table>
+      <div id="taskViewEmpty" class="no-comments" style="display:none;">No tasks flagged yet. Use "Mark as Task" when adding a comment or note.</div>
+    </div>
+  </div>
+</div>
+
 <div id="viewDetail" class="view">
   <div class="detail-view">
     <div class="breadcrumb">
