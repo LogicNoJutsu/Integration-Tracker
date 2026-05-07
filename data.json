@@ -324,7 +324,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:36:37.004Z",
-      "updatedAt": "2026-05-07T16:36:37.004Z",
+      "updatedAt": "2026-05-07T17:36:22.956Z",
       "sections": [
         {
           "id": "test_instance",
@@ -436,7 +436,13 @@
         }
       ],
       "docs": [],
-      "globalComments": []
+      "globalComments": [
+        {
+          "author": "VG",
+          "text": "Thanks Annica, got the locations updated in Dev. Location API will now send the type associated with it.\n\n@Venky Gupta\nI got the Asset Type API updated as well in the proposed payload structure. Please validate and keep us posted when you get a chance.",
+          "timestamp": "May 7, 2026, 1:36 PM"
+        }
+      ]
     },
     {
       "id": "c_1778171892397",
