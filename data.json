@@ -151,7 +151,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:35:53.549Z",
-      "updatedAt": "2026-05-07T17:33:19.768Z",
+      "updatedAt": "2026-05-07T17:33:50.582Z",
       "sections": [
         {
           "id": "test_instance",
@@ -295,6 +295,13 @@
           "type": "Integration Call Notes",
           "name": "Integration Call Notes",
           "link": "https://hcfcompliancecom-my.sharepoint.com/:w:/g/personal/venky_crxweb_com/IQCNSw3zHiXRSbWXgdryasaNAfJEhVrGO0AGC_8mL2o4bds?e=gXyI1B",
+          "notes": "",
+          "date": "5/7/2026"
+        },
+        {
+          "type": "API End Points",
+          "name": "API End Points",
+          "link": "https://hcfcompliancecom.sharepoint.com/:w:/s/CRxSupport/IQD4LapU1Ew6TICzQ4iccI5tAed7RMxG6DzqXGLaGzmNc_w?e=jS5jlO",
           "notes": "",
           "date": "5/7/2026"
         }
