@@ -376,6 +376,130 @@
       ],
       "docs": [],
       "globalComments": []
+    },
+    {
+      "id": "c_1778171892397",
+      "name": "Billings Clinic",
+      "cmmsType": "TMS",
+      "crxConsultant": "Clay, Kevin",
+      "clientPoc": "Kelly Halligan",
+      "overallStatus": "Active",
+      "startDate": "2026-04-01",
+      "expectedDate": "",
+      "createdAt": "2026-05-07T16:38:12.397Z",
+      "updatedAt": "2026-05-07T16:38:12.397Z",
+      "sections": [
+        {
+          "id": "test_instance",
+          "label": "CMMS Test Instance Integration",
+          "phases": [
+            {
+              "id": "test_p1",
+              "label": "Phase 1:",
+              "tasks": [
+                {
+                  "id": "t1",
+                  "name": "Initial Requirement",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "t2",
+                  "name": "Organizational Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "t3",
+                  "name": "Asset Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "t4",
+                  "name": "Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            },
+            {
+              "id": "test_p2",
+              "label": "Phase 2: Advanced Setup",
+              "tasks": [
+                {
+                  "id": "t5",
+                  "name": "PM Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "t6",
+                  "name": "Automated Asset Reports",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "live_instance",
+          "label": "CMMS Live Instance Integration",
+          "phases": [
+            {
+              "id": "live_p1",
+              "label": "Phase 1:",
+              "tasks": [
+                {
+                  "id": "l1",
+                  "name": "Initial Requirement",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l2",
+                  "name": "Organizational Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l3",
+                  "name": "Asset Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l4",
+                  "name": "Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            },
+            {
+              "id": "live_p2",
+              "label": "Phase 2: Advanced Setup",
+              "tasks": [
+                {
+                  "id": "l5",
+                  "name": "PM Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l6",
+                  "name": "Automated Asset Reports",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "docs": [],
+      "globalComments": []
     }
   ]
 }
