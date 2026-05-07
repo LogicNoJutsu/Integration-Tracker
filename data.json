@@ -9,7 +9,7 @@
       "overallStatus": "Active",
       "startDate": "2026-03-02",
       "createdAt": "2026-05-07T15:28:47.055Z",
-      "updatedAt": "2026-05-07T17:30:01.822Z",
+      "updatedAt": "2026-05-07T18:21:00.459Z",
       "sections": [
         {
           "id": "test_instance",
@@ -137,6 +137,13 @@
           "author": "VG",
           "text": "Updated asset mapping shared with Avinash and explained him the scenario as well We will need to send out one email to Tidal Health stating that this is one of the issue where there buildings are getting listed under campus and their floors are getting listed under buildings so they will need to get that fixed at their end",
           "timestamp": "May 7, 2026, 1:30 PM"
+        },
+        {
+          "author": "VG",
+          "text": "Need to complete the sync Peninsula region The sync documents are shared with Avinash that needs to be synced in CRX as well",
+          "timestamp": "May 7, 2026, 2:21 PM",
+          "isTask": true,
+          "_ts": 1778178060459
         }
       ],
       "expectedDate": ""
