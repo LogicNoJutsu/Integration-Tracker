@@ -518,7 +518,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:49.957Z",
-      "updatedAt": "2026-05-07T16:46:05.415Z",
+      "updatedAt": "2026-05-07T16:49:25.704Z",
       "sections": [
         {
           "id": "test_instance",
@@ -544,7 +544,13 @@
                   "id": "t3",
                   "name": "Asset Setup",
                   "status": "in-progress",
-                  "comments": []
+                  "comments": [
+                    {
+                      "author": "VG",
+                      "text": "Currently, for the asset setup, we have synced the majority of the assets. There were a few assets where the column names differed from the expected format. We have shared those discrepancies with the development team, and they are currently working on syncing those assets as well.\n\nAt this stage, the remaining items are pending from the client side.",
+                      "timestamp": "May 7, 2026, 12:49 PM"
+                    }
+                  ]
                 },
                 {
                   "id": "t4",
