@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRX Integration Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --surface2: #1c2030;
+    --surface3: #222840;
+    --border: #2a3050;
+    --accent: #4f7cff;
+    --accent2: #00e5c0;
+    --text: #e8ecf8;
+    --text2: #8892b0;
+    --text3: #4a5580;
+
+    --ns: #3a3f5c;       /* Not Started */
+    --ns-text: #8892b0;
+    --ip: #1a3a6a;       /* In Progress */
+    --ip-text: #4f9fff;
+    --done: #0d3322;     /* Completed */
+    --done-text: #00e5a0;
+    --pfc: #3a2a00;      /* Pending From Client */
+    --pfc-text: #ffb830;
+    --cbd: #3a1a1a;      /* Cannot Be Done */
+    --cbd-text: #ff5a5a;
+    --nr: #1a1a3a;       /* Not Required */
+    --nr-text: #7878c0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── HEADER ─── */
+  .app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .app-logo span { color: var(--text); }
+  .header-actions { display: flex; gap: 10px; }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { background: #3d6aee; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-accent2 {
+    background: transparent;
+    color: var(--accent2);
+    border-color: var(--accent2);
+  }
+  .btn-accent2:hover { background: rgba(0,229,192,0.08); }
+  .btn-danger {
+    background: transparent;
+    color: #ff5a5a;
+    border-color: #ff5a5a;
+  }
+  .btn-danger:hover { background: rgba(255,90,90,0.1); }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* ─── VIEWS ─── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ─── DASHBOARD ─── */
+  .dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 32px;
+  }
+  .dash-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+  }
+  .dash-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .dash-sub { color: var(--text2); font-size: 12px; margin-top: 4px; }
+
+  .client-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 20px;
+  }
+
+  .client-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .client-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .client-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .client-card:hover::before { opacity: 1; }
+
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .card-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .card-cmms {
+    font-size: 11px;
+    background: var(--surface3);
+    color: var(--accent);
+    padding: 3px 9px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+  .card-meta { color: var(--text2); font-size: 11px; margin-bottom: 14px; line-height: 1.8; }
+  .card-meta strong { color: var(--text); }
+
+  .progress-section { margin-bottom: 10px; }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--surface3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  .status-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+  .pill {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .card-actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  /* ─── ADD CLIENT MODAL ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: none; border: none;
+    color: var(--text2); cursor: pointer;
+    font-size: 20px; line-height: 1;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  input, select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* ─── CLIENT DETAIL VIEW ─── */
+  .detail-view {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 24px;
+  }
+  .breadcrumb a { color: var(--accent); cursor: pointer; text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb span { color: var(--text3); }
+
+  .detail-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .detail-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .detail-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+  }
+  .detail-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  .meta-item label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .meta-item .val { font-size: 14px; color: var(--text); }
+
+  /* ─── TABS ─── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 5px;
+    width: fit-content;
+  }
+  .tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 7px 18px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text2);
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .tab:hover:not(.active) { background: var(--surface2); color: var(--text); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ─── INTEGRATION TABLE ─── */
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-title {
+    background: var(--surface2);
+    padding: 12px 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-tag {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--surface3);
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(42,48,80,0.5);
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(79,124,255,0.03); }
+
+  .task-name { color: var(--text2); }
+
+  .status-select {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892b0'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+  }
+
+  .s-not-started { background: var(--ns); color: var(--ns-text); border-color: rgba(136,146,176,0.2); }
+  .s-in-progress { background: var(--ip); color: var(--ip-text); border-color: rgba(79,159,255,0.3); }
+  .s-completed { background: var(--done); color: var(--done-text); border-color: rgba(0,229,160,0.3); }
+  .s-pending-client { background: var(--pfc); color: var(--pfc-text); border-color: rgba(255,184,48,0.3); }
+  .s-cannot-be-done { background: var(--cbd); color: var(--cbd-text); border-color: rgba(255,90,90,0.3); }
+  .s-not-required { background: var(--nr); color: var(--nr-text); border-color: rgba(120,120,192,0.3); }
+
+  .comment-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--text2);
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .comment-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .comment-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 20px;
+    font-size: 9px;
+    padding: 1px 6px;
+    margin-left: 4px;
+  }
+
+  /* ─── COMMENT MODAL ─── */
+  .comment-modal .modal { width: 640px; }
+  .comment-thread {
+    max-height: 320px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .comment-bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .comment-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 5px;
+  }
+  .comment-author { color: var(--accent); font-weight: 500; }
+  .comment-text { font-size: 12px; color: var(--text); line-height: 1.6; }
+  .comment-input-row { display: flex; gap: 8px; align-items: flex-start; }
+  .comment-input-row .name-in { width: 180px; flex-shrink: 0; }
+  .comment-input-row textarea { flex: 1; min-height: 60px; }
+  .no-comments { color: var(--text3); font-size: 12px; text-align: center; padding: 24px; }
+
+  /* ─── DOCS TAB ─── */
+  .docs-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .docs-toolbar {
+    padding: 16px 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .docs-table th, .docs-table td { padding: 10px 16px; }
+  .doc-link { color: var(--accent); text-decoration: none; font-size: 12px; }
+  .doc-link:hover { text-decoration: underline; }
+  .doc-type-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--surface3);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .doc-date { color: var(--text3); font-size: 11px; }
+
+  /* ─── GLOBAL COMMENTS ─── */
+  .global-chat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .chat-messages {
+    padding: 20px;
+    max-height: 450px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 200px;
+  }
+  .chat-input-area {
+    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    background: var(--surface2);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .chat-row { display: flex; gap: 10px; }
+  .chat-row input { flex: 0 0 200px; }
+  .chat-row textarea { flex: 1; min-height: 50px; }
+
+  /* ─── OVERVIEW BADGES ─── */
+  .overview-stats {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 32px;
+    color: var(--text3);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
+  .empty-desc { font-size: 13px; margin-bottom: 24px; }
+
+  /* DELETE confirm */
+  .confirm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 300;
+    display: none; align-items: center; justify-content: center;
+  }
+  .confirm-overlay.open { display: flex; }
+  .confirm-box {
+    background: var(--surface);
+    border: 1px solid #ff5a5a;
+    border-radius: 12px;
+    padding: 28px;
+    width: 400px;
+    text-align: center;
+  }
+  .confirm-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .confirm-desc { color: var(--text2); font-size: 13px; margin-bottom: 24px; }
+  .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+  .last-updated-badge {
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+  }
+
+  @media print {
+    .app-header, .breadcrumb, .tabs, .header-actions, .card-actions, .btn { display: none !important; }
+    body { background: #fff; color: #000; }
+    .detail-view { padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ APP HEADER ═══════════════════ -->
+<header class="app-header">
+  <div class="app-logo">CRX <span>/ Integration Tracker</span></div>
+  <div class="header-actions" id="headerActions">
+    <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>
+  </div>
+</header>
+
+<!-- ═══════════════════ DASHBOARD VIEW ═══════════════════ -->
+<div id="viewDashboard" class="view active">
+  <div class="dashboard">
+    <div class="dash-top">
+      <div>
+        <div class="dash-title">Integration Dashboard</div>
+        <div class="dash-sub">All active client integrations · Click a card to manage</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>
+    </div>
+    <div class="client-grid" id="clientGrid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CLIENT DETAIL VIEW ═══════════════════ -->
+<div id="viewDetail" class="view">
+  <div class="detail-view">
+    <div class="breadcrumb">
+      <a onclick="showDashboard()">Dashboard</a>
+      <span>/</span>
+      <span id="breadcrumbName">Client</span>
+    </div>
+
+    <div class="detail-header">
+      <div class="detail-header-top">
+        <div class="detail-name" id="detailName">—</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span class="last-updated-badge" id="detailUpdated">—</span>
+          <button class="btn btn-ghost btn-sm" onclick="openEditClientModal()">Edit Info</button>
+          <button class="btn btn-accent2 btn-sm" onclick="exportPDF()">↓ PDF</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmDeleteClient()">Delete</button>
+        </div>
+      </div>
+      <div class="detail-meta-grid">
+        <div class="meta-item"><label>CMMS Type</label><div class="val" id="detailCmms">—</div></div>
+        <div class="meta-item"><label>CRX Consultant</label><div class="val" id="detailCrx">—</div></div>
+        <div class="meta-item"><label>Client POC</label><div class="val" id="detailPoc">—</div></div>
+        <div class="meta-item"><label>Status</label><div class="val" id="detailStatus">—</div></div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('tabIntegration', this)">Integration Status</button>
+      <button class="tab" onclick="switchTab('tabDocs', this)">Documents</button>
+      <button class="tab" onclick="switchTab('tabComments', this)">Client Notes</button>
+    </div>
+
+    <!-- TAB: Integration Status -->
+    <div id="tabIntegration" class="tab-content active">
+      <div class="overview-stats" id="overviewStats"></div>
+      <div id="integrationSections"></div>
+    </div>
+
+    <!-- TAB: Documents -->
+    <div id="tabDocs" class="tab-content">
+      <div class="docs-panel">
+        <div class="docs-toolbar">
+          <button class="btn btn-primary btn-sm" onclick="openAddDocModal()">+ Add Document</button>
+        </div>
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Doc Type</th>
+              <th>Document Name / Link</th>
+              <th>Date Added</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="docsTableBody"></tbody>
+        </table>
+        <div id="docsEmpty" class="no-comments" style="display:none;">No documents added yet.</div>
+      </div>
+    </div>
+
+    <!-- TAB: Global Comments -->
+    <div id="tabComments" class="tab-content">
+      <div class="global-chat">
+        <div class="chat-messages" id="globalChatMessages">
+          <div class="no-comments">No notes yet. Add the first one below.</div>
+        </div>
+        <div class="chat-input-area">
+          <div class="chat-row">
+            <input type="text" id="globalAuthor" placeholder="Your name" style="flex:0 0 200px;">
+            <textarea id="globalComment" placeholder="Add a note or update..." style="flex:1;min-height:50px;"></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <button class="btn btn-primary btn-sm" onclick="addGlobalComment()">Post Note</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ ADD/EDIT CLIENT MODAL ═══════════════════ -->
+<div class="modal-overlay" id="clientModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('clientModal')">×</button>
+    <div class="modal-title" id="clientModalTitle">New Client Integration</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Client Name *</label>
+        <input type="text" id="fClientName" placeholder="e.g. Geisinger Health">
+      </div>
+      <div class="form-group">
+        <label>CMMS Type *</label>
+        <input type="text" id="fCmmsType" placeholder="e.g. Maximo, Infor EAM">
+      </div>
+      <div class="form-group">
+        <label>CRX Consultant(s)</label>
+        <input type="text" id="fCrxConsultant" placeholder="Consultant name(s)">
+      </div>
+      <div class="form-group">
+        <label>Client POC</label>
+        <input type="text" id="fClientPoc" placeholder="Client contact name">
+      </div>
+      <div class="form-group">
+        <label>Overall Status</label>
+        <select id="fOverallStatus">
+          <option value="Active">Active</option>
+          <option value="On Hold">On Hold</option>
+          <option value="Completed">Completed</option>
+          <option value="Not Started">Not Started</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" id="fStartDate">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('clientModal')">Cancel</button>
+      <button class="btn btn-primary" id="clientModalSaveBtn" onclick="saveClient()">Create Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TASK COMMENT MODAL ═══════════════════ -->
+<div class="modal-overlay comment-modal" id="commentModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('commentModal')">×</button>
+    <div class="modal-title" id="commentModalTitle">Comments</div>
+    <div class="comment-thread" id="commentThread"></div>
+    <div class="comment-input-row">
+      <input type="text" class="name-in" id="commentAuthor" placeholder="Your name">
+      <textarea id="commentText" placeholder="Add a comment..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('commentModal')">Close</button>
+      <button class="btn btn-primary" onclick="saveComment()">Post Comment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ ADD DOC MODAL ═══════════════════ -->
+<div class="modal-overlay" id="docModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('docModal')">×</button>
+    <div class="modal-title">Add Document</div>
+    <div class="form-group">
+      <label>Doc Type</label>
+      <input type="text" id="fDocType" placeholder="e.g. SRS, Meeting Notes, Config">
+    </div>
+    <div class="form-group">
+      <label>Document Name</label>
+      <input type="text" id="fDocName" placeholder="Document title / description">
+    </div>
+    <div class="form-group">
+      <label>Document Link (URL)</label>
+      <input type="url" id="fDocLink" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="fDocNotes" placeholder="Any notes about this document..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('docModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Add Document</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CONFIRM DELETE ═══════════════════ -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-title">Delete Client?</div>
+    <div class="confirm-desc" id="confirmDesc">This will permanently remove the client and all associated data.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeModal('confirmOverlay')">Cancel</button>
+      <button class="btn btn-danger" onclick="deleteCurrentClient()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA LAYER — localStorage persistence
+// ═══════════════════════════════════════════════
+const DB_KEY = 'crx_tracker_v2';
+
+function loadDB() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY)) || { clients: [] }; }
+  catch { return { clients: [] }; }
+}
+function saveDB(db) {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+}
+
+// Default task sections for every new client
+function defaultSections() {
+  return [
+    {
+      id: 'test_instance',
+      label: 'CMMS Test Instance Integration',
+      phases: [
+        { id: 'test_p1', label: 'Phase 1:', tasks: [
+          { id: 't1', name: 'Initial Requirement', status: 'not-started', comments: [] },
+          { id: 't2', name: 'Organizational Setup', status: 'not-started', comments: [] },
+          { id: 't3', name: 'Asset Setup', status: 'not-started', comments: [] },
+          { id: 't4', name: 'Work Order Setup', status: 'not-started', comments: [] },
+        ]},
+        { id: 'test_p2', label: 'Phase 2: Advanced Setup', tasks: [
+          { id: 't5', name: 'PM Work Order Setup', status: 'not-started', comments: [] },
+          { id: 't6', name: 'Automated Asset Reports', status: 'not-started', comments: [] },
+        ]},
+      ]
+    },
+    {
+      id: 'live_instance',
+      label: 'CMMS Live Instance Integration',
+      phases: [
+        { id: 'live_p1', label: 'Phase 1:', tasks: [
+          { id: 'l1', name: 'Initial Requirement', status: 'not-started', comments: [] },
+          { id: 'l2', name: 'Organizational Setup', status: 'not-started', comments: [] },
+          { id: 'l3', name: 'Asset Setup', status: 'not-started', comments: [] },
+          { id: 'l4', name: 'Work Order Setup', status: 'not-started', comments: [] },
+        ]},
+        { id: 'live_p2', label: 'Phase 2: Advanced Setup', tasks: [
+          { id: 'l5', name: 'PM Work Order Setup', status: 'not-started', comments: [] },
+          { id: 'l6', name: 'Automated Asset Reports', status: 'not-started', comments: [] },
+        ]},
+      ]
+    }
+  ];
+}
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let currentClientId = null;
+let editingClientId = null;
+let commentContext = null; // { sectionId, phaseId, taskId }
+
+// ═══════════════════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════════════════
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showDashboard() {
+  currentClientId = null;
+  renderDashboard();
+  showView('viewDashboard');
+  document.getElementById('headerActions').innerHTML = `<button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>`;
+}
+function showDetail(clientId) {
+  currentClientId = clientId;
+  renderDetail();
+  showView('viewDetail');
+  document.getElementById('headerActions').innerHTML = `<button class="btn btn-ghost btn-sm" onclick="showDashboard()">← Dashboard</button>`;
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+  const db = loadDB();
+  const grid = document.getElementById('clientGrid');
+  if (!db.clients.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">🔌</div>
+      <div class="empty-title">No integrations yet</div>
+      <div class="empty-desc">Create your first client integration to get started.</div>
+      <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = db.clients.map(c => {
+    const stats = computeStats(c);
+    const pct = stats.total ? Math.round(stats.completed / stats.total * 100) : 0;
+    const inProgress = stats.inProgress;
+    const pillsHtml = Object.entries(stats.byStatus)
+      .filter(([,n]) => n > 0)
+      .map(([s,n]) => `<span class="pill ${statusClass(s)}">${statusLabel(s)}: ${n}</span>`).join('');
+    return `<div class="client-card" onclick="showDetail('${c.id}')">
+      <div class="card-header">
+        <div class="card-name">${esc(c.name)}</div>
+        <span class="card-cmms">${esc(c.cmmsType || '—')}</span>
+      </div>
+      <div class="card-meta">
+        <strong>CRX:</strong> ${esc(c.crxConsultant || '—')}<br>
+        <strong>Client POC:</strong> ${esc(c.clientPoc || '—')}<br>
+        <strong>Status:</strong> ${esc(c.overallStatus || 'Active')}
+      </div>
+      <div class="progress-section">
+        <div class="progress-label"><span>Completion</span><span>${pct}%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="status-pills">${pillsHtml}</div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="showDetail('${c.id}')">Open →</button>
+        ${inProgress > 0 ? `<span style="font-size:11px;color:var(--ip-text);padding:4px 8px;background:var(--ip);border-radius:4px;">${inProgress} In Progress</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function computeStats(client) {
+  const counts = { 'not-started':0,'in-progress':0,'completed':0,'pending-client':0,'cannot-be-done':0,'not-required':0 };
+  client.sections.forEach(s => s.phases.forEach(p => p.tasks.forEach(t => {
+    if (counts[t.status] !== undefined) counts[t.status]++;
+  })));
+  const total = Object.values(counts).reduce((a,b)=>a+b,0);
+  return {
+    total,
+    completed: counts['completed'],
+    inProgress: counts['in-progress'],
+    byStatus: counts
+  };
+}
+
+// ═══════════════════════════════════════════════
+// DETAIL VIEW
+// ═══════════════════════════════════════════════
+function renderDetail() {
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  if (!c) { showDashboard(); return; }
+
+  document.getElementById('breadcrumbName').textContent = c.name;
+  document.getElementById('detailName').textContent = c.name;
+  document.getElementById('detailCmms').textContent = c.cmmsType || '—';
+  document.getElementById('detailCrx').textContent = c.crxConsultant || '—';
+  document.getElementById('detailPoc').textContent = c.clientPoc || '—';
+  document.getElementById('detailStatus').textContent = c.overallStatus || 'Active';
+  document.getElementById('detailUpdated').textContent = 'Updated: ' + new Date(c.updatedAt || c.createdAt).toLocaleDateString();
+
+  renderStats(c);
+  renderSections(c);
+  renderDocs(c);
+  renderGlobalComments(c);
+}
+
+function renderStats(c) {
+  const stats = computeStats(c);
+  const labels = {
+    'not-started': ['Not Started','var(--ns-text)'],
+    'in-progress': ['In Progress','var(--ip-text)'],
+    'completed': ['Completed','var(--done-text)'],
+    'pending-client': ['Pending Client','var(--pfc-text)'],
+    'cannot-be-done': ['Cannot Do','var(--cbd-text)'],
+    'not-required': ['Not Required','var(--nr-text)'],
+  };
+  document.getElementById('overviewStats').innerHTML = Object.entries(stats.byStatus).map(([s,n]) => {
+    const [label, color] = labels[s];
+    return `<div class="stat-box">
+      <div class="stat-num" style="color:${color}">${n}</div>
+      <div class="stat-label">${label}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSections(c) {
+  const cont = document.getElementById('integrationSections');
+  cont.innerHTML = c.sections.map(sec => `
+    <div class="section-card">
+      <div class="section-title">${esc(sec.label)}</div>
+      ${sec.phases.map(ph => `
+        <div>
+          <div style="padding:8px 16px 4px;font-size:11px;color:var(--accent2);font-weight:600;letter-spacing:0.05em;">${esc(ph.label)}</div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width:28%">Task</th>
+                <th style="width:20%">Status</th>
+                <th>Comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${ph.tasks.map(t => {
+                const cc = t.comments ? t.comments.length : 0;
+                return `<tr>
+                  <td class="task-name">${esc(t.name)}</td>
+                  <td>
+                    <select class="status-select ${statusClass(t.status)}" 
+                      onchange="updateTaskStatus('${sec.id}','${ph.id}','${t.id}',this.value); updateSelectStyle(this)">
+                      ${statusOptions(t.status)}
+                    </select>
+                  </td>
+                  <td>
+                    <button class="comment-btn" onclick="openCommentModal('${sec.id}','${ph.id}','${t.id}','${esc(t.name)}')">
+                      💬 Comments${cc > 0 ? `<span class="comment-count">${cc}</span>` : ''}
+                    </button>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function renderDocs(c) {
+  const docs = c.docs || [];
+  const tbody = document.getElementById('docsTableBody');
+  const empty = document.getElementById('docsEmpty');
+  if (!docs.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = docs.map((d,i) => `
+    <tr>
+      <td><span class="doc-type-badge">${esc(d.type||'—')}</span></td>
+      <td>${d.link ? `<a class="doc-link" href="${esc(d.link)}" target="_blank">${esc(d.name||d.link)}</a>` : esc(d.name||'—')}</td>
+      <td class="doc-date">${esc(d.date||'—')}</td>
+      <td style="font-size:12px;color:var(--text2)">${esc(d.notes||'')}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteDoc(${i})">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+function renderGlobalComments(c) {
+  const msgs = document.getElementById('globalChatMessages');
+  const comments = c.globalComments || [];
+  if (!comments.length) {
+    msgs.innerHTML = '<div class="no-comments">No notes yet. Add the first one below.</div>';
+    return;
+  }
+  msgs.innerHTML = comments.map(cm => `
+    <div class="comment-bubble">
+      <div class="comment-meta">
+        <span class="comment-author">${esc(cm.author||'Anonymous')}</span>
+        <span>${esc(cm.timestamp)}</span>
+      </div>
+      <div class="comment-text">${esc(cm.text)}</div>
+    </div>
+  `).join('');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════
+// STATUS HELPERS
+// ═══════════════════════════════════════════════
+const STATUS_MAP = {
+  'not-started': 'Not Started',
+  'in-progress': 'In Progress',
+  'completed': 'Completed',
+  'pending-client': 'Pending From Client',
+  'cannot-be-done': 'Cannot Be Done',
+  'not-required': 'Not Required',
+};
+function statusLabel(s) { return STATUS_MAP[s] || s; }
+function statusClass(s) {
+  return { 'not-started':'s-not-started','in-progress':'s-in-progress','completed':'s-completed',
+    'pending-client':'s-pending-client','cannot-be-done':'s-cannot-be-done','not-required':'s-not-required' }[s] || '';
+}
+function statusOptions(cur) {
+  return Object.entries(STATUS_MAP).map(([v,l]) =>
+    `<option value="${v}" ${cur===v?'selected':''}>${l}</option>`).join('');
+}
+function updateSelectStyle(sel) {
+  sel.className = 'status-select ' + statusClass(sel.value);
+}
+
+// ═══════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════
+function updateTaskStatus(secId, phId, taskId, newStatus) {
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  const sec = c.sections.find(s => s.id === secId);
+  const ph = sec.phases.find(p => p.id === phId);
+  const task = ph.tasks.find(t => t.id === taskId);
+  task.status = newStatus;
+  c.updatedAt = new Date().toISOString();
+  saveDB(db);
+  renderStats(c);
+  renderDashboard();
+  document.getElementById('detailUpdated').textContent = 'Updated: ' + new Date(c.updatedAt).toLocaleDateString();
+}
+
+// ─── ADD/EDIT CLIENT ───
+function openAddClientModal() {
+  editingClientId = null;
+  document.getElementById('clientModalTitle').textContent = 'New Client Integration';
+  document.getElementById('clientModalSaveBtn').textContent = 'Create Client';
+  ['fClientName','fCmmsType','fCrxConsultant','fClientPoc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fOverallStatus').value = 'Active';
+  document.getElementById('fStartDate').value = '';
+  openModal('clientModal');
+}
+function openEditClientModal() {
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  editingClientId = currentClientId;
+  document.getElementById('clientModalTitle').textContent = 'Edit Client';
+  document.getElementById('clientModalSaveBtn').textContent = 'Save Changes';
+  document.getElementById('fClientName').value = c.name;
+  document.getElementById('fCmmsType').value = c.cmmsType || '';
+  document.getElementById('fCrxConsultant').value = c.crxConsultant || '';
+  document.getElementById('fClientPoc').value = c.clientPoc || '';
+  document.getElementById('fOverallStatus').value = c.overallStatus || 'Active';
+  document.getElementById('fStartDate').value = c.startDate || '';
+  openModal('clientModal');
+}
+function saveClient() {
+  const name = document.getElementById('fClientName').value.trim();
+  if (!name) { alert('Client name is required.'); return; }
+  const db = loadDB();
+  if (editingClientId) {
+    const c = db.clients.find(x => x.id === editingClientId);
+    c.name = name;
+    c.cmmsType = document.getElementById('fCmmsType').value.trim();
+    c.crxConsultant = document.getElementById('fCrxConsultant').value.trim();
+    c.clientPoc = document.getElementById('fClientPoc').value.trim();
+    c.overallStatus = document.getElementById('fOverallStatus').value;
+    c.startDate = document.getElementById('fStartDate').value;
+    c.updatedAt = new Date().toISOString();
+  } else {
+    const c = {
+      id: 'c_' + Date.now(),
+      name, 
+      cmmsType: document.getElementById('fCmmsType').value.trim(),
+      crxConsultant: document.getElementById('fCrxConsultant').value.trim(),
+      clientPoc: document.getElementById('fClientPoc').value.trim(),
+      overallStatus: document.getElementById('fOverallStatus').value,
+      startDate: document.getElementById('fStartDate').value,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      sections: defaultSections(),
+      docs: [],
+      globalComments: []
+    };
+    db.clients.push(c);
+  }
+  saveDB(db);
+  closeModal('clientModal');
+  if (editingClientId && currentClientId === editingClientId) renderDetail();
+  renderDashboard();
+}
+
+// ─── TASK COMMENTS ───
+function openCommentModal(secId, phId, taskId, taskName) {
+  commentContext = { secId, phId, taskId };
+  document.getElementById('commentModalTitle').textContent = '💬 ' + taskName;
+  document.getElementById('commentText').value = '';
+  renderCommentThread();
+  openModal('commentModal');
+}
+function renderCommentThread() {
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  const { secId, phId, taskId } = commentContext;
+  const task = c.sections.find(s=>s.id===secId).phases.find(p=>p.id===phId).tasks.find(t=>t.id===taskId);
+  const thread = document.getElementById('commentThread');
+  if (!task.comments || !task.comments.length) {
+    thread.innerHTML = '<div class="no-comments">No comments yet.</div>';
+    return;
+  }
+  thread.innerHTML = task.comments.map(cm => `
+    <div class="comment-bubble">
+      <div class="comment-meta">
+        <span class="comment-author">${esc(cm.author||'Anonymous')}</span>
+        <span>${esc(cm.timestamp)}</span>
+      </div>
+      <div class="comment-text">${esc(cm.text)}</div>
+    </div>
+  `).join('');
+  thread.scrollTop = thread.scrollHeight;
+}
+function saveComment() {
+  const text = document.getElementById('commentText').value.trim();
+  if (!text) return;
+  const author = document.getElementById('commentAuthor').value.trim() || 'Anonymous';
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  const { secId, phId, taskId } = commentContext;
+  const task = c.sections.find(s=>s.id===secId).phases.find(p=>p.id===phId).tasks.find(t=>t.id===taskId);
+  if (!task.comments) task.comments = [];
+  task.comments.push({ author, text, timestamp: fmtTime() });
+  c.updatedAt = new Date().toISOString();
+  saveDB(db);
+  document.getElementById('commentText').value = '';
+  renderCommentThread();
+  renderSections(c); // refresh comment counts
+}
+
+// ─── GLOBAL COMMENTS ───
+function addGlobalComment() {
+  const text = document.getElementById('globalComment').value.trim();
+  if (!text) return;
+  const author = document.getElementById('globalAuthor').value.trim() || 'Anonymous';
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  if (!c.globalComments) c.globalComments = [];
+  c.globalComments.push({ author, text, timestamp: fmtTime() });
+  c.updatedAt = new Date().toISOString();
+  saveDB(db);
+  document.getElementById('globalComment').value = '';
+  renderGlobalComments(c);
+}
+
+// ─── DOCS ───
+function openAddDocModal() { openModal('docModal'); ['fDocType','fDocName','fDocLink','fDocNotes'].forEach(id=>document.getElementById(id).value=''); }
+function saveDoc() {
+  const name = document.getElementById('fDocName').value.trim();
+  if (!name) { alert('Document name is required.'); return; }
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  if (!c.docs) c.docs = [];
+  c.docs.push({
+    type: document.getElementById('fDocType').value.trim(),
+    name,
+    link: document.getElementById('fDocLink').value.trim(),
+    notes: document.getElementById('fDocNotes').value.trim(),
+    date: new Date().toLocaleDateString()
+  });
+  c.updatedAt = new Date().toISOString();
+  saveDB(db);
+  closeModal('docModal');
+  renderDocs(c);
+}
+function deleteDoc(idx) {
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  c.docs.splice(idx, 1);
+  c.updatedAt = new Date().toISOString();
+  saveDB(db);
+  renderDocs(c);
+}
+
+// ─── DELETE CLIENT ───
+function confirmDeleteClient() { openModal('confirmOverlay'); document.getElementById('confirmDesc').textContent = `Delete "${loadDB().clients.find(x=>x.id===currentClientId)?.name}"? This cannot be undone.`; }
+function deleteCurrentClient() {
+  const db = loadDB();
+  db.clients = db.clients.filter(x => x.id !== currentClientId);
+  saveDB(db);
+  closeModal('confirmOverlay');
+  showDashboard();
+}
+
+// ─── TABS ───
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── MODAL HELPERS ───
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
+
+// ─── PDF EXPORT ───
+function exportPDF() {
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  
+  let y = 20;
+  doc.setFontSize(18);
+  doc.setFont('helvetica','bold');
+  doc.text(c.name + ' — Integration Status', 20, y);
+  y += 10;
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(100);
+  doc.text(`CMMS: ${c.cmmsType||'—'}  |  CRX: ${c.crxConsultant||'—'}  |  Client POC: ${c.clientPoc||'—'}  |  Status: ${c.overallStatus||'Active'}`, 20, y);
+  y += 4;
+  doc.text('Generated: ' + new Date().toLocaleString(), 20, y);
+  y += 10;
+
+  c.sections.forEach(sec => {
+    if (y > 180) { doc.addPage(); y = 20; }
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(13);
+    doc.setTextColor(0);
+    doc.text(sec.label, 20, y); y += 8;
+    sec.phases.forEach(ph => {
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.setTextColor(60,80,160);
+      doc.text(ph.label, 25, y); y += 6;
+      ph.tasks.forEach(t => {
+        if (y > 185) { doc.addPage(); y = 20; }
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        doc.text(`• ${t.name}`, 30, y);
+        doc.setTextColor(80);
+        doc.text(statusLabel(t.status), 130, y);
+        y += 6;
+      });
+      y += 2;
+    });
+    y += 4;
+  });
+
+  if (c.docs && c.docs.length) {
+    if (y > 170) { doc.addPage(); y = 20; }
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(0);
+    doc.text('Documents', 20, y); y += 8;
+    c.docs.forEach(d => {
+      if (y > 185) { doc.addPage(); y = 20; }
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`[${d.type||'—'}] ${d.name} — ${d.date||''}`, 25, y); y += 6;
+    });
+  }
+
+  doc.save(`${c.name.replace(/\s+/g,'_')}_integration_status.pdf`);
+}
+
+// ─── UTILS ───
+function esc(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtTime() {
+  return new Date().toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
+}
+
+// ─── INIT ───
+renderDashboard();
+</script>
+</body>
+</html>
