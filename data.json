@@ -996,7 +996,7 @@
       "startDate": "2026-01-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:41:30.681Z",
-      "updatedAt": "2026-05-07T17:42:00.109Z",
+      "updatedAt": "2026-05-07T17:42:01.633Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1075,7 +1075,7 @@
                 {
                   "id": "l3",
                   "name": "Asset Setup",
-                  "status": "not-started",
+                  "status": "not-required",
                   "comments": []
                 },
                 {
