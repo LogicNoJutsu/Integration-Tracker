@@ -387,7 +387,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:12.397Z",
-      "updatedAt": "2026-05-07T16:44:38.192Z",
+      "updatedAt": "2026-05-07T16:45:10.325Z",
       "sections": [
         {
           "id": "test_instance",
@@ -413,7 +413,13 @@
                   "id": "t3",
                   "name": "Asset Setup",
                   "status": "pending-client",
-                  "comments": []
+                  "comments": [
+                    {
+                      "author": "VG",
+                      "text": "Clear all the asset subtypes being received from client side is coming in as general we have updated declined for the same as mapping will not be possible if everything is received as general.",
+                      "timestamp": "May 7, 2026, 12:45 PM"
+                    }
+                  ]
                 },
                 {
                   "id": "t4",
