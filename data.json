@@ -319,12 +319,12 @@
       "name": "Madison Health",
       "cmmsType": "CereCore",
       "crxConsultant": "Clay, kevin",
-      "clientPoc": "",
+      "clientPoc": "Rathan, Annica",
       "overallStatus": "Active",
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:36:37.004Z",
-      "updatedAt": "2026-05-07T17:36:58.632Z",
+      "updatedAt": "2026-05-07T17:38:48.476Z",
       "sections": [
         {
           "id": "test_instance",
