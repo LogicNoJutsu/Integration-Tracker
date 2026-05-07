@@ -9,7 +9,7 @@
       "overallStatus": "Active",
       "startDate": "2026-03-02",
       "createdAt": "2026-05-07T15:28:47.055Z",
-      "updatedAt": "2026-05-07T16:47:44.648Z",
+      "updatedAt": "2026-05-07T17:29:33.566Z",
       "sections": [
         {
           "id": "test_instance",
@@ -127,7 +127,13 @@
         }
       ],
       "docs": [],
-      "globalComments": [],
+      "globalComments": [
+        {
+          "author": "VG",
+          "text": "Asset mapping shared with Kevin and he has completed the asset mapping",
+          "timestamp": "May 7, 2026, 1:29 PM"
+        }
+      ],
       "expectedDate": ""
     },
     {
