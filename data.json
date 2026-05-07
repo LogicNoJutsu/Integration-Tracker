@@ -605,7 +605,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:49.957Z",
-      "updatedAt": "2026-05-07T16:51:14.259Z",
+      "updatedAt": "2026-05-07T18:38:29.043Z",
       "sections": [
         {
           "id": "test_instance",
@@ -751,7 +751,15 @@
         }
       ],
       "docs": [],
-      "globalComments": []
+      "globalComments": [
+        {
+          "author": "VG",
+          "text": "I'm not sure which is the category and subcategory, but the equipment type description is Lighting Fixtures. and the description has exit signs, exit lights, and emergency lights. The second example is equipment type description is Electrical with description listing ATS, generators, and emergency lights,",
+          "timestamp": "May 7, 2026, 2:38 PM",
+          "isTask": true,
+          "_ts": 1778179109043
+        }
+      ]
     },
     {
       "id": "c_1778171955224",
