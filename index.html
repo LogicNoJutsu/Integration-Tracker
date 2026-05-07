@@ -3,12 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRX Integration Tracker</title>
+<title>CRx Integration Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Aptos:wght@300;400;500;600;700&family=Aptos+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Aptos fallback via Noto Sans which is the closest available on Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
+  /* Aptos is a Microsoft font; use it if installed, otherwise Noto Sans is the closest match */
   :root {
+    --font-body: 'Aptos', 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+    --font-display: 'Aptos Display', 'Noto Sans Display', 'Segoe UI', system-ui, sans-serif;
+
     --bg: #0d0f14;
     --surface: #151820;
     --surface2: #1c2030;
@@ -20,28 +26,24 @@
     --text2: #8892b0;
     --text3: #4a5580;
 
-    --ns: #3a3f5c;       /* Not Started */
-    --ns-text: #8892b0;
-    --ip: #1a3a6a;       /* In Progress */
-    --ip-text: #4f9fff;
-    --done: #0d3322;     /* Completed */
-    --done-text: #00e5a0;
-    --pfc: #3a2a00;      /* Pending From Client */
-    --pfc-text: #ffb830;
-    --cbd: #3a1a1a;      /* Cannot Be Done */
-    --cbd-text: #ff5a5a;
-    --nr: #1a1a3a;       /* Not Required */
-    --nr-text: #7878c0;
+    --ns: #2e3350;       --ns-text: #8892b0;
+    --ip: #0f2d5e;       --ip-text: #5aaeff;
+    --done: #0a2e20;     --done-text: #00d48a;
+    --pfc: #332500;      --pfc-text: #ffb020;
+    --cbd: #2e1010;      --cbd-text: #ff4f4f;
+    --nr: #16163a;       --nr-text: #7070c8;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     overflow-x: hidden;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
   /* ─── HEADER ─── */
@@ -52,514 +54,366 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 60px;
+    height: 58px;
     position: sticky;
     top: 0;
     z-index: 100;
   }
   .app-logo {
-    font-family: 'Syne', sans-serif;
+    font-family: var(--font-display);
     font-weight: 800;
-    font-size: 18px;
-    letter-spacing: 0.05em;
+    font-size: 17px;
+    letter-spacing: 0.01em;
     color: var(--accent);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
   }
-  .app-logo span { color: var(--text); }
-  .header-actions { display: flex; gap: 10px; }
+  .app-logo .logo-crx { color: var(--accent); }
+  .app-logo .logo-rest { color: var(--text2); font-weight: 400; }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+
+  /* GitHub sync status */
+  .sync-status {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: default;
+  }
+  .sync-status.syncing { color: var(--ip-text); border-color: var(--ip-text); }
+  .sync-status.synced { color: var(--done-text); border-color: var(--done-text); }
+  .sync-status.error { color: var(--cbd-text); border-color: var(--cbd-text); }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   /* ─── BUTTONS ─── */
   .btn {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
+    font-family: var(--font-body);
+    font-size: 13px;
     padding: 7px 16px;
-    border-radius: 6px;
+    border-radius: 7px;
     border: 1px solid var(--border);
     cursor: pointer;
     transition: all 0.15s;
     font-weight: 500;
-    letter-spacing: 0.03em;
   }
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
-  .btn-primary:hover { background: #3d6aee; }
-  .btn-ghost {
-    background: transparent;
-    color: var(--text2);
-  }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: #3b6aee; }
+  .btn-ghost { background: transparent; color: var(--text2); }
   .btn-ghost:hover { background: var(--surface2); color: var(--text); }
-  .btn-accent2 {
-    background: transparent;
-    color: var(--accent2);
-    border-color: var(--accent2);
-  }
+  .btn-accent2 { background: transparent; color: var(--accent2); border-color: var(--accent2); }
   .btn-accent2:hover { background: rgba(0,229,192,0.08); }
-  .btn-danger {
-    background: transparent;
-    color: #ff5a5a;
-    border-color: #ff5a5a;
-  }
-  .btn-danger:hover { background: rgba(255,90,90,0.1); }
-  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn-danger { background: transparent; color: #ff4f4f; border-color: #ff4f4f; }
+  .btn-danger:hover { background: rgba(255,79,79,0.1); }
+  .btn-sm { padding: 4px 11px; font-size: 12px; }
+  .btn-xs { padding: 3px 8px; font-size: 11px; }
 
   /* ─── VIEWS ─── */
   .view { display: none; }
   .view.active { display: block; }
 
   /* ─── DASHBOARD ─── */
-  .dashboard {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 40px 32px;
-  }
+  .dashboard { max-width: 1440px; margin: 0 auto; padding: 36px 32px; }
   .dash-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 32px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 28px;
   }
-  .dash-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 28px;
-    font-weight: 700;
-  }
-  .dash-sub { color: var(--text2); font-size: 12px; margin-top: 4px; }
+  .dash-title { font-family: var(--font-display); font-size: 26px; font-weight: 800; }
+  .dash-sub { color: var(--text2); font-size: 13px; margin-top: 3px; }
+  .dash-actions { display: flex; gap: 10px; }
 
   .client-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 18px;
   }
 
   .client-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 24px;
+    padding: 22px 24px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.18s;
     position: relative;
     overflow: hidden;
   }
   .client-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
+    top: 0; left: 0; right: 0; height: 3px;
     background: linear-gradient(90deg, var(--accent), var(--accent2));
-    opacity: 0;
-    transition: opacity 0.2s;
+    opacity: 0; transition: opacity 0.18s;
   }
-  .client-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .client-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
   .client-card:hover::before { opacity: 1; }
 
-  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-  .card-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-  }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .card-name { font-family: var(--font-display); font-size: 17px; font-weight: 700; }
   .card-cmms {
-    font-size: 11px;
-    background: var(--surface3);
-    color: var(--accent);
-    padding: 3px 9px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
+    font-size: 11px; background: var(--surface3); color: var(--accent);
+    padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border); white-space: nowrap;
   }
-  .card-meta { color: var(--text2); font-size: 11px; margin-bottom: 14px; line-height: 1.8; }
+  .card-meta { color: var(--text2); font-size: 12px; margin-bottom: 12px; line-height: 1.9; }
   .card-meta strong { color: var(--text); }
+  .card-last-updated {
+    font-size: 11px; color: var(--text3);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 5px; padding: 3px 8px; display: inline-block; margin-bottom: 12px;
+  }
 
   .progress-section { margin-bottom: 10px; }
   .progress-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: var(--text3);
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--text3); margin-bottom: 5px;
   }
-  .progress-bar {
-    height: 4px;
-    background: var(--surface3);
-    border-radius: 2px;
-    overflow: hidden;
-  }
+  .progress-bar { height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
   .progress-fill {
-    height: 100%;
+    height: 100%; border-radius: 2px;
     background: linear-gradient(90deg, var(--accent), var(--accent2));
-    border-radius: 2px;
     transition: width 0.5s ease;
   }
 
-  .status-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
-  .pill {
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-weight: 500;
+  .status-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+  .pill { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+
+  .card-actions {
+    display: flex; gap: 8px; margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid var(--border); align-items: center;
   }
 
-  .card-actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-
-  /* ─── ADD CLIENT MODAL ─── */
+  /* ─── MODALS ─── */
   .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(5px);
     z-index: 200;
-    display: none;
-    align-items: center;
-    justify-content: center;
+    display: none; align-items: center; justify-content: center;
   }
   .modal-overlay.open { display: flex; }
   .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px;
-    width: 560px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px;
+    width: 580px; max-height: 90vh; overflow-y: auto; position: relative;
   }
   .modal-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 24px;
+    font-family: var(--font-display); font-size: 19px; font-weight: 700; margin-bottom: 22px;
   }
   .modal-close {
-    position: absolute;
-    top: 16px; right: 16px;
-    background: none; border: none;
-    color: var(--text2); cursor: pointer;
-    font-size: 20px; line-height: 1;
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none; color: var(--text2); cursor: pointer; font-size: 22px; line-height: 1;
   }
   .modal-close:hover { color: var(--text); }
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .form-group { margin-bottom: 16px; }
+  .form-group { margin-bottom: 14px; }
   .form-group.full { grid-column: 1 / -1; }
   label {
-    display: block;
-    font-size: 11px;
-    color: var(--text2);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 6px;
+    display: block; font-size: 11px; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; font-weight: 600;
   }
   input, select, textarea {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 9px 12px;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    outline: none;
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; color: var(--text);
+    font-family: var(--font-body); font-size: 13px; outline: none;
     transition: border-color 0.15s;
   }
   input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   select option { background: var(--surface2); }
   textarea { resize: vertical; min-height: 80px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
 
-  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
-
-  /* ─── CLIENT DETAIL VIEW ─── */
-  .detail-view {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 32px;
+  /* ─── GITHUB SETUP MODAL ─── */
+  .github-modal .modal { width: 560px; }
+  .github-info {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; margin-bottom: 18px;
+    font-size: 12px; color: var(--text2); line-height: 1.7;
   }
+  .github-info a { color: var(--accent); }
+  .github-info code {
+    background: var(--surface3); padding: 1px 6px; border-radius: 3px;
+    font-size: 11px; color: var(--accent2);
+  }
+
+  /* ─── CLIENT DETAIL ─── */
+  .detail-view { max-width: 1440px; margin: 0 auto; padding: 28px 32px; }
   .breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--text2);
-    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text2); margin-bottom: 20px;
   }
   .breadcrumb a { color: var(--accent); cursor: pointer; text-decoration: none; }
   .breadcrumb a:hover { text-decoration: underline; }
   .breadcrumb span { color: var(--text3); }
 
   .detail-header {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px 32px;
-    margin-bottom: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px 28px; margin-bottom: 20px;
   }
   .detail-header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;
   }
-  .detail-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 26px;
-    font-weight: 800;
-  }
-  .detail-meta-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-  }
-  .meta-item label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-  .meta-item .val { font-size: 14px; color: var(--text); }
+  .detail-name { font-family: var(--font-display); font-size: 24px; font-weight: 800; }
+  .detail-meta-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
+  .meta-item label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 3px; }
+  .meta-item .val { font-size: 14px; color: var(--text); font-weight: 500; }
 
   /* ─── TABS ─── */
   .tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 24px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 5px;
-    width: fit-content;
+    display: flex; gap: 3px; margin-bottom: 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 4px; width: fit-content;
   }
   .tab {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    padding: 7px 18px;
-    border-radius: 7px;
-    border: none;
-    cursor: pointer;
-    background: transparent;
-    color: var(--text2);
-    transition: all 0.15s;
-    font-weight: 500;
+    font-family: var(--font-body); font-size: 13px; padding: 6px 18px;
+    border-radius: 7px; border: none; cursor: pointer;
+    background: transparent; color: var(--text2); transition: all 0.15s; font-weight: 500;
   }
-  .tab.active {
-    background: var(--accent);
-    color: #fff;
-  }
+  .tab.active { background: var(--accent); color: #fff; }
   .tab:hover:not(.active) { background: var(--surface2); color: var(--text); }
-
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
   /* ─── INTEGRATION TABLE ─── */
   .section-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    margin-bottom: 16px;
-    overflow: hidden;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 14px; overflow: hidden;
   }
   .section-title {
-    background: var(--surface2);
-    padding: 12px 20px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--accent2);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    background: var(--surface2); padding: 11px 18px;
+    font-family: var(--font-display); font-size: 12px; font-weight: 700;
+    color: var(--accent2); text-transform: uppercase; letter-spacing: 0.07em;
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .section-tag {
-    font-size: 10px;
-    color: var(--text3);
-    font-family: 'DM Mono', monospace;
-    font-weight: 400;
-    text-transform: none;
-    letter-spacing: 0;
   }
 
   table { width: 100%; border-collapse: collapse; }
   th {
-    background: var(--surface3);
-    padding: 10px 16px;
-    text-align: left;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text3);
-    font-weight: 500;
+    background: var(--surface3); padding: 9px 14px;
+    text-align: left; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--text3); font-weight: 600;
     border-bottom: 1px solid var(--border);
   }
-  td {
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(42,48,80,0.5);
-    font-size: 13px;
-    vertical-align: middle;
-  }
+  td { padding: 10px 14px; border-bottom: 1px solid rgba(42,48,80,0.4); font-size: 13px; vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: rgba(79,124,255,0.03); }
-
-  .task-name { color: var(--text2); }
+  .task-name { color: var(--text2); font-weight: 400; }
 
   .status-select {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    border: 1px solid transparent;
-    cursor: pointer;
-    font-weight: 500;
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
+    font-family: var(--font-body); font-size: 11px; font-weight: 600;
+    padding: 4px 24px 4px 10px; border-radius: 20px; border: 1px solid transparent;
+    cursor: pointer; outline: none; appearance: none; -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892b0'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    padding-right: 24px;
+    background-repeat: no-repeat; background-position: right 8px center;
   }
-
   .s-not-started { background: var(--ns); color: var(--ns-text); border-color: rgba(136,146,176,0.2); }
   .s-in-progress { background: var(--ip); color: var(--ip-text); border-color: rgba(79,159,255,0.3); }
-  .s-completed { background: var(--done); color: var(--done-text); border-color: rgba(0,229,160,0.3); }
-  .s-pending-client { background: var(--pfc); color: var(--pfc-text); border-color: rgba(255,184,48,0.3); }
-  .s-cannot-be-done { background: var(--cbd); color: var(--cbd-text); border-color: rgba(255,90,90,0.3); }
-  .s-not-required { background: var(--nr); color: var(--nr-text); border-color: rgba(120,120,192,0.3); }
+  .s-completed { background: var(--done); color: var(--done-text); border-color: rgba(0,212,138,0.3); }
+  .s-pending-client { background: var(--pfc); color: var(--pfc-text); border-color: rgba(255,176,32,0.3); }
+  .s-cannot-be-done { background: var(--cbd); color: var(--cbd-text); border-color: rgba(255,79,79,0.3); }
+  .s-not-required { background: var(--nr); color: var(--nr-text); border-color: rgba(112,112,200,0.3); }
 
+  /* Comment cell layout */
+  .comment-cell { display: flex; flex-direction: column; gap: 5px; min-width: 240px; }
+  .comment-preview {
+    font-size: 11px; color: var(--text2); line-height: 1.4;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 9px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px;
+    display: none;
+  }
+  .comment-preview.visible { display: block; }
+  .comment-preview-author { color: var(--accent); font-weight: 600; margin-right: 4px; }
   .comment-btn {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 11px;
-    color: var(--text2);
-    cursor: pointer;
-    font-family: 'DM Mono', monospace;
-    transition: all 0.15s;
-    white-space: nowrap;
+    background: none; border: 1px solid var(--border); border-radius: 6px;
+    padding: 4px 10px; font-size: 11px; color: var(--text2);
+    cursor: pointer; font-family: var(--font-body);
+    transition: all 0.15s; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;
+    width: fit-content;
   }
   .comment-btn:hover { border-color: var(--accent); color: var(--accent); }
   .comment-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--accent);
-    color: #fff;
-    border-radius: 20px;
-    font-size: 9px;
-    padding: 1px 6px;
-    margin-left: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #fff; border-radius: 20px;
+    font-size: 9px; padding: 1px 6px;
   }
 
   /* ─── COMMENT MODAL ─── */
   .comment-modal .modal { width: 640px; }
   .comment-thread {
-    max-height: 320px;
-    overflow-y: auto;
-    margin-bottom: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    max-height: 340px; overflow-y: auto; margin-bottom: 16px;
+    display: flex; flex-direction: column; gap: 10px;
   }
   .comment-bubble {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px;
   }
   .comment-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: var(--text3);
-    margin-bottom: 5px;
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: var(--text3); margin-bottom: 5px;
   }
-  .comment-author { color: var(--accent); font-weight: 500; }
-  .comment-text { font-size: 12px; color: var(--text); line-height: 1.6; }
+  .comment-author { color: var(--accent); font-weight: 600; }
+  .comment-text { font-size: 13px; color: var(--text); line-height: 1.6; }
   .comment-input-row { display: flex; gap: 8px; align-items: flex-start; }
   .comment-input-row .name-in { width: 180px; flex-shrink: 0; }
   .comment-input-row textarea { flex: 1; min-height: 60px; }
-  .no-comments { color: var(--text3); font-size: 12px; text-align: center; padding: 24px; }
+  .no-comments { color: var(--text3); font-size: 12px; text-align: center; padding: 28px; }
 
-  /* ─── DOCS TAB ─── */
-  .docs-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
+  /* ─── DOCS ─── */
+  .docs-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
   .docs-toolbar {
-    padding: 16px 20px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface2);
+    padding: 14px 18px; display: flex; gap: 10px; align-items: center;
+    border-bottom: 1px solid var(--border); background: var(--surface2);
   }
-  .docs-table th, .docs-table td { padding: 10px 16px; }
-  .doc-link { color: var(--accent); text-decoration: none; font-size: 12px; }
+  .docs-table th, .docs-table td { padding: 10px 14px; }
+  .doc-link { color: var(--accent); text-decoration: none; font-size: 13px; }
   .doc-link:hover { text-decoration: underline; }
   .doc-type-badge {
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 20px;
-    background: var(--surface3);
-    color: var(--text2);
-    border: 1px solid var(--border);
+    font-size: 10px; padding: 2px 8px; border-radius: 20px;
+    background: var(--surface3); color: var(--text2); border: 1px solid var(--border);
   }
   .doc-date { color: var(--text3); font-size: 11px; }
 
   /* ─── GLOBAL COMMENTS ─── */
-  .global-chat {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
+  .global-chat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
   .chat-messages {
-    padding: 20px;
-    max-height: 450px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-height: 200px;
+    padding: 18px; max-height: 440px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px; min-height: 200px;
   }
   .chat-input-area {
-    border-top: 1px solid var(--border);
-    padding: 16px 20px;
-    background: var(--surface2);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    border-top: 1px solid var(--border); padding: 14px 18px;
+    background: var(--surface2); display: flex; flex-direction: column; gap: 8px;
   }
   .chat-row { display: flex; gap: 10px; }
   .chat-row input { flex: 0 0 200px; }
-  .chat-row textarea { flex: 1; min-height: 50px; }
+  .chat-row textarea { flex: 1; min-height: 48px; }
 
-  /* ─── OVERVIEW BADGES ─── */
-  .overview-stats {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
-  }
+  /* ─── OVERVIEW STATS ─── */
+  .overview-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 16px;
-    text-align: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; text-align: center;
   }
-  .stat-num {
-    font-family: 'Syne', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 2px;
+  .stat-num { font-family: var(--font-display); font-size: 22px; font-weight: 800; margin-bottom: 2px; }
+  .stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ─── PDF SELECTOR MODAL ─── */
+  .pdf-modal .modal { width: 520px; }
+  .client-checklist { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; max-height: 340px; overflow-y: auto; }
+  .client-check-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; cursor: pointer;
+    transition: border-color 0.15s;
   }
-  .stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+  .client-check-item:hover { border-color: var(--accent); }
+  .client-check-item input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .client-check-name { font-weight: 600; font-size: 13px; }
+  .client-check-meta { font-size: 11px; color: var(--text2); margin-top: 1px; }
+  .pdf-select-all { display: flex; gap: 8px; margin-bottom: 8px; }
 
   /* ─── SCROLLBAR ─── */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -567,44 +421,44 @@
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
   /* ─── EMPTY STATE ─── */
-  .empty-state {
-    text-align: center;
-    padding: 80px 32px;
-    color: var(--text3);
-  }
+  .empty-state { text-align: center; padding: 80px 32px; color: var(--text3); }
   .empty-icon { font-size: 48px; margin-bottom: 16px; }
-  .empty-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
+  .empty-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
   .empty-desc { font-size: 13px; margin-bottom: 24px; }
 
-  /* DELETE confirm */
+  /* ─── CONFIRM DELETE ─── */
   .confirm-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
-    z-index: 300;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(5px); z-index: 300;
     display: none; align-items: center; justify-content: center;
   }
   .confirm-overlay.open { display: flex; }
   .confirm-box {
-    background: var(--surface);
-    border: 1px solid #ff5a5a;
-    border-radius: 12px;
-    padding: 28px;
-    width: 400px;
-    text-align: center;
+    background: var(--surface); border: 1px solid #ff4f4f;
+    border-radius: 12px; padding: 28px; width: 400px; text-align: center;
   }
-  .confirm-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-  .confirm-desc { color: var(--text2); font-size: 13px; margin-bottom: 24px; }
+  .confirm-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .confirm-desc { color: var(--text2); font-size: 13px; margin-bottom: 22px; }
   .confirm-actions { display: flex; gap: 10px; justify-content: center; }
 
   .last-updated-badge {
-    font-size: 11px;
-    color: var(--text3);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 10px;
+    font-size: 11px; color: var(--text3); background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
   }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 18px;
+    font-size: 13px; color: var(--text); z-index: 999;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.25s; pointer-events: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--done-text); }
+  .toast.error { border-color: var(--cbd-text); }
 
   @media print {
     .app-header, .breadcrumb, .tabs, .header-actions, .card-actions, .btn { display: none !important; }
@@ -615,15 +469,21 @@
 </head>
 <body>
 
-<!-- ═══════════════════ APP HEADER ═══════════════════ -->
+<!-- ═══════════════════ HEADER ═══════════════════ -->
 <header class="app-header">
-  <div class="app-logo">CRX <span>/ Integration Tracker</span></div>
+  <div class="app-logo">
+    <span class="logo-crx">CRx</span><span class="logo-rest">/ Integration Tracker</span>
+  </div>
   <div class="header-actions" id="headerActions">
+    <span class="sync-status" id="syncStatus" onclick="openGithubSetup()" title="Click to configure GitHub sync">
+      <span class="sync-dot"></span><span id="syncLabel">Not synced</span>
+    </span>
+    <button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">⚙ GitHub Sync</button>
     <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>
   </div>
 </header>
 
-<!-- ═══════════════════ DASHBOARD VIEW ═══════════════════ -->
+<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
 <div id="viewDashboard" class="view active">
   <div class="dashboard">
     <div class="dash-top">
@@ -631,15 +491,16 @@
         <div class="dash-title">Integration Dashboard</div>
         <div class="dash-sub">All active client integrations · Click a card to manage</div>
       </div>
-      <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>
+      <div class="dash-actions">
+        <button class="btn btn-accent2" onclick="openPdfModal(null)">↓ Export All PDF</button>
+        <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>
+      </div>
     </div>
-    <div class="client-grid" id="clientGrid">
-      <!-- populated by JS -->
-    </div>
+    <div class="client-grid" id="clientGrid"></div>
   </div>
 </div>
 
-<!-- ═══════════════════ CLIENT DETAIL VIEW ═══════════════════ -->
+<!-- ═══════════════════ CLIENT DETAIL ═══════════════════ -->
 <div id="viewDetail" class="view">
   <div class="detail-view">
     <div class="breadcrumb">
@@ -647,39 +508,36 @@
       <span>/</span>
       <span id="breadcrumbName">Client</span>
     </div>
-
     <div class="detail-header">
       <div class="detail-header-top">
         <div class="detail-name" id="detailName">—</div>
-        <div style="display:flex;gap:10px;align-items:center;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span class="last-updated-badge" id="detailUpdated">—</span>
           <button class="btn btn-ghost btn-sm" onclick="openEditClientModal()">Edit Info</button>
-          <button class="btn btn-accent2 btn-sm" onclick="exportPDF()">↓ PDF</button>
+          <button class="btn btn-accent2 btn-sm" onclick="openPdfModal('current')">↓ PDF</button>
           <button class="btn btn-danger btn-sm" onclick="confirmDeleteClient()">Delete</button>
         </div>
       </div>
       <div class="detail-meta-grid">
         <div class="meta-item"><label>CMMS Type</label><div class="val" id="detailCmms">—</div></div>
-        <div class="meta-item"><label>CRX Consultant</label><div class="val" id="detailCrx">—</div></div>
+        <div class="meta-item"><label>CRx Consultant</label><div class="val" id="detailCrx">—</div></div>
         <div class="meta-item"><label>Client POC</label><div class="val" id="detailPoc">—</div></div>
-        <div class="meta-item"><label>Status</label><div class="val" id="detailStatus">—</div></div>
+        <div class="meta-item"><label>Overall Status</label><div class="val" id="detailStatus">—</div></div>
+        <div class="meta-item"><label>Expected Completion</label><div class="val" id="detailExpected">—</div></div>
       </div>
     </div>
 
-    <!-- TABS -->
     <div class="tabs">
       <button class="tab active" onclick="switchTab('tabIntegration', this)">Integration Status</button>
       <button class="tab" onclick="switchTab('tabDocs', this)">Documents</button>
       <button class="tab" onclick="switchTab('tabComments', this)">Client Notes</button>
     </div>
 
-    <!-- TAB: Integration Status -->
     <div id="tabIntegration" class="tab-content active">
       <div class="overview-stats" id="overviewStats"></div>
       <div id="integrationSections"></div>
     </div>
 
-    <!-- TAB: Documents -->
     <div id="tabDocs" class="tab-content">
       <div class="docs-panel">
         <div class="docs-toolbar">
@@ -687,13 +545,7 @@
         </div>
         <table class="docs-table">
           <thead>
-            <tr>
-              <th>Doc Type</th>
-              <th>Document Name / Link</th>
-              <th>Date Added</th>
-              <th>Notes</th>
-              <th></th>
-            </tr>
+            <tr><th>Doc Type</th><th>Document Name / Link</th><th>Date Added</th><th>Notes</th><th></th></tr>
           </thead>
           <tbody id="docsTableBody"></tbody>
         </table>
@@ -701,16 +553,15 @@
       </div>
     </div>
 
-    <!-- TAB: Global Comments -->
     <div id="tabComments" class="tab-content">
       <div class="global-chat">
         <div class="chat-messages" id="globalChatMessages">
-          <div class="no-comments">No notes yet. Add the first one below.</div>
+          <div class="no-comments">No notes yet.</div>
         </div>
         <div class="chat-input-area">
           <div class="chat-row">
             <input type="text" id="globalAuthor" placeholder="Your name" style="flex:0 0 200px;">
-            <textarea id="globalComment" placeholder="Add a note or update..." style="flex:1;min-height:50px;"></textarea>
+            <textarea id="globalComment" placeholder="Add a note or update..." style="flex:1;min-height:48px;"></textarea>
           </div>
           <div style="display:flex;justify-content:flex-end;">
             <button class="btn btn-primary btn-sm" onclick="addGlobalComment()">Post Note</button>
@@ -721,7 +572,7 @@
   </div>
 </div>
 
-<!-- ═══════════════════ ADD/EDIT CLIENT MODAL ═══════════════════ -->
+<!-- ═══════════════════ CLIENT MODAL ═══════════════════ -->
 <div class="modal-overlay" id="clientModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('clientModal')">×</button>
@@ -736,7 +587,7 @@
         <input type="text" id="fCmmsType" placeholder="e.g. Maximo, Infor EAM">
       </div>
       <div class="form-group">
-        <label>CRX Consultant(s)</label>
+        <label>CRx Consultant(s)</label>
         <input type="text" id="fCrxConsultant" placeholder="Consultant name(s)">
       </div>
       <div class="form-group">
@@ -756,6 +607,10 @@
         <label>Start Date</label>
         <input type="date" id="fStartDate">
       </div>
+      <div class="form-group full">
+        <label>Expected Completion Date</label>
+        <input type="date" id="fExpectedDate">
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('clientModal')">Cancel</button>
@@ -764,7 +619,7 @@
   </div>
 </div>
 
-<!-- ═══════════════════ TASK COMMENT MODAL ═══════════════════ -->
+<!-- ═══════════════════ COMMENT MODAL ═══════════════════ -->
 <div class="modal-overlay comment-modal" id="commentModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('commentModal')">×</button>
@@ -781,30 +636,69 @@
   </div>
 </div>
 
-<!-- ═══════════════════ ADD DOC MODAL ═══════════════════ -->
+<!-- ═══════════════════ DOC MODAL ═══════════════════ -->
 <div class="modal-overlay" id="docModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('docModal')">×</button>
     <div class="modal-title">Add Document</div>
-    <div class="form-group">
-      <label>Doc Type</label>
-      <input type="text" id="fDocType" placeholder="e.g. SRS, Meeting Notes, Config">
-    </div>
-    <div class="form-group">
-      <label>Document Name</label>
-      <input type="text" id="fDocName" placeholder="Document title / description">
-    </div>
-    <div class="form-group">
-      <label>Document Link (URL)</label>
-      <input type="url" id="fDocLink" placeholder="https://...">
-    </div>
-    <div class="form-group">
-      <label>Notes</label>
-      <textarea id="fDocNotes" placeholder="Any notes about this document..."></textarea>
-    </div>
+    <div class="form-group"><label>Doc Type</label><input type="text" id="fDocType" placeholder="e.g. SRS, Meeting Notes, Config"></div>
+    <div class="form-group"><label>Document Name</label><input type="text" id="fDocName" placeholder="Document title / description"></div>
+    <div class="form-group"><label>Document Link (URL)</label><input type="url" id="fDocLink" placeholder="https://..."></div>
+    <div class="form-group"><label>Notes</label><textarea id="fDocNotes" placeholder="Any notes about this document..."></textarea></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('docModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveDoc()">Add Document</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PDF SELECTOR MODAL ═══════════════════ -->
+<div class="modal-overlay pdf-modal" id="pdfModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('pdfModal')">×</button>
+    <div class="modal-title">Export to PDF</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Select the clients to include in the PDF export. All clients are selected by default.</p>
+    <div class="pdf-select-all">
+      <button class="btn btn-ghost btn-xs" onclick="pdfSelectAll(true)">Select All</button>
+      <button class="btn btn-ghost btn-xs" onclick="pdfSelectAll(false)">Deselect All</button>
+    </div>
+    <div class="client-checklist" id="pdfClientList"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('pdfModal')">Cancel</button>
+      <button class="btn btn-accent2" onclick="generateSelectedPDF()">↓ Generate PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ GITHUB SETUP MODAL ═══════════════════ -->
+<div class="modal-overlay github-modal" id="githubModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('githubModal')">×</button>
+    <div class="modal-title">⚙ GitHub Sync Setup</div>
+    <div class="github-info">
+      Your data will be saved as <code>data.json</code> in your GitHub repository every time you make a change.<br><br>
+      <strong>How to get a Personal Access Token:</strong><br>
+      1. Go to <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
+      2. Give it a name (e.g. "CRx Tracker")<br>
+      3. Check <code>repo</code> scope (full repository access)<br>
+      4. Click "Generate token" and copy it here
+    </div>
+    <div class="form-group">
+      <label>GitHub Username</label>
+      <input type="text" id="fGhUser" placeholder="your-github-username">
+    </div>
+    <div class="form-group">
+      <label>Repository Name</label>
+      <input type="text" id="fGhRepo" placeholder="crx-integration-tracker">
+    </div>
+    <div class="form-group">
+      <label>Personal Access Token</label>
+      <input type="password" id="fGhToken" placeholder="ghp_xxxxxxxxxxxx">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('githubModal')">Cancel</button>
+      <button class="btn btn-ghost" onclick="clearGithubConfig()">Clear Config</button>
+      <button class="btn btn-primary" onclick="saveGithubConfig()">Save &amp; Test Connection</button>
     </div>
   </div>
 </div>
@@ -813,7 +707,7 @@
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-box">
     <div class="confirm-title">Delete Client?</div>
-    <div class="confirm-desc" id="confirmDesc">This will permanently remove the client and all associated data.</div>
+    <div class="confirm-desc" id="confirmDesc">This will permanently remove the client and all data.</div>
     <div class="confirm-actions">
       <button class="btn btn-ghost" onclick="closeModal('confirmOverlay')">Cancel</button>
       <button class="btn btn-danger" onclick="deleteCurrentClient()">Yes, Delete</button>
@@ -821,9 +715,12 @@
   </div>
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast"><span id="toastIcon">✓</span><span id="toastMsg"></span></div>
+
 <script>
 // ═══════════════════════════════════════════════
-// DATA LAYER — localStorage persistence
+// DATA LAYER
 // ═══════════════════════════════════════════════
 const DB_KEY = 'crx_tracker_v2';
 
@@ -833,14 +730,13 @@ function loadDB() {
 }
 function saveDB(db) {
   localStorage.setItem(DB_KEY, JSON.stringify(db));
+  syncToGitHub(db);
 }
 
-// Default task sections for every new client
 function defaultSections() {
   return [
     {
-      id: 'test_instance',
-      label: 'CMMS Test Instance Integration',
+      id: 'test_instance', label: 'CMMS Test Instance Integration',
       phases: [
         { id: 'test_p1', label: 'Phase 1:', tasks: [
           { id: 't1', name: 'Initial Requirement', status: 'not-started', comments: [] },
@@ -855,8 +751,7 @@ function defaultSections() {
       ]
     },
     {
-      id: 'live_instance',
-      label: 'CMMS Live Instance Integration',
+      id: 'live_instance', label: 'CMMS Live Instance Integration',
       phases: [
         { id: 'live_p1', label: 'Phase 1:', tasks: [
           { id: 'l1', name: 'Initial Requirement', status: 'not-started', comments: [] },
@@ -874,11 +769,119 @@ function defaultSections() {
 }
 
 // ═══════════════════════════════════════════════
+// GITHUB SYNC
+// ═══════════════════════════════════════════════
+const GH_KEY = 'crx_github_config';
+let syncTimeout = null;
+
+function getGhConfig() {
+  try { return JSON.parse(localStorage.getItem(GH_KEY)) || null; }
+  catch { return null; }
+}
+
+function openGithubSetup() {
+  const cfg = getGhConfig();
+  if (cfg) {
+    document.getElementById('fGhUser').value = cfg.user || '';
+    document.getElementById('fGhRepo').value = cfg.repo || '';
+    document.getElementById('fGhToken').value = cfg.token || '';
+  }
+  openModal('githubModal');
+}
+
+function saveGithubConfig() {
+  const user = document.getElementById('fGhUser').value.trim();
+  const repo = document.getElementById('fGhRepo').value.trim();
+  const token = document.getElementById('fGhToken').value.trim();
+  if (!user || !repo || !token) { showToast('Please fill in all fields.', 'error'); return; }
+  localStorage.setItem(GH_KEY, JSON.stringify({ user, repo, token }));
+  closeModal('githubModal');
+  setSyncStatus('syncing', 'Testing…');
+  const db = loadDB();
+  syncToGitHub(db, true);
+}
+
+function clearGithubConfig() {
+  localStorage.removeItem(GH_KEY);
+  setSyncStatus('idle', 'Not synced');
+  closeModal('githubModal');
+  showToast('GitHub config cleared.', '');
+}
+
+function setSyncStatus(state, label) {
+  const el = document.getElementById('syncStatus');
+  const lbl = document.getElementById('syncLabel');
+  el.className = 'sync-status ' + state;
+  lbl.textContent = label;
+}
+
+let ghFileSha = null; // store current file SHA for updates
+
+async function syncToGitHub(db, isTest = false) {
+  const cfg = getGhConfig();
+  if (!cfg) return;
+
+  // Debounce — wait 1.5s after last change before syncing
+  if (syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async () => {
+    setSyncStatus('syncing', 'Syncing…');
+    try {
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2))));
+      const url = `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/data.json`;
+      const headers = {
+        'Authorization': `token ${cfg.token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json'
+      };
+
+      // Get current SHA if file exists
+      let sha = ghFileSha;
+      if (!sha) {
+        try {
+          const getRes = await fetch(url, { headers });
+          if (getRes.ok) {
+            const existing = await getRes.json();
+            sha = existing.sha;
+            ghFileSha = sha;
+          }
+        } catch {}
+      }
+
+      const body = { message: `CRx Tracker sync — ${new Date().toLocaleString()}`, content };
+      if (sha) body.sha = sha;
+
+      const res = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+      if (res.ok) {
+        const data = await res.json();
+        ghFileSha = data.content?.sha || sha;
+        setSyncStatus('synced', 'Synced ✓');
+        if (isTest) showToast('GitHub sync working! Data saved.', 'success');
+        // Reset to "synced" after 3s
+        setTimeout(() => setSyncStatus('synced', 'GitHub synced'), 3000);
+      } else {
+        const err = await res.json();
+        setSyncStatus('error', 'Sync failed');
+        if (isTest) showToast('Error: ' + (err.message || 'Check token/repo name.'), 'error');
+      }
+    } catch (e) {
+      setSyncStatus('error', 'Sync error');
+      if (isTest) showToast('Network error. Check connection.', 'error');
+    }
+  }, isTest ? 0 : 1500);
+}
+
+// On load, check if already configured
+window.addEventListener('load', () => {
+  const cfg = getGhConfig();
+  if (cfg) setSyncStatus('synced', 'GitHub configured');
+});
+
+// ═══════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════
 let currentClientId = null;
 let editingClientId = null;
-let commentContext = null; // { sectionId, phaseId, taskId }
+let commentContext = null;
 
 // ═══════════════════════════════════════════════
 // VIEWS
@@ -891,13 +894,19 @@ function showDashboard() {
   currentClientId = null;
   renderDashboard();
   showView('viewDashboard');
-  document.getElementById('headerActions').innerHTML = `<button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>`;
+  document.getElementById('headerActions').innerHTML = `
+    <span class="sync-status" id="syncStatus" onclick="openGithubSetup()" title="Click to configure GitHub sync">
+      <span class="sync-dot"></span><span id="syncLabel">Not synced</span>
+    </span>
+    <button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">⚙ GitHub Sync</button>
+    <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>`;
+  const cfg = getGhConfig();
+  if (cfg) setSyncStatus('synced', 'GitHub configured');
 }
 function showDetail(clientId) {
   currentClientId = clientId;
   renderDetail();
   showView('viewDetail');
-  document.getElementById('headerActions').innerHTML = `<button class="btn btn-ghost btn-sm" onclick="showDashboard()">← Dashboard</button>`;
 }
 
 // ═══════════════════════════════════════════════
@@ -922,16 +931,19 @@ function renderDashboard() {
     const pillsHtml = Object.entries(stats.byStatus)
       .filter(([,n]) => n > 0)
       .map(([s,n]) => `<span class="pill ${statusClass(s)}">${statusLabel(s)}: ${n}</span>`).join('');
+    const lastUpdated = c.updatedAt || c.createdAt;
+    const updatedStr = lastUpdated ? 'Updated ' + timeAgo(new Date(lastUpdated)) : '—';
     return `<div class="client-card" onclick="showDetail('${c.id}')">
       <div class="card-header">
         <div class="card-name">${esc(c.name)}</div>
         <span class="card-cmms">${esc(c.cmmsType || '—')}</span>
       </div>
       <div class="card-meta">
-        <strong>CRX:</strong> ${esc(c.crxConsultant || '—')}<br>
+        <strong>CRx Consultant:</strong> ${esc(c.crxConsultant || '—')}<br>
         <strong>Client POC:</strong> ${esc(c.clientPoc || '—')}<br>
-        <strong>Status:</strong> ${esc(c.overallStatus || 'Active')}
+        <strong>Status:</strong> ${esc(c.overallStatus || 'Active')}${c.expectedDate ? `<br><strong>Expected:</strong> ${esc(c.expectedDate)}` : ''}
       </div>
+      <div class="card-last-updated">🕐 ${esc(updatedStr)}</div>
       <div class="progress-section">
         <div class="progress-label"><span>Completion</span><span>${pct}%</span></div>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -939,10 +951,19 @@ function renderDashboard() {
       <div class="status-pills">${pillsHtml}</div>
       <div class="card-actions" onclick="event.stopPropagation()">
         <button class="btn btn-ghost btn-sm" onclick="showDetail('${c.id}')">Open →</button>
-        ${inProgress > 0 ? `<span style="font-size:11px;color:var(--ip-text);padding:4px 8px;background:var(--ip);border-radius:4px;">${inProgress} In Progress</span>` : ''}
+        ${inProgress > 0 ? `<span style="font-size:11px;color:var(--ip-text);padding:3px 8px;background:var(--ip);border-radius:4px;">${inProgress} In Progress</span>` : ''}
       </div>
     </div>`;
   }).join('');
+}
+
+function timeAgo(date) {
+  const secs = Math.floor((new Date() - date) / 1000);
+  if (secs < 60) return 'just now';
+  if (secs < 3600) return Math.floor(secs/60) + 'm ago';
+  if (secs < 86400) return Math.floor(secs/3600) + 'h ago';
+  if (secs < 604800) return Math.floor(secs/86400) + 'd ago';
+  return date.toLocaleDateString();
 }
 
 function computeStats(client) {
@@ -950,13 +971,7 @@ function computeStats(client) {
   client.sections.forEach(s => s.phases.forEach(p => p.tasks.forEach(t => {
     if (counts[t.status] !== undefined) counts[t.status]++;
   })));
-  const total = Object.values(counts).reduce((a,b)=>a+b,0);
-  return {
-    total,
-    completed: counts['completed'],
-    inProgress: counts['in-progress'],
-    byStatus: counts
-  };
+  return { total: Object.values(counts).reduce((a,b)=>a+b,0), completed: counts['completed'], inProgress: counts['in-progress'], byStatus: counts };
 }
 
 // ═══════════════════════════════════════════════
@@ -966,19 +981,15 @@ function renderDetail() {
   const db = loadDB();
   const c = db.clients.find(x => x.id === currentClientId);
   if (!c) { showDashboard(); return; }
-
   document.getElementById('breadcrumbName').textContent = c.name;
   document.getElementById('detailName').textContent = c.name;
   document.getElementById('detailCmms').textContent = c.cmmsType || '—';
   document.getElementById('detailCrx').textContent = c.crxConsultant || '—';
   document.getElementById('detailPoc').textContent = c.clientPoc || '—';
   document.getElementById('detailStatus').textContent = c.overallStatus || 'Active';
+  document.getElementById('detailExpected').textContent = c.expectedDate || '—';
   document.getElementById('detailUpdated').textContent = 'Updated: ' + new Date(c.updatedAt || c.createdAt).toLocaleDateString();
-
-  renderStats(c);
-  renderSections(c);
-  renderDocs(c);
-  renderGlobalComments(c);
+  renderStats(c); renderSections(c); renderDocs(c); renderGlobalComments(c);
 }
 
 function renderStats(c) {
@@ -993,10 +1004,7 @@ function renderStats(c) {
   };
   document.getElementById('overviewStats').innerHTML = Object.entries(stats.byStatus).map(([s,n]) => {
     const [label, color] = labels[s];
-    return `<div class="stat-box">
-      <div class="stat-num" style="color:${color}">${n}</div>
-      <div class="stat-label">${label}</div>
-    </div>`;
+    return `<div class="stat-box"><div class="stat-num" style="color:${color}">${n}</div><div class="stat-label">${label}</div></div>`;
   }).join('');
 }
 
@@ -1007,30 +1015,38 @@ function renderSections(c) {
       <div class="section-title">${esc(sec.label)}</div>
       ${sec.phases.map(ph => `
         <div>
-          <div style="padding:8px 16px 4px;font-size:11px;color:var(--accent2);font-weight:600;letter-spacing:0.05em;">${esc(ph.label)}</div>
+          <div style="padding:8px 14px 3px;font-size:11px;color:var(--accent2);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">${esc(ph.label)}</div>
           <table>
             <thead>
               <tr>
-                <th style="width:28%">Task</th>
-                <th style="width:20%">Status</th>
+                <th style="width:26%">Task</th>
+                <th style="width:22%">Status</th>
                 <th>Comments</th>
               </tr>
             </thead>
             <tbody>
               ${ph.tasks.map(t => {
-                const cc = t.comments ? t.comments.length : 0;
+                const comments = t.comments || [];
+                const cc = comments.length;
+                const latest = cc > 0 ? comments[comments.length - 1] : null;
+                const previewHtml = latest
+                  ? `<div class="comment-preview visible"><span class="comment-preview-author">${esc(latest.author||'Anon')}:</span>${esc(latest.text)}</div>`
+                  : '';
                 return `<tr>
                   <td class="task-name">${esc(t.name)}</td>
                   <td>
-                    <select class="status-select ${statusClass(t.status)}" 
-                      onchange="updateTaskStatus('${sec.id}','${ph.id}','${t.id}',this.value); updateSelectStyle(this)">
+                    <select class="status-select ${statusClass(t.status)}"
+                      onchange="updateTaskStatus('${sec.id}','${ph.id}','${t.id}',this.value);updateSelectStyle(this)">
                       ${statusOptions(t.status)}
                     </select>
                   </td>
                   <td>
-                    <button class="comment-btn" onclick="openCommentModal('${sec.id}','${ph.id}','${t.id}','${esc(t.name)}')">
-                      💬 Comments${cc > 0 ? `<span class="comment-count">${cc}</span>` : ''}
-                    </button>
+                    <div class="comment-cell">
+                      <button class="comment-btn" onclick="openCommentModal('${sec.id}','${ph.id}','${t.id}','${esc(t.name).replace(/'/g,"\\'")}')">
+                        💬 ${cc > 0 ? `<span class="comment-count">${cc}</span>` : 'Add comment'}
+                      </button>
+                      ${previewHtml}
+                    </div>
                   </td>
                 </tr>`;
               }).join('')}
@@ -1046,11 +1062,7 @@ function renderDocs(c) {
   const docs = c.docs || [];
   const tbody = document.getElementById('docsTableBody');
   const empty = document.getElementById('docsEmpty');
-  if (!docs.length) {
-    tbody.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
+  if (!docs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   tbody.innerHTML = docs.map((d,i) => `
     <tr>
@@ -1058,27 +1070,19 @@ function renderDocs(c) {
       <td>${d.link ? `<a class="doc-link" href="${esc(d.link)}" target="_blank">${esc(d.name||d.link)}</a>` : esc(d.name||'—')}</td>
       <td class="doc-date">${esc(d.date||'—')}</td>
       <td style="font-size:12px;color:var(--text2)">${esc(d.notes||'')}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteDoc(${i})">✕</button></td>
-    </tr>
-  `).join('');
+      <td><button class="btn btn-danger btn-xs" onclick="deleteDoc(${i})">✕</button></td>
+    </tr>`).join('');
 }
 
 function renderGlobalComments(c) {
   const msgs = document.getElementById('globalChatMessages');
   const comments = c.globalComments || [];
-  if (!comments.length) {
-    msgs.innerHTML = '<div class="no-comments">No notes yet. Add the first one below.</div>';
-    return;
-  }
+  if (!comments.length) { msgs.innerHTML = '<div class="no-comments">No notes yet.</div>'; return; }
   msgs.innerHTML = comments.map(cm => `
     <div class="comment-bubble">
-      <div class="comment-meta">
-        <span class="comment-author">${esc(cm.author||'Anonymous')}</span>
-        <span>${esc(cm.timestamp)}</span>
-      </div>
+      <div class="comment-meta"><span class="comment-author">${esc(cm.author||'Anonymous')}</span><span>${esc(cm.timestamp)}</span></div>
       <div class="comment-text">${esc(cm.text)}</div>
-    </div>
-  `).join('');
+    </div>`).join('');
   msgs.scrollTop = msgs.scrollHeight;
 }
 
@@ -1086,12 +1090,8 @@ function renderGlobalComments(c) {
 // STATUS HELPERS
 // ═══════════════════════════════════════════════
 const STATUS_MAP = {
-  'not-started': 'Not Started',
-  'in-progress': 'In Progress',
-  'completed': 'Completed',
-  'pending-client': 'Pending From Client',
-  'cannot-be-done': 'Cannot Be Done',
-  'not-required': 'Not Required',
+  'not-started': 'Not Started', 'in-progress': 'In Progress', 'completed': 'Completed',
+  'pending-client': 'Pending From Client', 'cannot-be-done': 'Cannot Be Done', 'not-required': 'Not Required',
 };
 function statusLabel(s) { return STATUS_MAP[s] || s; }
 function statusClass(s) {
@@ -1099,12 +1099,9 @@ function statusClass(s) {
     'pending-client':'s-pending-client','cannot-be-done':'s-cannot-be-done','not-required':'s-not-required' }[s] || '';
 }
 function statusOptions(cur) {
-  return Object.entries(STATUS_MAP).map(([v,l]) =>
-    `<option value="${v}" ${cur===v?'selected':''}>${l}</option>`).join('');
+  return Object.entries(STATUS_MAP).map(([v,l]) => `<option value="${v}" ${cur===v?'selected':''}>${l}</option>`).join('');
 }
-function updateSelectStyle(sel) {
-  sel.className = 'status-select ' + statusClass(sel.value);
-}
+function updateSelectStyle(sel) { sel.className = 'status-select ' + statusClass(sel.value); }
 
 // ═══════════════════════════════════════════════
 // ACTIONS
@@ -1112,25 +1109,20 @@ function updateSelectStyle(sel) {
 function updateTaskStatus(secId, phId, taskId, newStatus) {
   const db = loadDB();
   const c = db.clients.find(x => x.id === currentClientId);
-  const sec = c.sections.find(s => s.id === secId);
-  const ph = sec.phases.find(p => p.id === phId);
-  const task = ph.tasks.find(t => t.id === taskId);
-  task.status = newStatus;
+  c.sections.find(s=>s.id===secId).phases.find(p=>p.id===phId).tasks.find(t=>t.id===taskId).status = newStatus;
   c.updatedAt = new Date().toISOString();
   saveDB(db);
   renderStats(c);
-  renderDashboard();
   document.getElementById('detailUpdated').textContent = 'Updated: ' + new Date(c.updatedAt).toLocaleDateString();
 }
 
-// ─── ADD/EDIT CLIENT ───
+// ─── CLIENT ───
 function openAddClientModal() {
   editingClientId = null;
   document.getElementById('clientModalTitle').textContent = 'New Client Integration';
   document.getElementById('clientModalSaveBtn').textContent = 'Create Client';
-  ['fClientName','fCmmsType','fCrxConsultant','fClientPoc'].forEach(id => document.getElementById(id).value = '');
+  ['fClientName','fCmmsType','fCrxConsultant','fClientPoc','fStartDate','fExpectedDate'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('fOverallStatus').value = 'Active';
-  document.getElementById('fStartDate').value = '';
   openModal('clientModal');
 }
 function openEditClientModal() {
@@ -1145,42 +1137,35 @@ function openEditClientModal() {
   document.getElementById('fClientPoc').value = c.clientPoc || '';
   document.getElementById('fOverallStatus').value = c.overallStatus || 'Active';
   document.getElementById('fStartDate').value = c.startDate || '';
+  document.getElementById('fExpectedDate').value = c.expectedDate || '';
   openModal('clientModal');
 }
 function saveClient() {
   const name = document.getElementById('fClientName').value.trim();
-  if (!name) { alert('Client name is required.'); return; }
+  if (!name) { showToast('Client name is required.', 'error'); return; }
   const db = loadDB();
+  const fields = {
+    name,
+    cmmsType: document.getElementById('fCmmsType').value.trim(),
+    crxConsultant: document.getElementById('fCrxConsultant').value.trim(),
+    clientPoc: document.getElementById('fClientPoc').value.trim(),
+    overallStatus: document.getElementById('fOverallStatus').value,
+    startDate: document.getElementById('fStartDate').value,
+    expectedDate: document.getElementById('fExpectedDate').value,
+  };
   if (editingClientId) {
     const c = db.clients.find(x => x.id === editingClientId);
-    c.name = name;
-    c.cmmsType = document.getElementById('fCmmsType').value.trim();
-    c.crxConsultant = document.getElementById('fCrxConsultant').value.trim();
-    c.clientPoc = document.getElementById('fClientPoc').value.trim();
-    c.overallStatus = document.getElementById('fOverallStatus').value;
-    c.startDate = document.getElementById('fStartDate').value;
-    c.updatedAt = new Date().toISOString();
+    Object.assign(c, fields, { updatedAt: new Date().toISOString() });
   } else {
-    const c = {
-      id: 'c_' + Date.now(),
-      name, 
-      cmmsType: document.getElementById('fCmmsType').value.trim(),
-      crxConsultant: document.getElementById('fCrxConsultant').value.trim(),
-      clientPoc: document.getElementById('fClientPoc').value.trim(),
-      overallStatus: document.getElementById('fOverallStatus').value,
-      startDate: document.getElementById('fStartDate').value,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      sections: defaultSections(),
-      docs: [],
-      globalComments: []
-    };
-    db.clients.push(c);
+    db.clients.push({ id: 'c_' + Date.now(), ...fields,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      sections: defaultSections(), docs: [], globalComments: [] });
   }
   saveDB(db);
   closeModal('clientModal');
   if (editingClientId && currentClientId === editingClientId) renderDetail();
   renderDashboard();
+  showToast(editingClientId ? 'Client updated.' : 'Client created!', 'success');
 }
 
 // ─── TASK COMMENTS ───
@@ -1197,19 +1182,12 @@ function renderCommentThread() {
   const { secId, phId, taskId } = commentContext;
   const task = c.sections.find(s=>s.id===secId).phases.find(p=>p.id===phId).tasks.find(t=>t.id===taskId);
   const thread = document.getElementById('commentThread');
-  if (!task.comments || !task.comments.length) {
-    thread.innerHTML = '<div class="no-comments">No comments yet.</div>';
-    return;
-  }
+  if (!task.comments || !task.comments.length) { thread.innerHTML = '<div class="no-comments">No comments yet.</div>'; return; }
   thread.innerHTML = task.comments.map(cm => `
     <div class="comment-bubble">
-      <div class="comment-meta">
-        <span class="comment-author">${esc(cm.author||'Anonymous')}</span>
-        <span>${esc(cm.timestamp)}</span>
-      </div>
+      <div class="comment-meta"><span class="comment-author">${esc(cm.author||'Anonymous')}</span><span>${esc(cm.timestamp)}</span></div>
       <div class="comment-text">${esc(cm.text)}</div>
-    </div>
-  `).join('');
+    </div>`).join('');
   thread.scrollTop = thread.scrollHeight;
 }
 function saveComment() {
@@ -1226,10 +1204,10 @@ function saveComment() {
   saveDB(db);
   document.getElementById('commentText').value = '';
   renderCommentThread();
-  renderSections(c); // refresh comment counts
+  renderSections(c);
 }
 
-// ─── GLOBAL COMMENTS ───
+// ─── GLOBAL NOTES ───
 function addGlobalComment() {
   const text = document.getElementById('globalComment').value.trim();
   if (!text) return;
@@ -1248,115 +1226,166 @@ function addGlobalComment() {
 function openAddDocModal() { openModal('docModal'); ['fDocType','fDocName','fDocLink','fDocNotes'].forEach(id=>document.getElementById(id).value=''); }
 function saveDoc() {
   const name = document.getElementById('fDocName').value.trim();
-  if (!name) { alert('Document name is required.'); return; }
+  if (!name) { showToast('Document name is required.', 'error'); return; }
   const db = loadDB();
   const c = db.clients.find(x => x.id === currentClientId);
   if (!c.docs) c.docs = [];
-  c.docs.push({
-    type: document.getElementById('fDocType').value.trim(),
-    name,
-    link: document.getElementById('fDocLink').value.trim(),
-    notes: document.getElementById('fDocNotes').value.trim(),
-    date: new Date().toLocaleDateString()
-  });
+  c.docs.push({ type: document.getElementById('fDocType').value.trim(), name, link: document.getElementById('fDocLink').value.trim(), notes: document.getElementById('fDocNotes').value.trim(), date: new Date().toLocaleDateString() });
   c.updatedAt = new Date().toISOString();
-  saveDB(db);
-  closeModal('docModal');
-  renderDocs(c);
+  saveDB(db); closeModal('docModal'); renderDocs(c);
 }
 function deleteDoc(idx) {
   const db = loadDB();
   const c = db.clients.find(x => x.id === currentClientId);
-  c.docs.splice(idx, 1);
-  c.updatedAt = new Date().toISOString();
-  saveDB(db);
-  renderDocs(c);
+  c.docs.splice(idx, 1); c.updatedAt = new Date().toISOString(); saveDB(db); renderDocs(c);
 }
 
 // ─── DELETE CLIENT ───
-function confirmDeleteClient() { openModal('confirmOverlay'); document.getElementById('confirmDesc').textContent = `Delete "${loadDB().clients.find(x=>x.id===currentClientId)?.name}"? This cannot be undone.`; }
+function confirmDeleteClient() {
+  openModal('confirmOverlay');
+  document.getElementById('confirmDesc').textContent = `Delete "${loadDB().clients.find(x=>x.id===currentClientId)?.name}"? This cannot be undone.`;
+}
 function deleteCurrentClient() {
   const db = loadDB();
   db.clients = db.clients.filter(x => x.id !== currentClientId);
-  saveDB(db);
-  closeModal('confirmOverlay');
-  showDashboard();
+  saveDB(db); closeModal('confirmOverlay'); showDashboard();
 }
 
-// ─── TABS ───
+// ═══════════════════════════════════════════════
+// PDF EXPORT
+// ═══════════════════════════════════════════════
+function openPdfModal(mode) {
+  const db = loadDB();
+  let clientsToShow = db.clients;
+  // If 'current', pre-select only this client
+  const currentOnly = mode === 'current';
+
+  const list = document.getElementById('pdfClientList');
+  list.innerHTML = clientsToShow.map(c => `
+    <label class="client-check-item">
+      <input type="checkbox" name="pdfClient" value="${c.id}" ${(!currentOnly || c.id === currentClientId) ? 'checked' : ''}>
+      <div>
+        <div class="client-check-name">${esc(c.name)}</div>
+        <div class="client-check-meta">${esc(c.cmmsType||'—')} · ${esc(c.overallStatus||'Active')}</div>
+      </div>
+    </label>`).join('');
+  openModal('pdfModal');
+}
+
+function pdfSelectAll(val) {
+  document.querySelectorAll('#pdfClientList input[type=checkbox]').forEach(cb => cb.checked = val);
+}
+
+function generateSelectedPDF() {
+  const db = loadDB();
+  const selected = [...document.querySelectorAll('#pdfClientList input[type=checkbox]:checked')].map(cb => cb.value);
+  if (!selected.length) { showToast('Select at least one client.', 'error'); return; }
+  const clients = db.clients.filter(c => selected.includes(c.id));
+  closeModal('pdfModal');
+  buildPDF(clients);
+}
+
+function buildPDF(clients) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const pageW = 297, pageH = 210;
+  const margin = 18;
+
+  clients.forEach((c, ci) => {
+    if (ci > 0) doc.addPage();
+    let y = margin;
+
+    // Header bar
+    doc.setFillColor(15, 24, 32);
+    doc.rect(0, 0, pageW, 14, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(79,124,255);
+    doc.text('CRx Integration Tracker', margin, 9);
+    doc.setTextColor(136,146,176); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.text('Generated: ' + new Date().toLocaleString(), pageW - margin, 9, { align: 'right' });
+
+    y = 22;
+    doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(30,30,30);
+    doc.text(c.name, margin, y); y += 7;
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
+    const metaParts = [`CMMS: ${c.cmmsType||'—'}`, `CRx: ${c.crxConsultant||'—'}`, `Client POC: ${c.clientPoc||'—'}`, `Status: ${c.overallStatus||'Active'}`, c.expectedDate ? `Expected: ${c.expectedDate}` : ''].filter(Boolean);
+    doc.text(metaParts.join('   |   '), margin, y); y += 4;
+    doc.setDrawColor(200); doc.line(margin, y, pageW - margin, y); y += 6;
+
+    c.sections.forEach(sec => {
+      if (y > pageH - 20) { doc.addPage(); y = 22; }
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(0,180,150);
+      doc.text(sec.label, margin, y); y += 6;
+
+      sec.phases.forEach(ph => {
+        if (y > pageH - 16) { doc.addPage(); y = 22; }
+        doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(80,100,180);
+        doc.text(ph.label, margin + 4, y); y += 5;
+
+        ph.tasks.forEach(t => {
+          if (y > pageH - 10) { doc.addPage(); y = 22; }
+          // Row background alternating
+          const statusColors = {
+            'not-started': [58,63,92], 'in-progress': [15,45,94], 'completed': [10,46,32],
+            'pending-client': [51,37,0], 'cannot-be-done': [46,16,16], 'not-required': [22,22,58]
+          };
+          const [r,g,b] = statusColors[t.status] || [240,240,240];
+          doc.setFillColor(r,g,b);
+          doc.rect(margin + 8, y - 3.5, pageW - margin*2 - 8, 6, 'F');
+          doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(220);
+          doc.text('• ' + t.name, margin + 10, y);
+          doc.setFont('helvetica','bold');
+          doc.text(statusLabel(t.status), 175, y);
+
+          // Latest comment
+          const latest = t.comments && t.comments.length ? t.comments[t.comments.length-1] : null;
+          if (latest) {
+            doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(160);
+            const preview = latest.author + ': ' + latest.text.substring(0, 60) + (latest.text.length > 60 ? '…' : '');
+            doc.text(preview, 215, y);
+          }
+          y += 6.5;
+        });
+        y += 2;
+      });
+      y += 3;
+    });
+
+    // Page number
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(160);
+    doc.text(`Page ${ci+1} of ${clients.length}`, pageW/2, pageH - 5, { align: 'center' });
+  });
+
+  const filename = clients.length === 1
+    ? `${clients[0].name.replace(/\s+/g,'_')}_integration.pdf`
+    : `CRx_Integration_Report_${new Date().toLocaleDateString().replace(/\//g,'-')}.pdf`;
+  doc.save(filename);
+  showToast(`PDF exported (${clients.length} client${clients.length > 1 ? 's' : ''}).`, 'success');
+}
+
+// ═══════════════════════════════════════════════
+// TABS / MODALS / UTILS
+// ═══════════════════════════════════════════════
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(tabId).classList.add('active');
   btn.classList.add('active');
 }
-
-// ─── MODAL HELPERS ───
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
 
-// ─── PDF EXPORT ───
-function exportPDF() {
-  const db = loadDB();
-  const c = db.clients.find(x => x.id === currentClientId);
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  
-  let y = 20;
-  doc.setFontSize(18);
-  doc.setFont('helvetica','bold');
-  doc.text(c.name + ' — Integration Status', 20, y);
-  y += 10;
-  doc.setFontSize(10);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(100);
-  doc.text(`CMMS: ${c.cmmsType||'—'}  |  CRX: ${c.crxConsultant||'—'}  |  Client POC: ${c.clientPoc||'—'}  |  Status: ${c.overallStatus||'Active'}`, 20, y);
-  y += 4;
-  doc.text('Generated: ' + new Date().toLocaleString(), 20, y);
-  y += 10;
-
-  c.sections.forEach(sec => {
-    if (y > 180) { doc.addPage(); y = 20; }
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(13);
-    doc.setTextColor(0);
-    doc.text(sec.label, 20, y); y += 8;
-    sec.phases.forEach(ph => {
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(10);
-      doc.setTextColor(60,80,160);
-      doc.text(ph.label, 25, y); y += 6;
-      ph.tasks.forEach(t => {
-        if (y > 185) { doc.addPage(); y = 20; }
-        doc.setFont('helvetica','normal');
-        doc.setFontSize(10);
-        doc.setTextColor(0);
-        doc.text(`• ${t.name}`, 30, y);
-        doc.setTextColor(80);
-        doc.text(statusLabel(t.status), 130, y);
-        y += 6;
-      });
-      y += 2;
-    });
-    y += 4;
-  });
-
-  if (c.docs && c.docs.length) {
-    if (y > 170) { doc.addPage(); y = 20; }
-    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(0);
-    doc.text('Documents', 20, y); y += 8;
-    c.docs.forEach(d => {
-      if (y > 185) { doc.addPage(); y = 20; }
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(`[${d.type||'—'}] ${d.name} — ${d.date||''}`, 25, y); y += 6;
-    });
-  }
-
-  doc.save(`${c.name.replace(/\s+/g,'_')}_integration_status.pdf`);
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  const icon = document.getElementById('toastIcon');
+  const m = document.getElementById('toastMsg');
+  icon.textContent = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+  m.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3000);
 }
 
-// ─── UTILS ───
 function esc(str) {
   if (str == null) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
