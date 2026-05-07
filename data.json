@@ -605,7 +605,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:49.957Z",
-      "updatedAt": "2026-05-07T18:38:29.043Z",
+      "updatedAt": "2026-05-07T18:45:55.286Z",
       "sections": [
         {
           "id": "test_instance",
@@ -653,6 +653,12 @@
                       "author": "VG",
                       "text": "Joey Replied back on that email confirming if Iowa team wants To add CRX or any other text",
                       "timestamp": "May 7, 2026, 12:51 PM"
+                    },
+                    {
+                      "author": "VG",
+                      "text": "CRx Is now added as type code for work order request and work order creation This has been shared dev as well and they will verify the same at their end",
+                      "timestamp": "May 7, 2026, 2:45 PM",
+                      "isTask": false
                     }
                   ]
                 }
