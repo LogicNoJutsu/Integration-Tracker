@@ -996,7 +996,7 @@
       "startDate": "2026-01-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:41:30.681Z",
-      "updatedAt": "2026-05-07T17:41:49.461Z",
+      "updatedAt": "2026-05-07T17:41:51.082Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1027,7 +1027,7 @@
                 {
                   "id": "t4",
                   "name": "Work Order Setup",
-                  "status": "not-started",
+                  "status": "not-required",
                   "comments": []
                 }
               ]
