@@ -1,8 +1,8 @@
-# CRX Integration Tracker
+# CRx Integration Tracker
 
 A lightweight, single-file web application for tracking CMMS integration statuses across multiple clients — no backend, no database, no dependencies to install.
 
-> Built for CRX consultants to manage client integration workflows, document links, and team notes in one place.
+> Built for CRx consultants to manage client integration workflows, document links, and team notes in one place.
 
 ---
 
@@ -13,7 +13,7 @@ This app is a **single HTML file** — host it for free on GitHub Pages in under
 ### Step 1 — Create a GitHub Repository
 1. Go to [github.com](https://github.com) and sign in
 2. Click **"New repository"**
-3. Name it something like `crx-integration-tracker`
+3. Name it something like `CRx-integration-tracker`
 4. Set it to **Public** (required for free GitHub Pages)
 5. Click **"Create repository"**
 
@@ -30,7 +30,7 @@ This app is a **single HTML file** — host it for free on GitHub Pages in under
 4. Click **Save**
 5. Wait ~60 seconds, then your app will be live at:
    ```
-   https://YOUR-USERNAME.github.io/crx-integration-tracker/
+   https://YOUR-USERNAME.github.io/CRx-integration-tracker/
    ```
 
 ### Step 4 — Updating the App Later
@@ -49,7 +49,7 @@ Whenever you get an updated `index.html`:
 | Feature | Description |
 |---|---|
 | **Multi-client Dashboard** | Landing page showing all integrations with progress bars and status counts |
-| **Client Profiles** | Store Client Name, CMMS Type, CRX Consultant, Client POC, and Overall Status |
+| **Client Profiles** | Store Client Name, CMMS Type, CRx Consultant, Client POC, and Overall Status |
 | **Integration Task Table** | Full phase-by-phase task tracking (Test Instance + Live Instance) |
 | **6 Status Types** | Not Started · In Progress · Completed · Pending From Client · Cannot Be Done · Not Required |
 | **Per-task Comments** | Threaded comment log per task with author name and timestamp |
@@ -65,7 +65,7 @@ Whenever you get an updated `index.html`:
 
 ### Creating a New Client
 1. Click **"+ New Client"** from the dashboard
-2. Fill in Client Name (required), CMMS Type, CRX Consultant, Client POC, and Overall Status
+2. Fill in Client Name (required), CMMS Type, CRx Consultant, Client POC, and Overall Status
 3. Click **"Create Client"** — the client appears on the dashboard with all tasks defaulted to *Not Started*
 
 ### Managing Integration Status
@@ -98,7 +98,7 @@ Whenever you get an updated `index.html`:
 ## 🗂️ Project Structure
 
 ```
-crx-integration-tracker/
+CRx-integration-tracker/
 │
 ├── index.html          ← The entire application (rename from integration-tracker.html)
 └── README.md           ← This file
@@ -110,12 +110,12 @@ That's it. No `node_modules`, no build step, no config files.
 
 ## 💾 Data Storage
 
-All data is stored in your **browser's localStorage** under the key `crx_tracker_v2`.
+All data is stored in your **browser's localStorage** under the key `CRx_tracker_v2`.
 
 - Data is **per-browser** — opening the app in Chrome vs Firefox = separate data
 - Data is **per-device** — your work laptop and home laptop won't sync automatically
 - Data is **not affected by updates** to the HTML file
-- To back up your data: open browser DevTools → Application → Local Storage → copy the value of `crx_tracker_v2`
+- To back up your data: open browser DevTools → Application → Local Storage → copy the value of `CRx_tracker_v2`
 
 ---
 
@@ -136,4 +136,4 @@ Want to add more task items to the integration template? Find the `defaultSectio
 
 ## 📄 License
 
-Internal tool — for CRX team use.
+Internal tool — for CRx team use.
