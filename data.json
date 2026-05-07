@@ -387,7 +387,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:12.397Z",
-      "updatedAt": "2026-05-07T16:44:34.576Z",
+      "updatedAt": "2026-05-07T16:44:38.192Z",
       "sections": [
         {
           "id": "test_instance",
@@ -412,7 +412,7 @@
                 {
                   "id": "t3",
                   "name": "Asset Setup",
-                  "status": "not-started",
+                  "status": "pending-client",
                   "comments": []
                 },
                 {
