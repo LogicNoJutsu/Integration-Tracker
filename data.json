@@ -151,7 +151,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:35:53.549Z",
-      "updatedAt": "2026-05-07T17:33:50.582Z",
+      "updatedAt": "2026-05-07T17:34:23.718Z",
       "sections": [
         {
           "id": "test_instance",
@@ -164,7 +164,7 @@
                 {
                   "id": "t1",
                   "name": "Initial Requirement",
-                  "status": "not-started",
+                  "status": "in-progress",
                   "comments": []
                 },
                 {
