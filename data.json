@@ -340,7 +340,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:36:37.004Z",
-      "updatedAt": "2026-05-08T10:58:24.309Z",
+      "updatedAt": "2026-05-08T11:12:43.178Z",
       "sections": [
         {
           "id": "test_instance",
@@ -469,7 +469,8 @@
           "text": "Need to need to send an email Ratan for the locations where the campus value is still null on all the buildings so there needs to be some value generated over there this way we can have a complete data set to use it while testing",
           "timestamp": "May 8, 2026, 6:58 AM",
           "isTask": true,
-          "_ts": 1778237904309
+          "_ts": 1778237904309,
+          "taskStatus": "pending-client"
         }
       ]
     },
