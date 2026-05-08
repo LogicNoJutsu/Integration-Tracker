@@ -1376,7 +1376,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-08T17:56:16.593Z",
-      "updatedAt": "2026-05-08T18:02:42.478Z",
+      "updatedAt": "2026-05-08T18:04:42.030Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1510,6 +1510,13 @@
           "timestamp": "May 8, 2026, 2:02 PM",
           "isTask": false,
           "_ts": 1778263362478
+        },
+        {
+          "author": "VG",
+          "text": "Here’s the updated version with your additional point included naturally:\n\nThe second requirement from the Helen Keller team was to establish an integration between CRX and TMA. However, the version of TMA currently being used on their end does not provide any APIs, which prevents CRX from directly integrating with the system.\n\nOn the other hand, CRX does provide APIs that can be consumed externally to push and sync data into the platform. To achieve the desired integration, the client would need to develop a script or middleware process that can extract data from their TMA system. This data can be gathered in any preferred format, such as CSV or another structured format supported by their environment.\n\nThe script would then need to periodically call the CRX APIs and transmit the extracted data. Once the data is received by CRX, the platform will process and synchronize it accordingly.\n\nAdditionally, since the client will be consuming CRX APIs, it is important to ensure that the APIs are enhanced and updated based on the integration requirements. Currently, there are several issues and limitations within the existing CRX APIs that need to be addressed on our end to support a stable and scalable integration process.\n\nThis approach would be required in scenarios where the client system does not expose APIs for direct integration.",
+          "timestamp": "May 8, 2026, 2:04 PM",
+          "isTask": true,
+          "_ts": 1778263482030
         }
       ],
       "notifications": []
