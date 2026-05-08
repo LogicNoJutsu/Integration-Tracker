@@ -804,7 +804,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:39:15.224Z",
-      "updatedAt": "2026-05-08T11:39:38.972Z",
+      "updatedAt": "2026-05-08T11:40:09.287Z",
       "sections": [
         {
           "id": "test_instance",
@@ -830,7 +830,14 @@
                   "id": "t3",
                   "name": "Asset Setup",
                   "status": "in-progress",
-                  "comments": []
+                  "comments": [
+                    {
+                      "author": "VG",
+                      "text": "We have completed the asset mapping at our end currently and there were few questions that we had since all of their assets were not currently visible and all of those asset subcategories are not visible on the system We wanted to make sure that everything is there so we wanted to convey the same to the client",
+                      "timestamp": "May 8, 2026, 7:40 AM",
+                      "isTask": false
+                    }
+                  ]
                 },
                 {
                   "id": "t4",
