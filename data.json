@@ -1088,7 +1088,7 @@
       "startDate": "2026-01-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:41:30.681Z",
-      "updatedAt": "2026-05-08T11:44:02.682Z",
+      "updatedAt": "2026-05-08T12:24:08.609Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1215,7 +1215,15 @@
           "date": "5/8/2026"
         }
       ],
-      "globalComments": []
+      "globalComments": [
+        {
+          "author": "VG",
+          "text": "Currently everything is set up for them for the phase one part but for the Phase 2 we wanted to work on marking the deficiencies that I received in C and those deficiencies added in the system will not have the asset numbers on them because they don't So what we want to do is we want to treat them as deficiencies around deficiencies to be precise this way those deficiencies can be listed in CRX and based on the update from their end they will keep on updating there was an email shared by Omar that will be attached along with this",
+          "timestamp": "May 8, 2026, 8:24 AM",
+          "isTask": false,
+          "_ts": 1778243048609
+        }
+      ]
     }
   ]
 }
