@@ -25,17 +25,38 @@
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:16px;line-height:1.5;}
 
+
+  /* PAGE CONTENT FONT — header excluded */
+  :root { --page-font-size: 16px; }
+  .view, .dashboard, .detail-view, .setup-screen {
+    font-size: var(--page-font-size) !important;
+  }
+  .app-header, .app-header * {
+    font-size: unset !important;
+  }
+  .app-header .btn { font-size: 12px !important; }
+  .app-header .sync-status { font-size: 11px !important; }
+  .app-header .font-size-label { font-size: 11px !important; }
+  .app-header .font-toggle-btn { font-size: 13px !important; }
+
+
   /* HEADER */
   .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
-  .app-logo{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--accent);display:flex;align-items:center;gap:8px;}
-  .app-logo .logo-rest{color:var(--text2);font-weight:400;}
-  .view-only-badge{font-size:11px;background:rgba(255,176,32,0.15);color:#ffb020;border:1px solid rgba(255,176,32,0.3);border-radius:20px;padding:3px 10px;font-weight:600;letter-spacing:0.04em;}
-  .header-right{display:flex;gap:8px;align-items:center;}
-  .sync-status{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text3);display:flex;align-items:center;gap:5px;}
-  .sync-status.syncing{color:var(--ip-text);border-color:var(--ip-text);}
-  .sync-status.synced{color:var(--done-text);border-color:var(--done-text);}
-  .sync-status.error{color:var(--cbd-text);border-color:var(--cbd-text);}
-  .sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .header-left{display:flex;align-items:center;}
+  .app-logo-static{display:flex;align-items:center;gap:0;font-family:var(--font-display);}
+  .logo-crx-text{color:var(--accent);font-size:17px;font-weight:800;}
+  .logo-slash{color:var(--text3);font-size:15px;margin:0 3px;font-weight:400;}
+  .logo-module-name{color:var(--text2);font-size:14px;font-weight:500;font-family:var(--font-body);}
+  .switch-wrapper{position:relative;display:inline-block;margin-left:10px;}
+  .switch-btn{font-family:var(--font-body);font-size:11px;font-weight:500;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 8px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+  .switch-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--surface3);}
+  .module-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:200px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;flex-direction:column;overflow:hidden;}
+  .module-menu.open{display:flex;}
+  .module-menu-item{padding:11px 16px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border-bottom:1px solid var(--border);font-family:var(--font-body);}
+  .module-menu-item:last-child{border-bottom:none;}
+  .module-menu-item:hover{background:var(--surface2);color:var(--text);}
+  .module-menu-item.active{color:var(--accent);background:rgba(79,124,255,0.08);}
+  .view-only-badge{font-size:11px;background:rgba(255,176,32,0.15);color:#ffb020;border:1px solid rgba(255,176,32,0.3);border-radius:20px;padding:3px 10px;font-weight:600;letter-spacing:0.04em;margin-left:10px;}
 
   /* BUTTONS */
   .btn{font-family:var(--font-body);font-size:13px;padding:7px 14px;border-radius:7px;border:1px solid var(--border);cursor:pointer;transition:all 0.15s;font-weight:500;}
@@ -58,18 +79,6 @@
   .storage-warning-close{margin-left:auto;background:none;border:none;color:#ffb020;cursor:pointer;font-size:18px;line-height:1;}
 
 
-  /* MODULE DROPDOWN */
-  .module-dropdown{position:relative;display:inline-block;}
-  .module-btn{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--accent);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;transition:background 0.15s;}
-  .module-btn:hover{background:var(--surface2);}
-  .module-arrow{font-size:10px;color:var(--text3);margin-left:2px;}
-  .module-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:200px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:none;flex-direction:column;overflow:hidden;}
-  .module-menu.open{display:flex;}
-  .module-menu-item{padding:10px 16px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
-  .module-menu-item:last-child{border-bottom:none;}
-  .module-menu-item:hover{background:var(--surface2);color:var(--text);}
-  .module-menu-item.active{color:var(--accent);background:rgba(79,124,255,0.08);}
-  /* FONT TOGGLE */
   .font-toggle{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;}
   .font-toggle-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;padding:2px 6px;border-radius:4px;line-height:1;font-family:var(--font-body);transition:all 0.15s;}
   .font-toggle-btn:hover{background:var(--surface3);color:var(--text);}
@@ -261,17 +270,20 @@
 
 <!-- HEADER -->
 <header class="app-header">
-  <div class="module-dropdown" id="moduleDropdown">
-    <button class="module-btn" onclick="toggleModuleMenu()">
-      <span style="color:var(--accent)">CRx</span>
-      <span style="color:var(--text2);font-weight:400;" id="moduleLabel">/ Integration Tracker</span>
-      <span class="module-arrow">&#9662;</span>
-    </button>
-    <div class="module-menu" id="moduleMenu">
-      <div class="module-menu-item active" onclick="switchModule('integration')">&#128268; Integration Tracker</div>
-      <div class="module-menu-item" onclick="switchModule('sso')">&#128272; SSO Tracker</div>
+  <div class="header-left">
+    <div class="app-logo-static">
+      <span class="logo-crx-text">CRx</span>
+      <span class="logo-slash">/</span>
+      <span class="logo-module-name" id="moduleLabel">Integration Tracker</span>
+      <div class="switch-wrapper" id="moduleDropdown">
+        <button class="switch-btn" onclick="toggleModuleMenu()">Switch &#9662;</button>
+        <div class="module-menu" id="moduleMenu">
+          <div class="module-menu-item active" onclick="switchModule('integration')">&#128268; Integration Tracker</div>
+          <div class="module-menu-item" onclick="switchModule('sso')">&#128272; SSO Tracker</div>
+        </div>
+      </div>
+      <span class="view-only-badge">VIEW ONLY</span>
     </div>
-    <span class="view-only-badge" style="margin-left:10px;">VIEW ONLY</span>
   </div>
   <div class="header-right">
     <div class="font-toggle" title="Adjust font size">
@@ -1076,7 +1088,7 @@ let currentFontSize = parseInt(localStorage.getItem(FONT_KEY) || '16');
 
 function applyFontSize(size) {
   currentFontSize = Math.min(22, Math.max(12, size));
-  document.body.style.fontSize = currentFontSize + 'px';
+  document.documentElement.style.setProperty('--page-font-size', currentFontSize + 'px');
   localStorage.setItem(FONT_KEY, currentFontSize);
   const lbl = document.getElementById('fontSizeLabel');
   if (lbl) lbl.textContent = currentFontSize;
