@@ -1231,6 +1231,132 @@
           "_ts": 1778243062156
         }
       ]
+    },
+    {
+      "id": "c_1778248313695",
+      "name": "State of California",
+      "cmmsType": "WebTMA",
+      "crxConsultant": "Clay",
+      "clientPoc": "",
+      "clientPocEmail": "",
+      "overallStatus": "Active",
+      "startDate": "",
+      "expectedDate": "",
+      "createdAt": "2026-05-08T13:51:53.695Z",
+      "updatedAt": "2026-05-08T13:51:53.695Z",
+      "sections": [
+        {
+          "id": "test_instance",
+          "label": "CMMS Test Instance Integration",
+          "phases": [
+            {
+              "id": "test_p1",
+              "label": "Phase 1:",
+              "tasks": [
+                {
+                  "id": "t1",
+                  "name": "Initial Requirement",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "t2",
+                  "name": "Organizational Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "t3",
+                  "name": "Asset Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "t4",
+                  "name": "Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            },
+            {
+              "id": "test_p2",
+              "label": "Phase 2: Advanced Setup",
+              "tasks": [
+                {
+                  "id": "t5",
+                  "name": "PM Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "t6",
+                  "name": "Automated Asset Reports",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "live_instance",
+          "label": "CMMS Live Instance Integration",
+          "phases": [
+            {
+              "id": "live_p1",
+              "label": "Phase 1:",
+              "tasks": [
+                {
+                  "id": "l1",
+                  "name": "Initial Requirement",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l2",
+                  "name": "Organizational Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l3",
+                  "name": "Asset Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l4",
+                  "name": "Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            },
+            {
+              "id": "live_p2",
+              "label": "Phase 2: Advanced Setup",
+              "tasks": [
+                {
+                  "id": "l5",
+                  "name": "PM Work Order Setup",
+                  "status": "not-started",
+                  "comments": []
+                },
+                {
+                  "id": "l6",
+                  "name": "Automated Asset Reports",
+                  "status": "not-started",
+                  "comments": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "docs": [],
+      "globalComments": [],
+      "notifications": []
     }
   ]
 }
