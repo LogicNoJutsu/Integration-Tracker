@@ -1376,7 +1376,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-08T17:56:16.593Z",
-      "updatedAt": "2026-05-08T17:58:33.593Z",
+      "updatedAt": "2026-05-08T17:58:36.626Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1473,13 +1473,13 @@
                 {
                   "id": "l5",
                   "name": "PM Work Order Setup",
-                  "status": "not-started",
+                  "status": "not-required",
                   "comments": []
                 },
                 {
                   "id": "l6",
                   "name": "Automated Asset Reports",
-                  "status": "not-started",
+                  "status": "not-required",
                   "comments": []
                 }
               ]
