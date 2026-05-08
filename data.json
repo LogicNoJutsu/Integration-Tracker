@@ -1250,7 +1250,7 @@
       "startDate": "",
       "expectedDate": "",
       "createdAt": "2026-05-08T13:51:53.695Z",
-      "updatedAt": "2026-05-08T19:15:48.094Z",
+      "updatedAt": "2026-05-08T19:15:56.066Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1269,19 +1269,19 @@
                 {
                   "id": "t2",
                   "name": "Organizational Setup",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 },
                 {
                   "id": "t3",
                   "name": "Asset Setup",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 },
                 {
                   "id": "t4",
                   "name": "Work Order Setup",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 }
               ]
@@ -1293,13 +1293,13 @@
                 {
                   "id": "t5",
                   "name": "PM Work Order Setup",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 },
                 {
                   "id": "t6",
                   "name": "Automated Asset Reports",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 }
               ]
