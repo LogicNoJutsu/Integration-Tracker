@@ -339,7 +339,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:36:37.004Z",
-      "updatedAt": "2026-05-07T17:38:48.476Z",
+      "updatedAt": "2026-05-08T10:58:24.309Z",
       "sections": [
         {
           "id": "test_instance",
@@ -462,6 +462,13 @@
           "author": "VG",
           "text": "Thanks Annica, got the locations updated in Dev. Location API will now send the type associated with it.\n\n@Venky Gupta\nI got the Asset Type API updated as well in the proposed payload structure. Please validate and keep us posted when you get a chance.",
           "timestamp": "May 7, 2026, 1:36 PM"
+        },
+        {
+          "author": "VG",
+          "text": "Need to need to send an email Ratan for the locations where the campus value is still null on all the buildings so there needs to be some value generated over there this way we can have a complete data set to use it while testing",
+          "timestamp": "May 8, 2026, 6:58 AM",
+          "isTask": true,
+          "_ts": 1778237904309
         }
       ]
     },
