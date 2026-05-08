@@ -6,369 +6,226 @@
 <title>CRx Integration Tracker — View Only</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
-
-// ── SSO VIEWER ──
-var ssoViewSortAsc = true;
-function ssoViewSortToggle() {
-  ssoViewSortAsc = !ssoViewSortAsc;
-  var btn = document.getElementById('ssoSortBtn');
-  if (btn) btn.textContent = ssoViewSortAsc ? '⇅ Client A–Z' : '⇅ Client Z–A';
-  renderSSOViewer();
-}
-function renderSSOViewer() {
-  var tb = document.getElementById('ssoTableBody');
-  var em = document.getElementById('ssoEmpty');
-  if (!tb) return;
-  if (!viewerDB._sso || !viewerDB._sso.length) { tb.innerHTML = ''; if (em) em.style.display = 'block'; return; }
-  if (em) em.style.display = 'none';
-  var ipEl = document.getElementById('ssoFilterIP');
-  var doneEl = document.getElementById('ssoFilterDone');
-  var nrEl = document.getElementById('ssoFilterNR');
-  var nsEl = document.getElementById('ssoFilterNS');
-  var allOk = !ipEl || ((!nsEl||nsEl.checked) && ipEl.checked && doneEl.checked && nrEl.checked);
-  var filters = allOk ? null : [];
-  if (!allOk) {
-    if (nsEl && nsEl.checked) filters.push('Not Started');
-    if (ipEl && ipEl.checked) filters.push('In Progress');
-    if (doneEl && doneEl.checked) filters.push('Completed');
-    if (nrEl && nrEl.checked) filters.push('Not Required');
-  }
-  var entries = (viewerDB._sso || []).slice().sort(function(a, b) {
-    return ssoViewSortAsc ? a.clientName.localeCompare(b.clientName) : b.clientName.localeCompare(a.clientName);
-  });
-  if (filters) entries = entries.filter(function(e) { return filters.indexOf(e.ssoStatus || 'In Progress') > -1; });
-  var ss = {'Not Started':'background:var(--ns);color:var(--ns-text);',
-    'In Progress': 'background:var(--ip);color:var(--ip-text);',
-    'Completed': 'background:var(--done);color:var(--done-text);',
-    'Not Required': 'background:var(--nr);color:var(--nr-text);'
-  };
-  tb.innerHTML = entries.map(function(e) {
-    var s = ss[e.ssoStatus || 'In Progress'] || ss['In Progress'];
-    return '<tr>' +
-      '<td style="font-weight:600;">' + esc(e.clientName) + '</td>' +
-      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--surface3);color:var(--text);">' + esc(e.loginType || '—') + '</span></td>' +
-      '<td style="font-size:12px;color:var(--text3);">' + esc(e.setupDate || '—') + '</td>' +
-      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;' + s + '">' + esc(e.ssoStatus || 'In Progress') + '</span></td>' +
-      '<td style="font-size:12px;color:var(--text2);">' + esc(e.comments || '—') + '</td>' +
-      '</tr>';
-  }).join('');
-}
-
-// ── INIT ──
-applyFontSize(currentFontSize);
-checkStorageAccess();
-window.addEventListener('load', function() {
-  const cfg = getCfg();
-  if (cfg) {
-    loadFromGitHub(false);
-    startAutoRefresh();
-  } else {
-    showSetupScreen();
-    setSyncStatus('idle', 'Not configured');
-  }
-});
-
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --font-body:'Aptos','Noto Sans','Segoe UI',system-ui,sans-serif;
-    --font-display:'Aptos Display','Noto Sans Display','Segoe UI',system-ui,sans-serif;
-    --bg:#0d0f14;--surface:#151820;--surface2:#1c2030;--surface3:#222840;
-    --border:#2a3050;--accent:#4f7cff;--accent2:#00e5c0;
-    --text:#e8ecf8;--text2:#8892b0;--text3:#4a5580;
-    --ns:#2e3350;--ns-text:#8892b0;
-    --ip:#0f2d5e;--ip-text:#ffffff;
-    --done:#0a2e20;--done-text:#00d48a;
-    --pfc:#332500;--pfc-text:#ffb020;
-    --cbd:#2e1010;--cbd-text:#ff4f4f;
-    --nr:#16163a;--nr-text:#7070c8;
+    --font-body: 'Aptos', 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+    --font-display: 'Aptos Display', 'Noto Sans Display', 'Segoe UI', system-ui, sans-serif;
+    --bg:#0d0f14; --surface:#151820; --surface2:#1c2030; --surface3:#222840;
+    --border:#2a3050; --accent:#4f7cff; --accent2:#00e5c0;
+    --text:#e8ecf8; --text2:#8892b0; --text3:#4a5580;
+    --ns:#2e3350; --ns-text:#8892b0;
+    --ip:#0f2d5e; --ip-text:#ffffff;
+    --done:#0a2e20; --done-text:#00d48a;
+    --pfc:#332500; --pfc-text:#ffb020;
+    --cbd:#2e1010; --cbd-text:#ff4f4f;
+    --nr:#16163a; --nr-text:#7070c8;
+    --page-font-size: 16px;
   }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:16px;line-height:1.5;}
-
-
-  /* PAGE CONTENT FONT — header excluded */
-  :root { --page-font-size: 16px; }
-  .view, .dashboard, .detail-view, .setup-screen {
-    font-size: var(--page-font-size) !important;
-  }
-  .app-header, .app-header * {
-    font-size: unset !important;
-  }
-  .app-header .btn { font-size: 12px !important; }
-  .app-header .sync-status { font-size: 11px !important; }
+  .view, .dashboard, .detail-view { font-size: var(--page-font-size); }
+  .app-header, .app-header * { font-size: unset !important; }
   .app-header .font-size-label { font-size: 11px !important; }
   .app-header .font-toggle-btn { font-size: 13px !important; }
-
+  .app-header .switch-btn { font-size: 11px !important; }
+  .app-header .logo-crx-text { font-size: 17px !important; }
+  .app-header .logo-module-name { font-size: 14px !important; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; font-size: 16px; line-height: 1.5; }
 
   /* HEADER */
-  .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;gap:12px;}
-  .header-left{display:flex;align-items:center;}
-  .app-logo-static{display:flex;align-items:center;gap:0;font-family:var(--font-display);flex-wrap:nowrap;white-space:nowrap;}
-  .logo-crx-text{color:var(--accent);font-size:17px;font-weight:800;}
-  .logo-slash{color:var(--text3);font-size:15px;margin:0 3px;font-weight:400;}
-  .logo-module-name{color:var(--text2);font-size:14px;font-weight:500;font-family:var(--font-body);}
-  .switch-wrapper{position:relative;display:inline-block;margin-left:10px;}
-  .switch-btn{font-family:var(--font-body);font-size:11px;font-weight:500;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 8px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
-  .switch-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--surface3);}
-  .module-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:200px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;flex-direction:column;overflow:hidden;}
-  .module-menu.open{display:flex;}
-  .module-menu-item{padding:11px 16px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border-bottom:1px solid var(--border);font-family:var(--font-body);}
-  .module-menu-item:last-child{border-bottom:none;}
-  .module-menu-item:hover{background:var(--surface2);color:var(--text);}
-  .module-menu-item.active{color:var(--accent);background:rgba(79,124,255,0.08);}
-  .view-only-badge{font-size:11px;background:rgba(255,176,32,0.15);color:#ffb020;border:1px solid rgba(255,176,32,0.3);border-radius:20px;padding:3px 10px;font-weight:600;letter-spacing:0.04em;margin-left:10px;}
+  .app-header { background:var(--surface); border-bottom:1px solid var(--border); padding:0 28px; display:flex; align-items:center; justify-content:space-between; height:56px; position:sticky; top:0; z-index:100; }
+  .header-left { display:flex; align-items:center; }
+  .app-logo-static { display:flex; align-items:center; flex-wrap:nowrap; white-space:nowrap; }
+  .logo-crx-text { color:var(--accent); font-size:17px; font-weight:800; font-family:var(--font-display); }
+  .logo-slash { color:var(--text3); font-size:15px; margin:0 3px; font-weight:400; }
+  .logo-module-name { color:var(--text2); font-size:14px; font-weight:500; font-family:var(--font-body); }
+  .switch-wrapper { position:relative; display:inline-block; margin-left:10px; }
+  .switch-btn { font-family:var(--font-body); font-size:11px; font-weight:500; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:5px; padding:3px 8px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .switch-btn:hover { color:var(--accent); border-color:var(--accent); background:var(--surface3); }
+  .module-menu { position:absolute; top:calc(100% + 6px); left:0; background:var(--surface); border:1px solid var(--border); border-radius:10px; min-width:200px; z-index:500; box-shadow:0 8px 24px rgba(0,0,0,0.5); display:none; flex-direction:column; overflow:hidden; }
+  .module-menu.open { display:flex; }
+  .module-menu-item { padding:11px 16px; font-size:13px; font-weight:500; color:var(--text2); cursor:pointer; transition:all 0.15s; border-bottom:1px solid var(--border); font-family:var(--font-body); }
+  .module-menu-item:last-child { border-bottom:none; }
+  .module-menu-item:hover { background:var(--surface2); color:var(--text); }
+  .module-menu-item.active { color:var(--accent); background:rgba(79,124,255,0.08); }
+  .view-only-badge { font-size:11px; background:rgba(255,176,32,0.15); color:#ffb020; border:1px solid rgba(255,176,32,0.3); border-radius:20px; padding:3px 10px; font-weight:600; margin-left:10px; }
+  .header-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .font-toggle { display:flex; align-items:center; gap:4px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:3px 6px; flex-shrink:0; }
+  .font-toggle-btn { background:none; border:none; color:var(--text2); cursor:pointer; font-size:13px; font-weight:700; padding:2px 6px; border-radius:4px; line-height:1; transition:all 0.15s; }
+  .font-toggle-btn:hover { background:var(--surface3); color:var(--text); }
+  .font-size-label { font-size:11px; color:var(--text3); min-width:24px; text-align:center; }
+  .refresh-badge { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text3); white-space:nowrap; }
+  .refresh-dot { width:6px; height:6px; border-radius:50%; background:var(--done-text); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+  .sync-badge { font-size:11px; padding:4px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text3); display:flex; align-items:center; gap:5px; white-space:nowrap; }
+  .sync-badge.syncing { color:var(--ip-text); border-color:var(--ip-text); }
+  .sync-badge.synced { color:var(--done-text); border-color:var(--done-text); }
+  .sync-badge.error { color:var(--cbd-text); border-color:var(--cbd-text); }
+  .sync-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .configure-btn { font-family:var(--font-body); font-size:12px; padding:5px 12px; border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--text2); cursor:pointer; white-space:nowrap; transition:all 0.15s; }
+  .configure-btn:hover { background:var(--surface2); color:var(--text); }
+
+  /* STORAGE WARNING */
+  .storage-warning { background:rgba(255,152,0,0.12); border-bottom:1px solid rgba(255,152,0,0.4); padding:10px 28px; font-size:13px; color:#ffb020; display:none; align-items:center; gap:10px; }
+  .storage-warning.visible { display:flex; }
+  .storage-warning a { color:#ffd060; font-weight:600; cursor:pointer; }
+  .storage-warning-close { margin-left:auto; background:none; border:none; color:#ffb020; cursor:pointer; font-size:18px; }
+
+  /* SETUP */
+  .setup-screen { display:flex; align-items:center; justify-content:center; min-height:calc(100vh - 56px); padding:32px; }
+  .setup-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:40px; width:500px; text-align:center; }
+  .setup-icon { font-size:48px; margin-bottom:16px; }
+  .setup-title { font-family:var(--font-display); font-size:22px; font-weight:800; margin-bottom:8px; }
+  .setup-desc { color:var(--text2); font-size:13px; line-height:1.7; margin-bottom:24px; }
+  .setup-info { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-bottom:20px; font-size:12px; color:var(--text2); line-height:1.7; text-align:left; }
+  .setup-info strong { color:var(--text); }
+  .setup-info code { background:var(--surface3); padding:1px 6px; border-radius:3px; font-size:11px; color:var(--accent2); }
+  .setup-form { display:flex; flex-direction:column; gap:12px; text-align:left; }
+  .form-label { display:block; font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.07em; font-weight:600; margin-bottom:4px; }
+  .form-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-family:var(--font-body); font-size:13px; outline:none; transition:border-color 0.15s; }
+  .form-input:focus { border-color:var(--accent); }
 
   /* BUTTONS */
-  .btn{font-family:var(--font-body);font-size:13px;padding:7px 14px;border-radius:7px;border:1px solid var(--border);cursor:pointer;transition:all 0.15s;font-weight:500;}
-  .btn-ghost{background:transparent;color:var(--text2);}
-  .btn-ghost:hover{background:var(--surface2);color:var(--text);}
-  .btn-accent2{background:transparent;color:var(--accent2);border-color:var(--accent2);}
-  .btn-accent2:hover{background:rgba(0,229,192,0.08);}
-  .btn-green{background:transparent;color:#00c853;border-color:#00c853;}
-  .btn-green:hover{background:rgba(0,200,83,0.1);}
-  .btn-sm{padding:4px 11px;font-size:12px;}
+  .btn { font-family:var(--font-body); font-size:13px; padding:7px 14px; border-radius:7px; border:1px solid var(--border); cursor:pointer; transition:all 0.15s; font-weight:500; }
+  .btn-primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .btn-primary:hover { background:#3b6aee; }
+  .btn-ghost { background:transparent; color:var(--text2); }
+  .btn-ghost:hover { background:var(--surface2); color:var(--text); }
+  .btn-accent2 { background:transparent; color:var(--accent2); border-color:var(--accent2); }
+  .btn-accent2:hover { background:rgba(0,229,192,0.08); }
+  .btn-sm { padding:4px 11px; font-size:12px; }
+  .btn-xs { padding:3px 8px; font-size:11px; }
 
   /* VIEWS */
-  .view{display:none;}.view.active{display:block;}
-
-
-  /* Edge tracking prevention banner */
-  .storage-warning{background:rgba(255,152,0,0.12);border-bottom:1px solid rgba(255,152,0,0.4);padding:10px 28px;font-size:13px;color:#ffb020;display:none;align-items:center;gap:10px;flex-wrap:wrap;}
-  .storage-warning.visible{display:flex;}
-  .storage-warning a{color:#ffd060;font-weight:600;cursor:pointer;}
-  .storage-warning-close{margin-left:auto;background:none;border:none;color:#ffb020;cursor:pointer;font-size:18px;line-height:1;}
-
-
-  .font-toggle{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;flex-shrink:0;white-space:nowrap;}
-  .font-toggle-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;padding:2px 6px;border-radius:4px;line-height:1;font-family:var(--font-body);transition:all 0.15s;}
-  .font-toggle-btn:hover{background:var(--surface3);color:var(--text);}
-  .font-size-label{font-size:11px;color:var(--text3);min-width:28px;text-align:center;}
-
-
-  /* VIEWER HEADER RIGHT — clean single row */
-  .vheader-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-  .vrefresh {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    color: var(--text3);
-    white-space: nowrap;
-  }
-  .vsync {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    color: var(--text3);
-    white-space: nowrap;
-    cursor: default;
-  }
-  .vsync.syncing { color: var(--ip-text); border-color: var(--ip-text); }
-  .vsync.synced  { color: var(--done-text); border-color: var(--done-text); }
-  .vsync.error   { color: var(--cbd-text); border-color: var(--cbd-text); }
-  .vconfigure {
-    font-family: var(--font-body);
-    font-size: 12px;
-    padding: 5px 12px;
-    border-radius: 7px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text2);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.15s;
-  }
-  .vconfigure:hover { background: var(--surface2); color: var(--text); }
-
-  /* SETUP SCREEN */
-  .setup-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);padding:32px;}
-  .setup-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;width:500px;text-align:center;}
-  .setup-icon{font-size:48px;margin-bottom:16px;}
-  .setup-title{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:8px;}
-  .setup-desc{color:var(--text2);font-size:13px;line-height:1.7;margin-bottom:28px;}
-  .setup-form{display:flex;flex-direction:column;gap:12px;text-align:left;}
-  .setup-form label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:4px;display:block;}
-  .setup-form input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;transition:border-color 0.15s;}
-  .setup-form input:focus{border-color:var(--accent);}
-  .setup-info{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px;text-align:left;}
-  .setup-info strong{color:var(--text);}
+  .view { display:none; }
+  .view.active { display:block; }
 
   /* DASHBOARD */
-  .dashboard{max-width:1600px;margin:0 auto;padding:28px;}
-  .dash-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
-  .dash-title{font-family:var(--font-display);font-size:24px;font-weight:800;}
-  .dash-sub{color:var(--text2);font-size:12px;margin-top:3px;}
-  .dash-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-  .client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+  .dashboard { max-width:1440px; margin:0 auto; padding:36px 32px; }
+  .dash-top { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
+  .dash-title { font-family:var(--font-display); font-size:26px; font-weight:800; }
+  .dash-sub { color:var(--text2); font-size:13px; margin-top:3px; }
+  .dash-actions { display:flex; gap:10px; flex-wrap:wrap; }
+  .client-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; cursor:pointer; transition:all 0.18s; position:relative; overflow:hidden; }
+  .client-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2)); opacity:0; transition:opacity 0.18s; }
+  .client-card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+  .client-card:hover::before { opacity:1; }
+  .card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+  .card-name { font-family:var(--font-display); font-size:14px; font-weight:700; }
+  .card-cmms { font-size:11px; background:var(--surface3); color:#fff; padding:3px 9px; border-radius:20px; border:1px solid var(--border); white-space:nowrap; }
+  .card-meta { color:var(--text2); font-size:11px; margin-bottom:12px; line-height:1.9; }
+  .card-meta strong { color:var(--text); }
+  .card-last-updated { font-size:11px; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:5px; padding:3px 8px; display:inline-block; margin-bottom:12px; }
+  .progress-section { margin-bottom:10px; }
+  .progress-label { display:flex; justify-content:space-between; font-size:11px; color:var(--text3); margin-bottom:5px; }
+  .progress-bar { height:4px; background:var(--surface3); border-radius:2px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+  .status-pills { display:flex; flex-wrap:wrap; gap:4px; margin-top:10px; }
+  .pill { font-size:10px; padding:2px 8px; border-radius:20px; font-weight:500; }
+  .card-footer { display:flex; gap:8px; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); align-items:center; }
 
-  /* CLIENT CARDS */
-  .client-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;}
-  .client-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity 0.18s;}
-  .client-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.3);}
-  .client-card:hover::before{opacity:1;}
-  .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
-  .card-name{font-family:var(--font-display);font-size:14px;font-weight:700;line-height:1.3;}
-  .card-cmms{font-size:10px;background:var(--surface3);color:#ffffff;padding:2px 7px;border-radius:20px;border:1px solid var(--border);white-space:nowrap;flex-shrink:0;}
-  .card-meta{color:var(--text2);font-size:11px;margin-bottom:8px;line-height:1.8;}
-  .card-meta strong{color:var(--text);}
-  .card-last-updated{font-size:10px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;display:inline-block;margin-bottom:8px;}
-  .progress-section{margin-bottom:8px;}
-  .progress-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px;}
-  .progress-bar{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;}
-  .progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
-  .status-pills{display:flex;flex-wrap:wrap;gap:3px;margin-top:8px;}
-  .pill{font-size:9px;padding:2px 6px;border-radius:20px;font-weight:500;}
-  .card-footer{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);align-items:center;}
-
-  /* DETAIL VIEW */
-  .detail-view{max-width:1440px;margin:0 auto;padding:24px 28px;}
-  .breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:16px;}
-  .breadcrumb a{color:var(--accent);cursor:pointer;text-decoration:none;}
-  .breadcrumb a:hover{text-decoration:underline;}
-  .breadcrumb span{color:var(--text3);}
-  .detail-header{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:18px;}
-  .detail-header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-  .detail-name{font-family:var(--font-display);font-size:22px;font-weight:800;}
-  .detail-meta-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;}
-  .meta-item label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;display:block;}
-  .meta-item .val{font-size:13px;color:var(--text);font-weight:500;}
-  .last-updated-badge{font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 9px;}
+  /* DETAIL */
+  .detail-view { max-width:1440px; margin:0 auto; padding:28px 32px; }
+  .breadcrumb { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text2); margin-bottom:20px; }
+  .breadcrumb a { color:var(--accent); cursor:pointer; text-decoration:none; }
+  .breadcrumb a:hover { text-decoration:underline; }
+  .breadcrumb span { color:var(--text3); }
+  .detail-header { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px 28px; margin-bottom:20px; }
+  .detail-header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+  .detail-name { font-family:var(--font-display); font-size:24px; font-weight:800; }
+  .last-updated-badge { font-size:11px; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:4px 10px; }
+  .meta-item label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:3px; display:block; }
+  .meta-item .val { font-size:14px; color:var(--text); font-weight:500; }
 
   /* TABS */
-  .tabs{display:flex;gap:3px;margin-bottom:18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;}
-  .tab{font-family:var(--font-body);font-size:13px;padding:6px 16px;border-radius:7px;border:none;cursor:pointer;background:transparent;color:var(--text2);transition:all 0.15s;font-weight:500;}
-  .tab.active{background:var(--accent);color:#fff;}
-  .tab:hover:not(.active){background:var(--surface2);color:var(--text);}
-  .tab-content{display:none;}.tab-content.active{display:block;}
+  .tabs { display:flex; gap:3px; margin-bottom:20px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4px; width:fit-content; }
+  .tab { font-family:var(--font-body); font-size:13px; padding:6px 18px; border-radius:7px; border:none; cursor:pointer; background:transparent; color:var(--text2); transition:all 0.15s; font-weight:500; }
+  .tab.active { background:var(--accent); color:#fff; }
+  .tab:hover:not(.active) { background:var(--surface2); color:var(--text); }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
 
   /* INTEGRATION TABLE */
-  .section-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;}
-  .section-title{background:var(--surface2);padding:10px 16px;font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border);}
-  table{width:100%;border-collapse:collapse;}
-  th{background:var(--surface3);padding:8px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border);}
-  td{padding:9px 14px;border-bottom:1px solid rgba(42,48,80,0.4);font-size:13px;vertical-align:middle;}
-  tr:last-child td{border-bottom:none;}
-  tr:hover td{background:rgba(79,124,255,0.03);}
-  .task-name{color:var(--text2);}
+  .section-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:14px; overflow:hidden; }
+  .section-title { background:var(--surface2); padding:11px 18px; font-family:var(--font-display); font-size:12px; font-weight:700; color:var(--accent2); text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--border); }
+  table { width:100%; border-collapse:collapse; }
+  th { background:var(--surface3); padding:9px 14px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:var(--text3); font-weight:600; border-bottom:1px solid var(--border); }
+  td { padding:10px 14px; border-bottom:1px solid rgba(42,48,80,0.4); font-size:13px; vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(79,124,255,0.03); }
+  .task-name { color:var(--text2); }
+  .status-badge { display:inline-block; font-size:11px; font-weight:600; padding:4px 12px; border-radius:20px; border:1px solid transparent; }
+  .s-not-started { background:var(--ns); color:var(--ns-text); border-color:rgba(136,146,176,0.2); }
+  .s-in-progress { background:var(--ip); color:var(--ip-text); border-color:rgba(79,159,255,0.3); }
+  .s-completed { background:var(--done); color:var(--done-text); border-color:rgba(0,212,138,0.3); }
+  .s-pending-client { background:var(--pfc); color:var(--pfc-text); border-color:rgba(255,176,32,0.3); }
+  .s-cannot-be-done { background:var(--cbd); color:var(--cbd-text); border-color:rgba(255,79,79,0.3); }
+  .s-not-required { background:var(--nr); color:var(--nr-text); border-color:rgba(112,112,200,0.3); }
 
-  /* STATUS BADGE (read-only, not a select) */
-  .status-badge{display:inline-block;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid transparent;}
-  .s-not-started{background:var(--ns);color:var(--ns-text);border-color:rgba(136,146,176,0.2);}
-  .s-in-progress{background:var(--ip);color:var(--ip-text);border-color:rgba(79,159,255,0.3);}
-  .s-completed{background:var(--done);color:var(--done-text);border-color:rgba(0,212,138,0.3);}
-  .s-pending-client{background:var(--pfc);color:var(--pfc-text);border-color:rgba(255,176,32,0.3);}
-  .s-cannot-be-done{background:var(--cbd);color:var(--cbd-text);border-color:rgba(255,79,79,0.3);}
-  .s-not-required{background:var(--nr);color:var(--nr-text);border-color:rgba(112,112,200,0.3);}
-
-  /* COMMENTS READ-ONLY */
-  .comment-thread-view{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;}
-  .comment-bubble{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 13px;}
-  .comment-meta{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px;}
-  .comment-author{color:var(--accent);font-weight:600;}
-  .comment-text{font-size:13px;color:var(--text);line-height:1.6;}
-  .comment-preview-inline{font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:4px 8px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;}
-  .comment-count-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:20px;font-size:9px;padding:1px 6px;margin-left:4px;}
-  .view-comments-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--text2);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;display:inline-flex;align-items:center;gap:4px;}
-  .view-comments-btn:hover{border-color:var(--accent);color:var(--accent);}
-
-  /* DOCS */
-  .docs-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-  .doc-link{color:var(--accent);text-decoration:none;font-size:13px;}
-  .doc-link:hover{text-decoration:underline;}
-  .doc-type-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--surface3);color:var(--text2);border:1px solid var(--border);}
-  .doc-date{color:var(--text3);font-size:11px;}
-
-  /* NOTIFICATIONS / NOTES (read-only feed) */
-  .feed-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-  .feed-messages{padding:16px;max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;min-height:120px;}
+  /* COMMENT CELL */
+  .comment-cell { display:flex; flex-direction:column; gap:4px; }
+  .comment-preview-ro { font-size:11px; color:var(--text2); background:var(--surface2); border:1px solid var(--border); border-radius:5px; padding:4px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:300px; }
+  .view-cmts-btn { background:none; border:1px solid var(--border); border-radius:6px; padding:3px 9px; font-size:11px; color:var(--text2); cursor:pointer; font-family:var(--font-body); transition:all 0.15s; display:inline-flex; align-items:center; gap:4px; }
+  .view-cmts-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .cmt-count { display:inline-flex; align-items:center; justify-content:center; background:var(--accent); color:#fff; border-radius:20px; font-size:9px; padding:1px 6px; }
 
   /* STATS */
-  .overview-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px;}
-  .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 12px;text-align:center;}
-  .stat-num{font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:2px;}
-  .stat-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;}
+  .overview-stats { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:20px; }
+  .stat-box { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px; text-align:center; }
+  .stat-num { font-family:var(--font-display); font-size:22px; font-weight:800; margin-bottom:2px; }
+  .stat-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; }
+
+  /* DOCS / FEED */
+  .docs-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .doc-link { color:var(--accent); text-decoration:none; font-size:13px; }
+  .doc-link:hover { text-decoration:underline; }
+  .doc-type-badge { font-size:10px; padding:2px 8px; border-radius:20px; background:var(--surface3); color:var(--text2); border:1px solid var(--border); }
+  .doc-date { color:var(--text3); font-size:11px; }
+  .feed-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .feed-messages { padding:18px; max-height:440px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; min-height:160px; }
+  .comment-bubble { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; }
+  .comment-meta { display:flex; justify-content:space-between; font-size:10px; color:var(--text3); margin-bottom:5px; }
+  .comment-author { color:var(--accent); font-weight:600; }
+  .comment-text { font-size:13px; color:var(--text); line-height:1.6; }
+  .no-data { color:var(--text3); font-size:12px; text-align:center; padding:28px; }
 
   /* TASK VIEW */
-  .task-view-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-  .task-view-toolbar{padding:10px 14px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;}
-  .ts-filter-select{padding:5px 8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;}
-  .ts-badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid transparent;}
-  .ts-not-started{background:var(--ns);color:var(--ns-text);border-color:rgba(136,146,176,0.2);}
-  .ts-in-progress{background:var(--ip);color:var(--ip-text);border-color:rgba(79,159,255,0.3);}
-  .ts-completed{background:var(--done);color:var(--done-text);border-color:rgba(0,212,138,0.3);}
-  .ts-pending-client{background:var(--pfc);color:var(--pfc-text);border-color:rgba(255,176,32,0.3);}
-  .ts-shared-dev{background:#1a1a4a;color:#a0a0ff;border-color:rgba(160,160,255,0.3);}
-  .ts-cannot-be-done{background:var(--cbd);color:var(--cbd-text);border-color:rgba(255,79,79,0.3);}
-  .overdue-badge{display:inline-block;font-size:9px;font-weight:700;background:#2e1010;color:#ff4f4f;border:1px solid rgba(255,79,79,0.4);border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:middle;}
-  .task-source-label{font-size:10px;color:var(--text3);}
+  .overdue-badge { display:inline-block; font-size:9px; font-weight:700; background:#2e1010; color:#ff4f4f; border:1px solid rgba(255,79,79,0.4); border-radius:3px; padding:1px 5px; margin-left:4px; vertical-align:middle; }
 
-  /* MODAL */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(5px);z-index:200;display:none;align-items:center;justify-content:center;}
-  .modal-overlay.open{display:flex;}
-  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:560px;max-height:85vh;overflow-y:auto;position:relative;}
-  .modal-title{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:18px;}
-  .modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;}
-  .modal-close:hover{color:var(--text);}
-  .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+  /* MODALS */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.72); backdrop-filter:blur(5px); z-index:200; display:none; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; width:520px; max-height:90vh; overflow-y:auto; position:relative; }
+  .modal-title { font-family:var(--font-display); font-size:18px; font-weight:700; margin-bottom:18px; }
+  .modal-close { position:absolute; top:14px; right:16px; background:none; border:none; color:var(--text2); cursor:pointer; font-size:22px; line-height:1; }
+  .modal-close:hover { color:var(--text); }
+  .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+  .client-checklist { display:flex; flex-direction:column; gap:7px; margin:12px 0; max-height:280px; overflow-y:auto; }
+  .client-check-item { display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:9px 13px; cursor:pointer; }
+  .client-check-item input[type=checkbox] { width:15px; height:15px; accent-color:var(--accent); cursor:pointer; }
+  .client-check-name { font-weight:600; font-size:13px; }
+  .client-check-meta { font-size:11px; color:var(--text2); margin-top:1px; }
+  .pdf-select-all { display:flex; gap:7px; margin-bottom:7px; }
+  .excel-section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text3); margin:16px 0 7px; }
+  .status-filter-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:4px; }
+  .status-filter-item { display:flex; align-items:center; gap:7px; border:1px solid var(--border); border-radius:7px; padding:6px 9px; font-size:12px; font-weight:500; }
+  .status-filter-item input[type=checkbox] { width:13px; height:13px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+  .sfi-ns{background:var(--ns);color:var(--ns-text);} .sfi-ip{background:var(--ip);color:var(--ip-text);}
+  .sfi-done{background:var(--done);color:var(--done-text);} .sfi-pfc{background:var(--pfc);color:var(--pfc-text);}
+  .sfi-cbd{background:var(--cbd);color:var(--cbd-text);} .sfi-nr{background:var(--nr);color:var(--nr-text);}
 
-  /* PDF/Excel Modals */
-  .client-checklist{display:flex;flex-direction:column;gap:7px;margin:12px 0;max-height:300px;overflow-y:auto;}
-  .client-check-item{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 13px;cursor:pointer;}
-  .client-check-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
-  .client-check-name{font-weight:600;font-size:13px;}
-  .client-check-meta{font-size:11px;color:var(--text2);margin-top:1px;}
-  .pdf-select-all{display:flex;gap:7px;margin-bottom:7px;}
-  .excel-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin:16px 0 7px;}
-  .status-filter-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px;}
-  .status-filter-item{display:flex;align-items:center;gap:7px;border:1px solid var(--border);border-radius:7px;padding:6px 9px;font-size:12px;font-weight:500;}
-  .status-filter-item input[type=checkbox]{width:13px;height:13px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
-  .sfi-ns{background:var(--ns);color:var(--ns-text);}
-  .sfi-ip{background:var(--ip);color:var(--ip-text);}
-  .sfi-done{background:var(--done);color:var(--done-text);}
-  .sfi-pfc{background:var(--pfc);color:var(--pfc-text);}
-  .sfi-cbd{background:var(--cbd);color:var(--cbd-text);}
-  .sfi-nr{background:var(--nr);color:var(--nr-text);}
-
-  /* SETUP MODAL */
-  .gh-setup-modal .modal{width:520px;}
-  .github-info{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.7;}
-  .github-info a{color:var(--accent);}
-  .github-info code{background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--accent2);}
-  .form-group{margin-bottom:13px;}
-  .form-group label{display:block;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;font-weight:600;}
-  .form-group input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;transition:border-color 0.15s;}
-  .form-group input:focus{border-color:var(--accent);}
-
-  /* EMPTY / NO DATA */
-  .empty-state{text-align:center;padding:70px 32px;color:var(--text3);}
-  .empty-icon{font-size:44px;margin-bottom:14px;}
-  .empty-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text2);margin-bottom:8px;}
-  .empty-desc{font-size:13px;margin-bottom:20px;}
-  .no-data{color:var(--text3);font-size:12px;text-align:center;padding:24px;}
-
-  /* AUTO-REFRESH indicator */
-  .refresh-badge{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;}
-  .refresh-dot{width:6px;height:6px;border-radius:50%;background:var(--done-text);animation:pulse 2s infinite;}
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  /* EMPTY STATE */
+  .empty-state { text-align:center; padding:80px 32px; color:var(--text3); }
+  .empty-icon { font-size:48px; margin-bottom:16px; }
+  .empty-title { font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--text2); margin-bottom:8px; }
+  .empty-desc { font-size:13px; margin-bottom:24px; }
 
   /* TOAST */
-  .toast{position:fixed;bottom:22px;right:22px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:13px;color:var(--text);z-index:999;transform:translateY(80px);opacity:0;transition:all 0.25s;pointer-events:none;display:flex;align-items:center;gap:8px;}
-  .toast.show{transform:translateY(0);opacity:1;}
-  .toast.success{border-color:var(--done-text);}
-  .toast.error{border-color:var(--cbd-text);}
+  .toast { position:fixed; bottom:22px; right:22px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:11px 16px; font-size:13px; color:var(--text); z-index:999; transform:translateY(80px); opacity:0; transition:all 0.25s; pointer-events:none; display:flex; align-items:center; gap:8px; }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.success { border-color:var(--done-text); }
+  .toast.error { border-color:var(--cbd-text); }
 
   ::-webkit-scrollbar{width:5px;height:5px;}
   ::-webkit-scrollbar-track{background:transparent;}
@@ -394,58 +251,50 @@ window.addEventListener('load', function() {
       <span class="view-only-badge">VIEW ONLY</span>
     </div>
   </div>
-  <div class="vheader-right">
+  <div class="header-right">
     <div class="font-toggle">
       <button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button>
       <span class="font-size-label" id="fontSizeLabel">16</span>
       <button class="font-toggle-btn" onclick="adjustFont(1)">A+</button>
     </div>
-    <span class="vrefresh"><span class="refresh-dot"></span><span id="refreshLabel">Live</span></span>
-    <span class="vsync" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting&#8230;</span></span>
-    <button class="vconfigure" onclick="openGhSetup()">&#9881; Configure</button>
+    <span class="refresh-badge"><span class="refresh-dot"></span><span id="refreshLabel">Live</span></span>
+    <span class="sync-badge" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting&#8230;</span></span>
+    <button class="configure-btn" onclick="openCfgModal()">&#9881; Configure</button>
   </div>
 </header>
 
-<!-- EDGE WARNING -->
+<!-- EDGE STORAGE WARNING -->
 <div class="storage-warning" id="storageWarning">
   <span>&#9888;</span>
-  <span><strong>Storage blocked:</strong> Your browser is blocking localStorage. <a onclick="showEdgeFix()">How to fix in Edge &#8594;</a></span>
-  <button class="storage-warning-close" onclick="document.getElementById('storageWarning').classList.remove('visible')">&#215;</button>
+  <span><strong>Storage blocked:</strong> Your browser may block data saving.
+    <a onclick="showEdgeFix()">How to fix in Edge &#8594;</a></span>
+  <button class="storage-warning-close" onclick="this.parentElement.style.display='none'">&#215;</button>
 </div>
 
-<!-- SETUP SCREEN (shown when GitHub not configured) -->
+<!-- SETUP SCREEN (shown when not configured) -->
 <div id="setupScreen" style="display:none;">
   <div class="setup-screen">
     <div class="setup-card">
-      <div class="setup-icon">🔌</div>
+      <div class="setup-icon">&#128268;</div>
       <div class="setup-title">Connect to Data Source</div>
       <div class="setup-desc">This is a read-only viewer. Enter the GitHub repository details below to load the latest integration data. You only need to do this once.</div>
       <div class="setup-info">
         <strong>Ask your admin for:</strong><br>
-        · Their GitHub username<br>
-        · The repository name<br>
-        · A read-only Personal Access Token (with <code>repo</code> scope)
+        &middot; Their GitHub username<br>
+        &middot; The repository name<br>
+        &middot; A Personal Access Token (with <code>repo</code> scope)
       </div>
       <div class="setup-form">
-        <div>
-          <label>GitHub Username</label>
-          <input type="text" id="setupUser" placeholder="github-username">
-        </div>
-        <div>
-          <label>Repository Name</label>
-          <input type="text" id="setupRepo" placeholder="crx-integration-tracker">
-        </div>
-        <div>
-          <label>Personal Access Token</label>
-          <input type="password" id="setupToken" placeholder="ghp_xxxxxxxxxxxx">
-        </div>
-        <button class="btn btn-primary" style="margin-top:8px;" onclick="saveSetupAndLoad()">Connect &amp; Load Data</button>
+        <div><label class="form-label">GitHub Username</label><input class="form-input" type="text" id="setupUser" placeholder="github-username"></div>
+        <div><label class="form-label">Repository Name</label><input class="form-input" type="text" id="setupRepo" placeholder="crx-integration-tracker"></div>
+        <div><label class="form-label">Personal Access Token</label><input class="form-input" type="password" id="setupToken" placeholder="ghp_xxxxxxxxxxxx"></div>
+        <button class="btn btn-primary" style="margin-top:8px;" onclick="saveAndLoad()">Connect &amp; Load Data</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MAIN APP (shown after data loaded) -->
+<!-- MAIN APP (shown after connected) -->
 <div id="mainApp" style="display:none;">
 
   <!-- DASHBOARD -->
@@ -454,13 +303,13 @@ window.addEventListener('load', function() {
       <div class="dash-top">
         <div>
           <div class="dash-title">Integration Dashboard</div>
-          <div class="dash-sub">Read-only view · Data synced from GitHub</div>
+          <div class="dash-sub">Read-only view &middot; Data synced from GitHub</div>
         </div>
         <div class="dash-actions">
           <button class="btn btn-ghost btn-sm" onclick="showTaskView()">&#128203; Task View</button>
           <button class="btn btn-accent2 btn-sm" onclick="openPdfModal(null)">&#8595; PDF</button>
-          <button class="btn btn-green btn-sm" onclick="openExcelModal(null)">&#8595; Excel</button>
-          <button class="btn btn-ghost btn-sm" onclick="refreshData()">&#8635; Refresh</button>
+          <button class="btn btn-sm" style="color:#00c853;border-color:#00c853;background:transparent;" onclick="openExcelModal(null)">&#8595; Excel</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadData(false)">&#8635; Refresh</button>
         </div>
       </div>
       <div id="clientGrid"></div>
@@ -471,18 +320,13 @@ window.addEventListener('load', function() {
   <div id="viewTasks" class="view">
     <div class="dashboard">
       <div class="dash-top">
-        <div>
-          <div class="dash-title">&#128203; Task View</div>
-          <div class="dash-sub">All flagged tasks — read only</div>
-        </div>
+        <div><div class="dash-title">&#128203; Task View</div><div class="dash-sub">All flagged tasks &mdash; read only</div></div>
         <button class="btn btn-ghost btn-sm" onclick="showDashboard()">&#8592; Dashboard</button>
       </div>
-      <div class="task-view-panel">
-        <div class="task-view-toolbar">
-          <select id="tvFilterClient" class="ts-filter-select" onchange="renderTaskView()">
-            <option value="">All Clients</option>
-          </select>
-          <select id="tvFilterStatus" class="ts-filter-select" onchange="renderTaskView()">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;">
+          <select id="tvFilterClient" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;"><option value="">All Clients</option></select>
+          <select id="tvFilterStatus" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;">
             <option value="">All Statuses</option>
             <option value="not-started">Not Started</option>
             <option value="in-progress">In Progress</option>
@@ -491,7 +335,7 @@ window.addEventListener('load', function() {
             <option value="shared-dev">Shared With Dev Team</option>
             <option value="cannot-be-done">Cannot Be Done</option>
           </select>
-          <select id="tvFilterOverdue" class="ts-filter-select" onchange="renderTaskView()">
+          <select id="tvFilterOverdue" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;">
             <option value="">All Tasks</option>
             <option value="overdue">Overdue Only</option>
             <option value="incomplete">Incomplete Only</option>
@@ -500,16 +344,11 @@ window.addEventListener('load', function() {
           <span id="tvCount" style="font-size:11px;color:var(--text3);"></span>
         </div>
         <table>
-          <thead>
-            <tr>
-              <th style="width:13%">Client</th>
-              <th style="width:16%">Task / Source</th>
-              <th style="width:16%">Task Status</th>
-              <th style="width:13%">Due Date</th>
-              <th style="width:12%">Flagged On</th>
-              <th>Comment / Note</th>
-            </tr>
-          </thead>
+          <thead><tr>
+            <th style="width:13%">Client</th><th style="width:18%">Task / Source</th>
+            <th style="width:14%">Status</th><th style="width:12%">Due Date</th>
+            <th style="width:14%">Flagged On</th><th>Comment</th>
+          </tr></thead>
           <tbody id="taskViewBody"></tbody>
         </table>
         <div id="taskViewEmpty" class="no-data" style="display:none;">No flagged tasks found.</div>
@@ -525,20 +364,20 @@ window.addEventListener('load', function() {
       </div>
       <div class="detail-header">
         <div class="detail-header-top">
-          <div class="detail-name" id="detailName">—</div>
+          <div class="detail-name" id="detailName">&#8212;</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <span class="last-updated-badge" id="detailUpdated">—</span>
+            <span class="last-updated-badge" id="detailUpdated">&#8212;</span>
             <button class="btn btn-accent2 btn-sm" onclick="openPdfModal('current')">&#8595; PDF</button>
-            <button class="btn btn-green btn-sm" onclick="openExcelModal('current')">&#8595; Excel</button>
+            <button class="btn btn-sm" style="color:#00c853;border-color:#00c853;background:transparent;" onclick="openExcelModal('current')">&#8595; Excel</button>
           </div>
         </div>
-        <div class="detail-meta-grid">
-          <div class="meta-item"><label>CMMS Type</label><div class="val" id="detailCmms">—</div></div>
-          <div class="meta-item"><label>CRx Consultant</label><div class="val" id="detailCrx">—</div></div>
-          <div class="meta-item"><label>Client POC</label><div class="val" id="detailPoc">—</div></div>
-          <div class="meta-item"><label>POC Email</label><div class="val" id="detailPocEmail" style="font-size:12px;">—</div></div>
-          <div class="meta-item"><label>Overall Status</label><div class="val" id="detailStatus">—</div></div>
-          <div class="meta-item"><label>Expected Completion</label><div class="val" id="detailExpected">—</div></div>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:16px;">
+          <div class="meta-item"><label>CMMS Type</label><div class="val" id="detailCmms">&#8212;</div></div>
+          <div class="meta-item"><label>CRx Consultant</label><div class="val" id="detailCrx">&#8212;</div></div>
+          <div class="meta-item"><label>Client POC</label><div class="val" id="detailPoc">&#8212;</div></div>
+          <div class="meta-item"><label>POC Email</label><div class="val" id="detailPocEmail" style="font-size:12px;">&#8212;</div></div>
+          <div class="meta-item"><label>Overall Status</label><div class="val" id="detailStatus">&#8212;</div></div>
+          <div class="meta-item"><label>Expected Completion</label><div class="val" id="detailExpected">&#8212;</div></div>
         </div>
       </div>
       <div class="tabs">
@@ -553,74 +392,61 @@ window.addEventListener('load', function() {
       </div>
       <div id="tabClientInfo" class="tab-content">
         <div class="docs-panel">
-          <table>
-            <thead><tr><th>Information Type</th><th>Name / Link</th><th>Date Added</th><th>Notes</th></tr></thead>
-            <tbody id="docsTableBody"></tbody>
-          </table>
-          <div id="docsEmpty" class="no-data" style="display:none;">No documents added yet.</div>
+          <table><thead><tr><th>Information Type</th><th>Name / Link</th><th>Date Added</th><th>Notes</th></tr></thead>
+          <tbody id="docsTableBody"></tbody></table>
+          <div id="docsEmpty" class="no-data" style="display:none;">No entries added yet.</div>
         </div>
       </div>
       <div id="tabNotifications" class="tab-content">
         <div class="feed-panel">
-          <div class="feed-messages" id="notifMessages">
-            <div class="no-data">No notifications.</div>
-          </div>
+          <div class="feed-messages" id="notifMessages"><div class="no-data">No notifications.</div></div>
         </div>
       </div>
       <div id="tabComments" class="tab-content">
         <div class="feed-panel">
-          <div class="feed-messages" id="globalChatMessages">
-            <div class="no-data">No notes yet.</div>
-          </div>
+          <div class="feed-messages" id="globalChatMessages"><div class="no-data">No notes yet.</div></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SSO TRACKER -->
+  <div id="viewSSO" class="view">
+    <div class="dashboard">
+      <div class="dash-top">
+        <div><div class="dash-title">&#128272; SSO Tracker</div><div class="dash-sub">Single Sign On configuration &mdash; read only</div></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:12px;color:var(--text2);font-weight:600;">Filter:</span>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:400;text-transform:none;letter-spacing:0;"><input type="checkbox" id="ssoFilterNS" checked onchange="renderSSOView()" style="width:13px;height:13px;accent-color:var(--ns-text);"> Not Started</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:400;text-transform:none;letter-spacing:0;"><input type="checkbox" id="ssoFilterIP" checked onchange="renderSSOView()" style="width:13px;height:13px;accent-color:var(--accent);"> In Progress</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:400;text-transform:none;letter-spacing:0;"><input type="checkbox" id="ssoFilterDone" checked onchange="renderSSOView()" style="width:13px;height:13px;accent-color:var(--done-text);"> Completed</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:400;text-transform:none;letter-spacing:0;"><input type="checkbox" id="ssoFilterNR" checked onchange="renderSSOView()" style="width:13px;height:13px;accent-color:var(--nr-text);"> Not Required</label>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="ssoSortToggle()" id="ssoSortBtn">&#8597; Client A&#8211;Z</button>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <table><thead><tr>
+          <th style="width:22%;cursor:pointer;" onclick="ssoSortToggle()">Client Name &#8597;</th>
+          <th style="width:20%">Login Type</th><th style="width:16%">Date of SSO Setup</th>
+          <th style="width:14%">Status</th><th>Comments</th>
+        </tr></thead>
+        <tbody id="ssoTableBody"></tbody></table>
+        <div id="ssoEmpty" class="no-data" style="display:none;">No SSO entries yet.</div>
       </div>
     </div>
   </div>
 
 </div><!-- /mainApp -->
 
-<!-- SSO TRACKER VIEW (read-only) -->
-<div id="viewSSO" class="view" style="display:none;">
-  <div class="dashboard">
-    <div class="dash-top">
-      <div>
-        <div class="dash-title">&#128272; SSO Tracker</div>
-        <div class="dash-sub">Single Sign On configuration &#8212; read only</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">Filter:</span>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterNS" checked onchange="renderSSOViewer()" style="width:13px;height:13px;accent-color:var(--ns-text);"> Not Started</label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterIP" checked onchange="renderSSOViewer()" style="width:13px;height:13px;accent-color:var(--accent);"> In Progress</label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterDone" checked onchange="renderSSOViewer()" style="width:13px;height:13px;accent-color:var(--done-text);"> Completed</label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterNR" checked onchange="renderSSOViewer()" style="width:13px;height:13px;accent-color:var(--nr-text);"> Not Required</label>
-        </div>
-        <button class="btn btn-ghost btn-sm" onclick="ssoViewSortToggle()" id="ssoSortBtn">&#8597; Client A&#8211;Z</button>
-      </div>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-      <table><thead><tr>
-        <th style="width:22%;cursor:pointer;" onclick="ssoViewSortToggle()">Client Name &#8597;</th>
-        <th style="width:20%">Login Type</th>
-        <th style="width:16%">Date of SSO Setup</th>
-        <th style="width:14%">Status</th>
-        <th>Comments</th>
-      </tr></thead>
-      <tbody id="ssoTableBody"></tbody></table>
-      <div id="ssoEmpty" class="no-data" style="display:none;">No SSO entries added yet.</div>
-    </div>
-  </div>
-</div>
-
-<!-- COMMENT VIEW MODAL (read-only) -->
+<!-- COMMENT VIEW MODAL (read only) -->
 <div class="modal-overlay" id="commentViewModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('commentViewModal')">&#215;</button>
     <div class="modal-title" id="commentViewTitle">Comments</div>
-    <div class="comment-thread-view" id="commentViewThread"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('commentViewModal')">Close</button>
-    </div>
+    <div id="commentViewThread" style="max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;"></div>
+    <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeModal('commentViewModal')">Close</button></div>
   </div>
 </div>
 
@@ -631,194 +457,252 @@ window.addEventListener('load', function() {
     <div class="modal-title">Export to PDF</div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:10px;">Select clients to include.</p>
     <div class="pdf-select-all">
-      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="pdfSelectAll(true)">Select All</button>
-      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="pdfSelectAll(false)">Deselect All</button>
+      <button class="btn btn-ghost btn-xs" onclick="pdfSelAll(true)">Select All</button>
+      <button class="btn btn-ghost btn-xs" onclick="pdfSelAll(false)">Deselect All</button>
     </div>
     <div class="client-checklist" id="pdfClientList"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeModal('pdfModal')">Cancel</button>
-      <button class="btn btn-accent2 btn-sm" onclick="generateSelectedPDF()">&#8595; Generate PDF</button>
+      <button class="btn btn-accent2 btn-sm" onclick="generatePDF()">&#8595; Generate PDF</button>
     </div>
   </div>
 </div>
 
 <!-- EXCEL MODAL -->
 <div class="modal-overlay" id="excelModal">
-  <div class="modal">
+  <div class="modal" style="width:560px;">
     <button class="modal-close" onclick="closeModal('excelModal')">&#215;</button>
     <div class="modal-title">&#8595; Export to Excel</div>
     <p style="font-size:13px;color:var(--text2);">Each selected client gets its own worksheet.</p>
     <div class="excel-section-label">Select Clients</div>
     <div class="pdf-select-all">
-      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="excelSelectAll('client',true)">Select All</button>
-      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="excelSelectAll('client',false)">Deselect All</button>
+      <button class="btn btn-ghost btn-xs" onclick="xlSelAll('client',true)">Select All</button>
+      <button class="btn btn-ghost btn-xs" onclick="xlSelAll('client',false)">Deselect All</button>
     </div>
-    <div class="client-checklist" id="excelClientList"></div>
+    <div class="client-checklist" id="xlClientList"></div>
     <div class="excel-section-label">Filter by Status</div>
     <div class="pdf-select-all">
-      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="excelSelectAll('status',true)">Select All</button>
-      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="excelSelectAll('status',false)">Deselect All</button>
+      <button class="btn btn-ghost btn-xs" onclick="xlSelAll('status',true)">Select All</button>
+      <button class="btn btn-ghost btn-xs" onclick="xlSelAll('status',false)">Deselect All</button>
     </div>
     <div class="status-filter-grid">
-      <label class="status-filter-item sfi-ns"><input type="checkbox" name="excelStatus" value="not-started" checked> Not Started</label>
-      <label class="status-filter-item sfi-ip"><input type="checkbox" name="excelStatus" value="in-progress" checked> In Progress</label>
-      <label class="status-filter-item sfi-done"><input type="checkbox" name="excelStatus" value="completed" checked> Completed</label>
-      <label class="status-filter-item sfi-pfc"><input type="checkbox" name="excelStatus" value="pending-client" checked> Pending From Client</label>
-      <label class="status-filter-item sfi-cbd"><input type="checkbox" name="excelStatus" value="cannot-be-done" checked> Cannot Be Done</label>
-      <label class="status-filter-item sfi-nr"><input type="checkbox" name="excelStatus" value="not-required" checked> Not Required</label>
+      <label class="status-filter-item sfi-ns"><input type="checkbox" name="xlStat" value="not-started" checked> Not Started</label>
+      <label class="status-filter-item sfi-ip"><input type="checkbox" name="xlStat" value="in-progress" checked> In Progress</label>
+      <label class="status-filter-item sfi-done"><input type="checkbox" name="xlStat" value="completed" checked> Completed</label>
+      <label class="status-filter-item sfi-pfc"><input type="checkbox" name="xlStat" value="pending-client" checked> Pending From Client</label>
+      <label class="status-filter-item sfi-cbd"><input type="checkbox" name="xlStat" value="cannot-be-done" checked> Cannot Be Done</label>
+      <label class="status-filter-item sfi-nr"><input type="checkbox" name="xlStat" value="not-required" checked> Not Required</label>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeModal('excelModal')">Cancel</button>
-      <button class="btn btn-green btn-sm" onclick="generateExcel()">&#8595; Generate Excel</button>
+      <button class="btn btn-sm" style="background:#00c853;color:#fff;border-color:#00c853;" onclick="generateExcel()">&#8595; Generate Excel</button>
     </div>
   </div>
 </div>
 
-<!-- GH SETUP MODAL -->
-<div class="modal-overlay gh-setup-modal" id="ghSetupModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('ghSetupModal')">&#215;</button>
+<!-- CONFIGURE MODAL -->
+<div class="modal-overlay" id="cfgModal">
+  <div class="modal" style="width:460px;">
+    <button class="modal-close" onclick="closeModal('cfgModal')">&#215;</button>
     <div class="modal-title">&#9881; Configure Data Source</div>
-    <div class="github-info">Connect to the GitHub repo where the admin stores <code>data.json</code>.</div>
-    <div class="form-group"><label>GitHub Username</label><input type="text" id="cfgUser" placeholder="github-username"></div>
-    <div class="form-group"><label>Repository Name</label><input type="text" id="cfgRepo" placeholder="crx-integration-tracker"></div>
-    <div class="form-group"><label>Personal Access Token</label><input type="password" id="cfgToken" placeholder="ghp_xxxxxxxxxxxx"></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Connect to the GitHub repo where <code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--accent2);">data.json</code> is stored.</p>
+    <div style="margin-bottom:12px;"><label class="form-label">GitHub Username</label><input class="form-input" type="text" id="cfgUser" placeholder="github-username"></div>
+    <div style="margin-bottom:12px;"><label class="form-label">Repository Name</label><input class="form-input" type="text" id="cfgRepo" placeholder="crx-integration-tracker"></div>
+    <div style="margin-bottom:12px;"><label class="form-label">Personal Access Token</label><input class="form-input" type="password" id="cfgToken" placeholder="ghp_xxxxxxxxxxxx"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('ghSetupModal')">Cancel</button>
-      <button class="btn btn-ghost btn-sm" onclick="clearCfg()">Clear</button>
-      <button class="btn btn-primary btn-sm" onclick="saveSetupAndLoad()">Save &amp; Load</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('cfgModal')">Cancel</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearConfig()">Clear</button>
+      <button class="btn btn-primary btn-sm" onclick="saveAndLoad()">Save &amp; Load</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"><span id="toastIcon">&#10003;</span><span id="toastMsg"></span></div>
-
 <script>
-// ── CONFIG ──
-const CFG_KEY = 'crx_viewer_config';
-let currentClientId = null;
-let viewerDB = { clients: [] };
-let refreshInterval = null;
+// ============================================================
+// CRx Integration Tracker - Viewer (Read Only)
+// Loads data from GitHub, no write access
+// ============================================================
 
+var CFG_KEY = 'crx_viewer_config';
+var FONT_KEY = 'crx_font_size';
+var viewerDB = { clients: [], _sso: [] };
+var currentClientId = null;
+var ssoSortAsc = true;
+var refreshInterval = null;
+
+// ── CONFIG ──
 function getCfg() {
-  try { return JSON.parse(localStorage.getItem(CFG_KEY)) || null; } catch { return null; }
+  try { return JSON.parse(localStorage.getItem(CFG_KEY)) || null; } catch(e) { return null; }
 }
 function saveCfg(cfg) { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
-function clearCfg() { localStorage.removeItem(CFG_KEY); location.reload(); }
-
-// ── GITHUB LOAD ──
-async function loadFromGitHub(silent) {
-  const cfg = getCfg();
-  if (!cfg) { showSetupScreen(); return; }
-  if (!silent) setSyncStatus('syncing', 'Loading\u2026');
-  try {
-    const url = 'https://api.github.com/repos/' + cfg.user + '/' + cfg.repo + '/contents/data.json';
-    const res = await fetch(url + '?t=' + Date.now(), {
-      headers: {
-        'Authorization': 'token ' + cfg.token,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
-    if (!res.ok) {
-      setSyncStatus('error', 'Load failed');
-      if (!silent) showToast('Could not load data. Check your config.', 'error');
-      showSetupScreen(); return;
-    }
-    const meta = await res.json();
-    const decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
-    viewerDB = JSON.parse(decoded);
-    // SSO data is stored inside the main DB
-    setSyncStatus('synced', 'Live \u2713');
-    document.getElementById('refreshLabel').textContent = 'Refreshed ' + new Date().toLocaleTimeString();
-    showMainApp();
-    renderDashboard();
-  } catch(e) {
-    setSyncStatus('error', 'Error');
-    if (!silent) showToast('Failed to load data.', 'error');
-    console.error(e);
-  }
+function clearConfig() {
+  localStorage.removeItem(CFG_KEY);
+  closeModal('cfgModal');
+  showSetupScreen();
 }
 
-function refreshData() { loadFromGitHub(false); }
+// ── FONT SIZE ──
+var currentFontSize = parseInt(localStorage.getItem(FONT_KEY) || '16');
+function applyFontSize(size) {
+  currentFontSize = Math.min(22, Math.max(12, size));
+  document.documentElement.style.setProperty('--page-font-size', currentFontSize + 'px');
+  localStorage.setItem(FONT_KEY, String(currentFontSize));
+  var lbl = document.getElementById('fontSizeLabel');
+  if (lbl) lbl.textContent = currentFontSize;
+}
+function adjustFont(delta) { applyFontSize(currentFontSize + delta); }
 
-// Auto-refresh every 3 minutes
-function startAutoRefresh() {
-  if (refreshInterval) clearInterval(refreshInterval);
-  refreshInterval = setInterval(function() { loadFromGitHub(true); }, 3 * 60 * 1000);
+// ── STORAGE CHECK ──
+function checkStorage() {
+  try { localStorage.setItem('_crx_t', '1'); localStorage.removeItem('_crx_t'); }
+  catch(e) { var b = document.getElementById('storageWarning'); if (b) b.classList.add('visible'); }
+}
+function showEdgeFix() {
+  alert('To fix in Microsoft Edge:\nGo to Settings > Privacy, search, and services > Tracking prevention > select Basic.\nOr: add this site as an exception under Tracking prevention > Exceptions.');
+}
+
+// ── SYNC STATUS ──
+function setSyncStatus(state, label) {
+  var el = document.getElementById('syncStatus');
+  var lbl = document.getElementById('syncLabel');
+  if (!el) return;
+  el.className = 'sync-badge' + (state ? ' ' + state : '');
+  lbl.textContent = label;
 }
 
 // ── SCREENS ──
 function showSetupScreen() {
   document.getElementById('setupScreen').style.display = 'block';
   document.getElementById('mainApp').style.display = 'none';
-  // Pre-fill if config exists
-  const cfg = getCfg();
-  if (cfg) {
-    document.getElementById('setupUser').value = cfg.user || '';
-    document.getElementById('setupRepo').value = cfg.repo || '';
-  }
+  setSyncStatus('', 'Not configured');
 }
 function showMainApp() {
   document.getElementById('setupScreen').style.display = 'none';
   document.getElementById('mainApp').style.display = 'block';
 }
 
-function openGhSetup() {
-  const cfg = getCfg();
+// ── GITHUB LOAD ──
+async function loadData(silent) {
+  var cfg = getCfg();
+  if (!cfg) { showSetupScreen(); return; }
+  if (!silent) setSyncStatus('syncing', 'Loading…');
+  try {
+    var url = 'https://api.github.com/repos/' + cfg.user + '/' + cfg.repo + '/contents/data.json?t=' + Date.now();
+    var res = await fetch(url, {
+      headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!res.ok) {
+      setSyncStatus('error', 'Load failed');
+      if (!silent) { showToast('Could not load data. Check your config.', 'error'); showSetupScreen(); }
+      return;
+    }
+    var meta = await res.json();
+    var decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
+    viewerDB = JSON.parse(decoded);
+    if (!viewerDB._sso) viewerDB._sso = [];
+    setSyncStatus('synced', 'Live ✓');
+    var rl = document.getElementById('refreshLabel');
+    if (rl) rl.textContent = 'Refreshed ' + new Date().toLocaleTimeString();
+    showMainApp();
+    renderDashboard();
+  } catch(e) {
+    setSyncStatus('error', 'Error');
+    if (!silent) showToast('Failed to load data.', 'error');
+    console.error('Viewer load error:', e);
+  }
+}
+
+function startAutoRefresh() {
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = setInterval(function() { loadData(true); }, 3 * 60 * 1000);
+}
+
+// ── CONFIGURE ──
+function openCfgModal() {
+  var cfg = getCfg();
   if (cfg) {
     document.getElementById('cfgUser').value = cfg.user || '';
     document.getElementById('cfgRepo').value = cfg.repo || '';
     document.getElementById('cfgToken').value = cfg.token || '';
   }
-  openModal('ghSetupModal');
+  openModal('cfgModal');
 }
 
-function saveSetupAndLoad() {
-  const user = (document.getElementById('setupUser') || document.getElementById('cfgUser')).value.trim();
-  const repo = (document.getElementById('setupRepo') || document.getElementById('cfgRepo')).value.trim();
-  const tokenEl = document.getElementById('setupToken') || document.getElementById('cfgToken');
-  const token = tokenEl ? tokenEl.value.trim() : (getCfg() || {}).token || '';
+function saveAndLoad() {
+  // Read from whichever inputs are visible (setup screen or configure modal)
+  var userEl = document.getElementById('cfgUser').value.trim() || (document.getElementById('setupUser') ? document.getElementById('setupUser').value.trim() : '');
+  var repoEl = document.getElementById('cfgRepo').value.trim() || (document.getElementById('setupRepo') ? document.getElementById('setupRepo').value.trim() : '');
+  var tokenEl = document.getElementById('cfgToken').value.trim() || (document.getElementById('setupToken') ? document.getElementById('setupToken').value.trim() : '');
 
-  // Handle both setup screen and modal
-  const u = document.getElementById('cfgUser') ? document.getElementById('cfgUser').value.trim() : user;
-  const r = document.getElementById('cfgRepo') ? document.getElementById('cfgRepo').value.trim() : repo;
-  const t = document.getElementById('cfgToken') ? document.getElementById('cfgToken').value.trim() : token;
+  // Also check if modal is open vs setup screen
+  var cfgModalOpen = document.getElementById('cfgModal').classList.contains('open');
+  if (cfgModalOpen) {
+    userEl = document.getElementById('cfgUser').value.trim();
+    repoEl = document.getElementById('cfgRepo').value.trim();
+    tokenEl = document.getElementById('cfgToken').value.trim();
+  } else {
+    userEl = document.getElementById('setupUser') ? document.getElementById('setupUser').value.trim() : '';
+    repoEl = document.getElementById('setupRepo') ? document.getElementById('setupRepo').value.trim() : '';
+    tokenEl = document.getElementById('setupToken') ? document.getElementById('setupToken').value.trim() : '';
+  }
 
-  const finalUser = u || user;
-  const finalRepo = r || repo;
-  const finalToken = t || token;
-
-  if (!finalUser || !finalRepo || !finalToken) { showToast('Please fill in all fields.', 'error'); return; }
-  saveCfg({ user: finalUser, repo: finalRepo, token: finalToken });
-  closeModal('ghSetupModal');
-  loadFromGitHub(false);
+  if (!userEl || !repoEl || !tokenEl) { showToast('Please fill in all fields.', 'error'); return; }
+  saveCfg({ user: userEl, repo: repoEl, token: tokenEl });
+  closeModal('cfgModal');
+  loadData(false);
+  startAutoRefresh();
 }
 
 // ── VIEWS ──
 function showView(id) {
-  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('#mainApp .view').forEach(function(v) { v.classList.remove('active'); });
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
 }
 function showDashboard() { currentClientId = null; renderDashboard(); showView('viewDashboard'); }
-function showDetail(clientId) { currentClientId = clientId; renderDetail(); showView('viewDetail'); }
+function showDetail(cid) { currentClientId = cid; renderDetail(); showView('viewDetail'); }
 function showTaskView() { renderTaskView(); showView('viewTasks'); }
+function showSSO() { renderSSOView(); showView('viewSSO'); }
+
+// ── MODULE SWITCH ──
+function toggleModuleMenu() {
+  var m = document.getElementById('moduleMenu');
+  if (m) m.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('moduleDropdown');
+  if (dd && !dd.contains(e.target)) { var m = document.getElementById('moduleMenu'); if (m) m.classList.remove('open'); }
+});
+function switchModule(mod) {
+  var m = document.getElementById('moduleMenu');
+  if (m) m.classList.remove('open');
+  var items = document.querySelectorAll('.module-menu-item');
+  items.forEach(function(item, i) {
+    item.classList.toggle('active', (mod === 'integration' && i === 0) || (mod === 'sso' && i === 1));
+  });
+  var lbl = document.getElementById('moduleLabel');
+  if (mod === 'integration') { if (lbl) lbl.textContent = 'Integration Tracker'; showDashboard(); }
+  else if (mod === 'sso') { if (lbl) lbl.textContent = 'SSO Tracker'; showSSO(); }
+}
 
 // ── HELPERS ──
-const STATUS_MAP = {
-  'not-started':'Not Started','in-progress':'In Progress','completed':'Completed',
-  'pending-client':'Pending From Client','cannot-be-done':'Cannot Be Done','not-required':'Not Required'
+var STATUS_MAP = {
+  'not-started': 'Not Started', 'in-progress': 'In Progress', 'completed': 'Completed',
+  'pending-client': 'Pending From Client', 'cannot-be-done': 'Cannot Be Done', 'not-required': 'Not Required'
 };
 function statusLabel(s) { return STATUS_MAP[s] || s; }
 function statusClass(s) {
-  return {'not-started':'s-not-started','in-progress':'s-in-progress','completed':'s-completed',
-    'pending-client':'s-pending-client','cannot-be-done':'s-cannot-be-done','not-required':'s-not-required'}[s] || '';
+  var m = {'not-started':'s-not-started','in-progress':'s-in-progress','completed':'s-completed',
+    'pending-client':'s-pending-client','cannot-be-done':'s-cannot-be-done','not-required':'s-not-required'};
+  return m[s] || '';
 }
 function esc(str) {
   if (str == null) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function timeAgo(date) {
-  const s = Math.floor((new Date() - date) / 1000);
+  var s = Math.floor((new Date() - date) / 1000);
   if (s < 60) return 'just now';
   if (s < 3600) return Math.floor(s/60) + 'm ago';
   if (s < 86400) return Math.floor(s/3600) + 'h ago';
@@ -826,16 +710,10 @@ function timeAgo(date) {
   return date.toLocaleDateString();
 }
 function computeStats(client) {
-  const counts = {'not-started':0,'in-progress':0,'completed':0,'pending-client':0,'cannot-be-done':0,'not-required':0};
+  var counts = {'not-started':0,'in-progress':0,'completed':0,'pending-client':0,'cannot-be-done':0,'not-required':0};
   client.sections.forEach(function(s) { s.phases.forEach(function(p) { p.tasks.forEach(function(t) { if (counts[t.status] !== undefined) counts[t.status]++; }); }); });
-  return { total: Object.values(counts).reduce(function(a,b){return a+b;},0), completed: counts['completed'], inProgress: counts['in-progress'], byStatus: counts };
-}
-function setSyncStatus(state, label) {
-  const el = document.getElementById('syncStatus');
-  const lbl = document.getElementById('syncLabel');
-  if (!el) return;
-  el.className = 'sync-status ' + state;
-  lbl.textContent = label;
+  var total = Object.values(counts).reduce(function(a,b){return a+b;}, 0);
+  return { total: total, completed: counts['completed'], inProgress: counts['in-progress'], byStatus: counts };
 }
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
@@ -845,53 +723,426 @@ function switchTab(tabId, btn) {
 }
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(function(o) {
-  o.addEventListener('click', function(e) { if (e.target === o) o.classList.remove('open'); });
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
 });
 function showToast(msg, type) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   document.getElementById('toastIcon').textContent = type === 'success' ? '\u2713' : type === 'error' ? '\u2715' : '\u2139';
   document.getElementById('toastMsg').textContent = msg;
-  t.className = 'toast show ' + (type || '');
+  t.className = 'toast show' + (type ? ' ' + type : '');
   setTimeout(function() { t.className = 'toast'; }, 3000);
 }
 
 // ── DASHBOARD ──
 function renderDashboard() {
-  const clients = viewerDB.clients || [];
-  const grid = document.getElementById('clientGrid');
-  if (!grid) return;
+  var grid = document.getElementById('clientGrid');
+  var clients = viewerDB.clients || [];
   if (!clients.length) {
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128268;</div><div class="empty-title">No integrations found</div><div class="empty-desc">Data may still be loading.</div><button class="btn btn-ghost btn-sm" onclick="refreshData()">&#8635; Try Refreshing</button></div>';
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128268;</div><div class="empty-title">No integrations found</div><div class="empty-desc">Data may still be loading.</div><button class="btn btn-ghost btn-sm" onclick="loadData(false)">&#8635; Refresh</button></div>';
     return;
   }
-  const activeClients = clients.filter(function(c) { return c.overallStatus !== 'Completed' && c.overallStatus !== 'Not Applicable'; });
-  const doneClients = clients.filter(function(c) { return c.overallStatus === 'Completed' || c.overallStatus === 'Not Applicable'; });
-  const scMap = {'Not Started':'var(--ns-text)','Active':'var(--done-text)','Upcoming':'var(--ip-text)','On Hold':'var(--pfc-text)','Completed':'var(--text3)','Not Applicable':'var(--text3)'};
+  var activeClients = clients.filter(function(c) { return c.overallStatus !== 'Completed' && c.overallStatus !== 'Not Applicable'; });
+  var doneClients = clients.filter(function(c) { return c.overallStatus === 'Completed' || c.overallStatus === 'Not Applicable'; });
+  var scMap = {'Not Started':'var(--ns-text)','Active':'var(--done-text)','Upcoming':'var(--ip-text)','On Hold':'var(--pfc-text)','Completed':'var(--text3)','Not Applicable':'var(--text3)'};
+
   function buildCard(c) {
     var stats = computeStats(c);
     var pct = stats.total ? Math.round(stats.completed / stats.total * 100) : 0;
-    var pills = Object.entries(stats.byStatus).filter(function(e){return e[1]>0;}).map(function(e){return '<span class="pill '+statusClass(e[0])+'">'+statusLabel(e[0])+': '+e[1]+'</span>';}).join('');
-    var upd = (c.updatedAt||c.createdAt) ? 'Updated '+timeAgo(new Date(c.updatedAt||c.createdAt)) : '—';
+    var pills = Object.entries(stats.byStatus).filter(function(e){return e[1]>0;}).map(function(e){
+      return '<span class="pill ' + statusClass(e[0]) + '">' + statusLabel(e[0]) + ': ' + e[1] + '</span>';
+    }).join('');
+    var upd = (c.updatedAt || c.createdAt) ? 'Updated ' + timeAgo(new Date(c.updatedAt || c.createdAt)) : '\u2014';
     var sc = scMap[c.overallStatus] || 'var(--text2)';
     var cid = c.id;
     return '<div class="client-card" onclick="showDetail(\'' + cid + '\')">' +
-      '<div class="card-header"><div class="card-name">' + esc(c.name) + '</div><span class="card-cmms">' + esc(c.cmmsType||'—') + '</span></div>' +
-      '<div class="card-meta"><strong>CRx:</strong> ' + esc(c.crxConsultant||'—') + '<br><strong>POC:</strong> ' + esc(c.clientPoc||'—') + (c.expectedDate ? '<br><strong>Expected:</strong> ' + esc(c.expectedDate) : '') + '</div>' +
+      '<div class="card-header"><div class="card-name">' + esc(c.name) + '</div><span class="card-cmms">' + esc(c.cmmsType || '\u2014') + '</span></div>' +
+      '<div class="card-meta"><strong>CRx Consultant:</strong> ' + esc(c.crxConsultant || '\u2014') + '<br><strong>Client POC:</strong> ' + esc(c.clientPoc || '\u2014') + (c.expectedDate ? '<br><strong>Expected:</strong> ' + esc(c.expectedDate) : '') + '</div>' +
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div class="card-last-updated">&#128336; ' + esc(upd) + '</div>' +
-      '<span style="font-size:10px;font-weight:600;color:' + sc + ';background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">' + esc(c.overallStatus||'Active') + '</span></div>' +
+      '<span style="font-size:10px;font-weight:600;color:' + sc + ';background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">' + esc(c.overallStatus || 'Active') + '</span></div>' +
       '<div class="progress-section"><div class="progress-label"><span>Completion</span><span>' + pct + '%</span></div><div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>' +
       '<div class="status-pills">' + pills + '</div>' +
       '<div class="card-footer" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="showDetail(\'' + cid + '\')">Open &#8594;</button>' +
       (stats.inProgress > 0 ? '<span style="font-size:10px;color:#fff;padding:2px 7px;background:var(--ip);border-radius:4px;">' + stats.inProgress + ' In Progress</span>' : '') +
       '</div></div>';
   }
+
   var html = '';
   if (activeClients.length) html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">' + activeClients.map(buildCard).join('') + '</div>';
   if (doneClients.length) {
-    html += '<div style="display:flex;align-items:center;gap:12px;margin:28px 0 16px;"><div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;">Completed &amp; Not Applicable</span><div style="flex:1;height:1px;background:var(--border);"></div></div>';
+    html += '<div style="display:flex;align-items:center;gap:12px;margin:28px 0 16px;">' +
+      '<div style="flex:1;height:1px;background:var(--border);"></div>' +
+      '<span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;">Completed &amp; Not Applicable</span>' +
+      '<div style="flex:1;height:1px;background:var(--border);"></div></div>';
     html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;opacity:0.75;">' + doneClients.map(buildCard).join('') + '</div>';
   }
   grid.innerHTML = html;
 }
 
+// ── DETAIL ──
+function renderDetail() {
+  var c = (viewerDB.clients || []).find(function(x) { return x.id === currentClientId; });
+  if (!c) { showDashboard(); return; }
+  document.getElementById('breadcrumbName').textContent = c.name;
+  document.getElementById('detailName').textContent = c.name;
+  document.getElementById('detailCmms').textContent = c.cmmsType || '\u2014';
+  document.getElementById('detailCrx').textContent = c.crxConsultant || '\u2014';
+  document.getElementById('detailPoc').textContent = c.clientPoc || '\u2014';
+  document.getElementById('detailPocEmail').textContent = c.clientPocEmail || '\u2014';
+  document.getElementById('detailStatus').textContent = c.overallStatus || 'Active';
+  document.getElementById('detailExpected').textContent = c.expectedDate || '\u2014';
+  document.getElementById('detailUpdated').textContent = 'Updated: ' + new Date(c.updatedAt || c.createdAt).toLocaleDateString();
+  renderStats(c); renderSections(c); renderDocs(c); renderNotifications(c); renderNotes(c);
+}
+
+function renderStats(c) {
+  var labels = {'not-started':['Not Started','var(--ns-text)'],'in-progress':['In Progress','var(--ip-text)'],'completed':['Completed','var(--done-text)'],'pending-client':['Pending Client','var(--pfc-text)'],'cannot-be-done':['Cannot Do','var(--cbd-text)'],'not-required':['Not Required','var(--nr-text)']};
+  var stats = computeStats(c);
+  document.getElementById('overviewStats').innerHTML = Object.entries(stats.byStatus).map(function(e) {
+    var info = labels[e[0]];
+    return '<div class="stat-box"><div class="stat-num" style="color:' + info[1] + '">' + e[1] + '</div><div class="stat-label">' + info[0] + '</div></div>';
+  }).join('');
+}
+
+function renderSections(c) {
+  var cont = document.getElementById('integrationSections');
+  cont.innerHTML = c.sections.map(function(sec) {
+    return '<div class="section-card"><div class="section-title">' + esc(sec.label) + '</div>' +
+      sec.phases.map(function(ph) {
+        return '<div><div style="padding:7px 14px 3px;font-size:10px;color:var(--accent2);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">' + esc(ph.label) + '</div>' +
+          '<table><thead><tr><th style="width:28%">Task</th><th style="width:22%">Status</th><th>Latest Comment</th></tr></thead><tbody>' +
+          ph.tasks.map(function(t) {
+            var comments = t.comments || [];
+            var cc = comments.length;
+            var latest = cc > 0 ? comments[comments.length - 1] : null;
+            var latestHtml = latest ? '<div class="comment-preview-ro"><span style="color:var(--accent);font-weight:600;">' + esc(latest.author || 'Anon') + ':</span> ' + esc(latest.text) + '</div>' : '';
+            var secId = esc(sec.id), phId = esc(ph.id), tId = esc(t.id);
+            return '<tr>' +
+              '<td class="task-name">' + esc(t.name) + '</td>' +
+              '<td><span class="status-badge ' + statusClass(t.status) + '">' + statusLabel(t.status) + '</span></td>' +
+              '<td><div class="comment-cell">' +
+              (cc > 0 ? '<button class="view-cmts-btn" onclick="openCommentView(\'' + secId + '\',\'' + phId + '\',\'' + tId + '\')">&#128172; <span class="cmt-count">' + cc + '</span></button>' : '<span style="font-size:11px;color:var(--text3);">No comments</span>') +
+              latestHtml + '</div></td></tr>';
+          }).join('') + '</tbody></table></div>';
+      }).join('') + '</div>';
+  }).join('');
+}
+
+function openCommentView(secId, phId, taskId) {
+  var c = (viewerDB.clients || []).find(function(x) { return x.id === currentClientId; });
+  if (!c) return;
+  var sec = c.sections.find(function(s) { return s.id === secId; });
+  if (!sec) return;
+  var ph = sec.phases.find(function(p) { return p.id === phId; });
+  if (!ph) return;
+  var task = ph.tasks.find(function(t) { return t.id === taskId; });
+  if (!task) return;
+  document.getElementById('commentViewTitle').textContent = '\uD83D\uDCAC ' + task.name;
+  var thread = document.getElementById('commentViewThread');
+  var comments = task.comments || [];
+  if (!comments.length) {
+    thread.innerHTML = '<div class="no-data">No comments on this task.</div>';
+  } else {
+    thread.innerHTML = comments.map(function(cm) {
+      var taskStyle = cm.isTask ? ' style="border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);"' : '';
+      return '<div class="comment-bubble"' + taskStyle + '>' +
+        '<div class="comment-meta"><span class="comment-author">' + esc(cm.author || 'Anonymous') + '</span><span>' + esc(cm.timestamp || '') + '</span></div>' +
+        '<div class="comment-text">' + esc(cm.text) + '</div></div>';
+    }).join('');
+  }
+  openModal('commentViewModal');
+}
+
+function renderDocs(c) {
+  var docs = c.docs || [];
+  var tbody = document.getElementById('docsTableBody');
+  var empty = document.getElementById('docsEmpty');
+  if (!docs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = docs.map(function(d) {
+    return '<tr>' +
+      '<td><span class="doc-type-badge">' + esc(d.type || '\u2014') + '</span></td>' +
+      '<td>' + (d.link ? '<a class="doc-link" href="' + esc(d.link) + '" target="_blank">' + esc(d.name || d.link) + '</a>' : esc(d.name || '\u2014')) + '</td>' +
+      '<td class="doc-date">' + esc(d.date || '\u2014') + '</td>' +
+      '<td style="font-size:12px;color:var(--text2);">' + esc(d.notes || '') + '</td></tr>';
+  }).join('');
+}
+
+function renderNotifications(c) {
+  var msgs = document.getElementById('notifMessages');
+  var notifs = c.notifications || [];
+  var extras = [];
+  (c.globalComments || []).filter(function(cm){return cm.isTask;}).forEach(function(cm){extras.push(Object.assign({},cm,{_source:'Client Notes'}));});
+  c.sections.forEach(function(s){s.phases.forEach(function(p){p.tasks.forEach(function(t){(t.comments||[]).filter(function(cm){return cm.isTask;}).forEach(function(cm){extras.push(Object.assign({},cm,{_source:t.name}));});});});});
+  var all = notifs.concat(extras).sort(function(a,b){return(b._ts||0)-(a._ts||0);});
+  if (!all.length) { msgs.innerHTML = '<div class="no-data">No notifications.</div>'; return; }
+  msgs.innerHTML = all.map(function(n) {
+    return '<div class="comment-bubble" style="border-color:rgba(255,176,32,0.3);background:rgba(51,37,0,0.2);">' +
+      '<div class="comment-meta"><span style="color:var(--pfc-text);font-weight:600;">' + esc(n.author||'Anonymous') + (n._source ? ' <span style="color:var(--text3);font-weight:400;">\u00b7 ' + esc(n._source) + '</span>' : '') + '</span><span>' + esc(n.timestamp||'') + '</span></div>' +
+      '<div class="comment-text">' + esc(n.text) + '</div></div>';
+  }).join('');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function renderNotes(c) {
+  var msgs = document.getElementById('globalChatMessages');
+  var comments = c.globalComments || [];
+  if (!comments.length) { msgs.innerHTML = '<div class="no-data">No notes yet.</div>'; return; }
+  msgs.innerHTML = comments.map(function(cm) {
+    var taskStyle = cm.isTask ? ' style="border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);"' : '';
+    return '<div class="comment-bubble"' + taskStyle + '>' +
+      '<div class="comment-meta"><span class="comment-author">' + esc(cm.author||'Anonymous') + '</span><span>' + esc(cm.timestamp||'') + '</span></div>' +
+      '<div class="comment-text">' + esc(cm.text) + '</div></div>';
+  }).join('');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ── TASK VIEW ──
+function renderTaskView() {
+  var cf = document.getElementById('tvFilterClient');
+  if (!cf) return;
+  var prevVal = cf.value;
+  cf.innerHTML = '<option value="">All Clients</option>' +
+    (viewerDB.clients||[]).map(function(cc){return '<option value="'+cc.id+'">'+esc(cc.name)+'</option>';}).join('');
+  cf.value = prevVal;
+  var filterClient = cf.value;
+  var filterStatus = document.getElementById('tvFilterStatus').value;
+  var filterOverdue = document.getElementById('tvFilterOverdue').value;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var rows = [];
+  (viewerDB.clients||[]).forEach(function(cc) {
+    if (filterClient && cc.id !== filterClient) return;
+    cc.sections.forEach(function(sec){sec.phases.forEach(function(ph){ph.tasks.forEach(function(t){
+      (t.comments||[]).filter(function(cm){return cm.isTask;}).forEach(function(cm){
+        rows.push({clientName:cc.name,clientId:cc.id,task:t.name,source:'Integration',date:cm.timestamp,comment:cm.text,author:cm.author,cmStatus:cm.taskStatus||'not-started',dueDate:cm.dueDate||''});
+      });
+    });});});
+    (cc.globalComments||[]).filter(function(cm){return cm.isTask;}).forEach(function(cm){
+      rows.push({clientName:cc.name,clientId:cc.id,task:'Client Note',source:'Client Notes',date:cm.timestamp,comment:cm.text,author:cm.author,cmStatus:cm.taskStatus||'not-started',dueDate:cm.dueDate||''});
+    });
+  });
+  var tsLabel = {'not-started':'Not Started','in-progress':'In Progress','completed':'Completed','pending-client':'Pending From Client','shared-dev':'Shared With Dev Team','cannot-be-done':'Cannot Be Done'};
+  var tsColor = {'not-started':'background:var(--ns);color:var(--ns-text);','in-progress':'background:var(--ip);color:var(--ip-text);','completed':'background:var(--done);color:var(--done-text);','pending-client':'background:var(--pfc);color:var(--pfc-text);','shared-dev':'background:#1a1a4a;color:#a0a0ff;','cannot-be-done':'background:var(--cbd);color:var(--cbd-text);'};
+  var filtered = rows.filter(function(r) {
+    if (filterStatus && r.cmStatus !== filterStatus) return false;
+    var dd = r.dueDate ? new Date(r.dueDate) : null; if (dd) dd.setHours(0,0,0,0);
+    var isOverdue = dd && dd < today && r.cmStatus !== 'completed';
+    if (filterOverdue === 'overdue' && !isOverdue) return false;
+    if (filterOverdue === 'incomplete' && r.cmStatus === 'completed') return false;
+    if (filterOverdue === 'no-date' && r.dueDate) return false;
+    return true;
+  });
+  var tbody = document.getElementById('taskViewBody');
+  var empty = document.getElementById('taskViewEmpty');
+  var countEl = document.getElementById('tvCount');
+  if (countEl) countEl.textContent = filtered.length + ' task' + (filtered.length !== 1 ? 's' : '');
+  if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = filtered.map(function(r) {
+    var dd = r.dueDate ? new Date(r.dueDate) : null; if (dd) dd.setHours(0,0,0,0);
+    var isOverdue = dd && dd < today && r.cmStatus !== 'completed';
+    var dueTxt = r.dueDate
+      ? '<span style="font-size:11px;color:' + (isOverdue?'var(--cbd-text)':'var(--text2)') + ';">' + r.dueDate + '</span>' + (isOverdue ? '<span class="overdue-badge">OVERDUE</span>' : '')
+      : '<span style="font-size:11px;color:var(--text3);">\u2014</span>';
+    var sc = tsColor[r.cmStatus] || tsColor['not-started'];
+    var sl = tsLabel[r.cmStatus] || r.cmStatus;
+    return '<tr>' +
+      '<td><a style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="showDetail(\'' + r.clientId + '\')">' + esc(r.clientName) + '</a></td>' +
+      '<td class="task-name">' + esc(r.task) + '<div style="font-size:10px;color:var(--text3);">' + esc(r.source) + '</div></td>' +
+      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;' + sc + '">' + sl + '</span></td>' +
+      '<td>' + dueTxt + '</td>' +
+      '<td style="font-size:11px;color:var(--text3);">' + esc(r.date) + '</td>' +
+      '<td style="font-size:12px;"><span style="color:var(--accent);font-weight:600;">' + esc(r.author||'Anon') + ':</span> ' + esc(r.comment) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+// ── SSO VIEW ──
+function ssoSortToggle() {
+  ssoSortAsc = !ssoSortAsc;
+  var btn = document.getElementById('ssoSortBtn');
+  if (btn) btn.textContent = ssoSortAsc ? '\u21C5 Client A\u2013Z' : '\u21C5 Client Z\u2013A';
+  renderSSOView();
+}
+function renderSSOView() {
+  var tb = document.getElementById('ssoTableBody');
+  var em = document.getElementById('ssoEmpty');
+  if (!tb) return;
+  var sso = viewerDB._sso || [];
+  if (!sso.length) { tb.innerHTML = ''; em.style.display = 'block'; return; }
+  em.style.display = 'none';
+  var nsEl = document.getElementById('ssoFilterNS');
+  var ipEl = document.getElementById('ssoFilterIP');
+  var doneEl = document.getElementById('ssoFilterDone');
+  var nrEl = document.getElementById('ssoFilterNR');
+  var allChecked = !nsEl || (nsEl.checked && ipEl.checked && doneEl.checked && nrEl.checked);
+  var filters = allChecked ? null : [];
+  if (!allChecked) {
+    if (nsEl && nsEl.checked) filters.push('Not Started');
+    if (ipEl && ipEl.checked) filters.push('In Progress');
+    if (doneEl && doneEl.checked) filters.push('Completed');
+    if (nrEl && nrEl.checked) filters.push('Not Required');
+  }
+  var entries = sso.slice().sort(function(a,b){return ssoSortAsc ? a.clientName.localeCompare(b.clientName) : b.clientName.localeCompare(a.clientName);});
+  if (filters) entries = entries.filter(function(e){return filters.indexOf(e.ssoStatus||'Not Started')>-1;});
+  var ss = {'Not Started':'background:var(--ns);color:var(--ns-text);','In Progress':'background:var(--ip);color:var(--ip-text);','Completed':'background:var(--done);color:var(--done-text);','Not Required':'background:var(--nr);color:var(--nr-text);'};
+  tb.innerHTML = entries.map(function(e) {
+    var s = ss[e.ssoStatus||'Not Started'] || ss['Not Started'];
+    return '<tr>' +
+      '<td style="font-weight:600;">' + esc(e.clientName) + '</td>' +
+      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--surface3);color:var(--text);">' + esc(e.loginType||'\u2014') + '</span></td>' +
+      '<td style="font-size:12px;color:var(--text3);">' + esc(e.setupDate||'\u2014') + '</td>' +
+      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;' + s + '">' + esc(e.ssoStatus||'Not Started') + '</span></td>' +
+      '<td style="font-size:12px;color:var(--text2);">' + esc(e.comments||'\u2014') + '</td></tr>';
+  }).join('');
+}
+
+// ── PDF ──
+function openPdfModal(mode) {
+  var currentOnly = mode === 'current';
+  document.getElementById('pdfClientList').innerHTML = (viewerDB.clients||[]).map(function(c) {
+    return '<label class="client-check-item"><input type="checkbox" name="pdfClient" value="'+c.id+'" '+((!currentOnly||c.id===currentClientId)?'checked':'')+'>'+
+      '<div><div class="client-check-name">'+esc(c.name)+'</div><div class="client-check-meta">'+esc(c.cmmsType||'\u2014')+' \u00b7 '+esc(c.overallStatus||'Active')+'</div></div></label>';
+  }).join('');
+  openModal('pdfModal');
+}
+function pdfSelAll(val) { document.querySelectorAll('#pdfClientList input[type=checkbox]').forEach(function(cb){cb.checked=val;}); }
+function generatePDF() {
+  var selected = Array.from(document.querySelectorAll('#pdfClientList input[type=checkbox]:checked')).map(function(cb){return cb.value;});
+  if (!selected.length) { showToast('Select at least one client.','error'); return; }
+  closeModal('pdfModal');
+  buildPDF((viewerDB.clients||[]).filter(function(c){return selected.indexOf(c.id)>-1;}));
+}
+function buildPDF(clients) {
+  var jsPDF_ = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
+  if (!jsPDF_) { showToast('PDF library not loaded.','error'); return; }
+  var doc = new jsPDF_({orientation:'landscape',unit:'mm',format:'a4'});
+  var pageW=297,pageH=210,margin=18;
+  clients.forEach(function(c,ci) {
+    if (ci>0) doc.addPage();
+    var y=margin;
+    doc.setFillColor(15,24,32); doc.rect(0,0,pageW,14,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(79,124,255);
+    doc.text('CRx Integration Tracker',margin,9);
+    doc.setTextColor(136,146,176); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.text('Generated: '+new Date().toLocaleString(),pageW-margin,9,{align:'right'});
+    y=22; doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(30,30,30);
+    doc.text(c.name,margin,y); y+=7;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
+    doc.text(['CMMS: '+(c.cmmsType||'\u2014'),'CRx: '+(c.crxConsultant||'\u2014'),'POC: '+(c.clientPoc||'\u2014'),'Status: '+(c.overallStatus||'Active')].join('   |   '),margin,y);
+    y+=4; doc.setDrawColor(200); doc.line(margin,y,pageW-margin,y); y+=6;
+    c.sections.forEach(function(sec) {
+      if (y>pageH-20){doc.addPage();y=22;}
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(0,180,150);
+      doc.text(sec.label,margin,y); y+=6;
+      sec.phases.forEach(function(ph) {
+        if (y>pageH-16){doc.addPage();y=22;}
+        doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(80,100,180);
+        doc.text(ph.label,margin+4,y); y+=5;
+        ph.tasks.forEach(function(t) {
+          if (y>pageH-10){doc.addPage();y=22;}
+          var sColors={'not-started':[58,63,92],'in-progress':[15,45,94],'completed':[10,46,32],'pending-client':[51,37,0],'cannot-be-done':[46,16,16],'not-required':[22,22,58]};
+          var rgb=sColors[t.status]||[240,240,240];
+          doc.setFillColor(rgb[0],rgb[1],rgb[2]); doc.rect(margin+8,y-3.5,pageW-margin*2-8,6,'F');
+          doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(220);
+          doc.text('\u2022 '+t.name,margin+10,y);
+          doc.setFont('helvetica','bold'); doc.text(statusLabel(t.status),175,y);
+          var latest=t.comments&&t.comments.length?t.comments[t.comments.length-1]:null;
+          if (latest){doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(160);doc.text((latest.author||'')+': '+latest.text.substring(0,55)+(latest.text.length>55?'\u2026':''),215,y);}
+          y+=6.5;
+        }); y+=2;
+      }); y+=3;
+    });
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(160);
+    doc.text('Page '+(ci+1)+' of '+clients.length,pageW/2,pageH-5,{align:'center'});
+  });
+  doc.save(clients.length===1?clients[0].name.replace(/\s+/g,'_')+'_integration.pdf':'CRx_Integration_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.pdf');
+  showToast('PDF exported ('+clients.length+' client'+(clients.length>1?'s':'')+').','success');
+}
+
+// ── EXCEL ──
+function openExcelModal(mode) {
+  var currentOnly = mode === 'current';
+  document.getElementById('xlClientList').innerHTML = (viewerDB.clients||[]).map(function(c) {
+    return '<label class="client-check-item"><input type="checkbox" name="xlClient" value="'+c.id+'" '+((!currentOnly||c.id===currentClientId)?'checked':'')+'>'+
+      '<div><div class="client-check-name">'+esc(c.name)+'</div><div class="client-check-meta">'+esc(c.cmmsType||'\u2014')+' \u00b7 '+esc(c.overallStatus||'Active')+'</div></div></label>';
+  }).join('');
+  document.querySelectorAll('#excelModal input[name=xlStat]').forEach(function(cb){cb.checked=true;});
+  openModal('excelModal');
+}
+function xlSelAll(type,val) { document.querySelectorAll('#excelModal input[name='+(type==='client'?'xlClient':'xlStat')+']').forEach(function(cb){cb.checked=val;}); }
+function generateExcel() {
+  var selected = Array.from(document.querySelectorAll('#excelModal input[name=xlClient]:checked')).map(function(cb){return cb.value;});
+  var statuses = Array.from(document.querySelectorAll('#excelModal input[name=xlStat]:checked')).map(function(cb){return cb.value;});
+  if (!selected.length){showToast('Select at least one client.','error');return;}
+  if (!statuses.length){showToast('Select at least one status.','error');return;}
+  var clients = (viewerDB.clients||[]).filter(function(c){return selected.indexOf(c.id)>-1;});
+  closeModal('excelModal');
+  if (!window.XLSX) { showToast('Excel library not loaded.','error'); return; }
+  var wb = XLSX.utils.book_new();
+  function mkCell(v,opts){
+    opts=opts||{}; var c={v:v,t:typeof v==='number'?'n':'s'};
+    if(opts.bold||opts.headerBg||opts.infoBg){c.s={font:{bold:!!opts.bold,color:{rgb:opts.fontColor||(opts.headerBg?'FFFFFF':'C0C8E0')}},fill:{fgColor:{rgb:opts.headerBg||opts.infoBg||'151820'}},alignment:{vertical:'center',wrapText:!!opts.wrap},border:{top:{style:'thin',color:{rgb:'3A4060'}},bottom:{style:'thin',color:{rgb:'3A4060'}},left:{style:'thin',color:{rgb:'3A4060'}},right:{style:'thin',color:{rgb:'3A4060'}}}};}
+    return c;
+  }
+  var ovRows=[];
+  ovRows.push([mkCell('CRx Integration Tracker \u2014 Overview',{bold:true,headerBg:'0F1828',fontColor:'4F7CFF'})].concat(Array(8).fill(mkCell(''))));
+  ovRows.push([mkCell('Generated: '+new Date().toLocaleString(),{infoBg:'1C2030'})].concat(Array(8).fill(mkCell(''))));
+  ovRows.push(Array(9).fill(mkCell('')));
+  ovRows.push(['Client Name','CMMS Type','CRx Consultant','Client POC','Overall Status','In Progress','Completed %','Last Updated','Expected'].map(function(h){return mkCell(h,{bold:true,headerBg:'222840',fontColor:'00E5C0'});}));
+  clients.forEach(function(c){
+    var stats=computeStats(c); var pct=stats.total?Math.round(stats.completed/stats.total*100):0;
+    ovRows.push([mkCell(c.name,{bold:true,infoBg:'151820'}),mkCell(c.cmmsType||'\u2014',{infoBg:'151820'}),mkCell(c.crxConsultant||'\u2014',{infoBg:'151820'}),mkCell(c.clientPoc||'\u2014',{infoBg:'151820'}),mkCell(c.overallStatus||'Active',{infoBg:'151820'}),mkCell(stats.inProgress,{infoBg:'151820'}),mkCell(pct+'%',{infoBg:'151820'}),mkCell(c.updatedAt?new Date(c.updatedAt).toLocaleDateString():'\u2014',{infoBg:'151820'}),mkCell(c.expectedDate||'\u2014',{infoBg:'151820'})]);
+  });
+  var ovWS=XLSX.utils.aoa_to_sheet(ovRows);
+  ovWS['!cols']=[24,16,20,20,14,13,13,16,18].map(function(w){return{wch:w};});
+  ovWS['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}},{s:{r:2,c:0},e:{r:2,c:8}}];
+  XLSX.utils.book_append_sheet(wb,ovWS,'Overview');
+  clients.forEach(function(c){
+    var rows=[];
+    [['Client Name',c.name],['CMMS Type',c.cmmsType||'\u2014'],['CRx Consultant',c.crxConsultant||'\u2014'],['Client POC',c.clientPoc||'\u2014'],['Overall Status',c.overallStatus||'Active'],['Expected',c.expectedDate||'\u2014'],['Last Updated',c.updatedAt?new Date(c.updatedAt).toLocaleDateString():'\u2014']].forEach(function(pair){rows.push([mkCell(pair[0],{bold:true,headerBg:'222840',fontColor:'00E5C0'}),mkCell(pair[1],{infoBg:'151820'})].concat(Array(5).fill(mkCell(''))));});
+    rows.push(Array(7).fill(mkCell('')));
+    rows.push(['Section','Phase','Task','Status','Latest Comment','Comment By','Date'].map(function(h){return mkCell(h,{bold:true,headerBg:'1C2030',fontColor:'4F7CFF'});}));
+    var allCmts=[];
+    c.sections.forEach(function(sec){sec.phases.forEach(function(ph){ph.tasks.forEach(function(t){
+      if(statuses.indexOf(t.status)<0) return;
+      var comments=t.comments||[]; var latest=comments.length?comments[comments.length-1]:null;
+      rows.push([mkCell(sec.label,{infoBg:'1A1E2E'}),mkCell(ph.label,{infoBg:'1A1E2E'}),mkCell(t.name,{infoBg:'1A1E2E'}),mkCell(statusLabel(t.status),{infoBg:'1A1E2E'}),mkCell(latest?latest.text:'',{infoBg:'1A1E2E',wrap:true}),mkCell(latest?latest.author||'':'',{infoBg:'1A1E2E'}),mkCell(latest?latest.timestamp:'',{infoBg:'1A1E2E'})]);
+      comments.forEach(function(cm){allCmts.push(Object.assign({section:sec.label,phase:ph.label,task:t.name},cm));});
+    });});});
+    if(allCmts.length){
+      rows.push(Array(7).fill(mkCell('')));
+      rows.push([mkCell('FULL COMMENT HISTORY',{bold:true,headerBg:'0A2030',fontColor:'00E5C0'})].concat(Array(6).fill(mkCell(''))));
+      rows.push(['Section','Phase','Task','Author','Comment','Date/Time','Task?'].map(function(h){return mkCell(h,{bold:true,headerBg:'1C2030',fontColor:'8892B0'});}));
+      allCmts.forEach(function(cm){rows.push([mkCell(cm.section,{infoBg:'111828'}),mkCell(cm.phase,{infoBg:'111828'}),mkCell(cm.task,{infoBg:'111828'}),mkCell(cm.author||'Anon',{bold:true,infoBg:'111828',fontColor:'4F7CFF'}),mkCell(cm.text,{infoBg:'111828',wrap:true}),mkCell(cm.timestamp||'',{infoBg:'111828'}),mkCell(cm.isTask?'\u2713':'',{infoBg:'111828'})]);});
+    }
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[26,18,26,20,38,16,20].map(function(w){return{wch:w};});
+    ws['!merges']=[]; for(var i=0;i<7;i++) ws['!merges'].push({s:{r:i,c:1},e:{r:i,c:6}});
+    XLSX.utils.book_append_sheet(wb,ws,c.name.replace(/[:\\\\/\?\*\[\]]/g,'').substring(0,31));
+  });
+  XLSX.writeFile(wb,clients.length===1?clients[0].name.replace(/\s+/g,'_')+'_integration.xlsx':'CRx_Integration_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.xlsx');
+  showToast('Excel exported ('+clients.length+' client'+(clients.length>1?'s':'')+').','success');
+}
+
+// ============================================================
+// INIT — runs immediately using IIFE, no event listener needed
+// This guarantees it works even if load event already fired
+// ============================================================
+(function init() {
+  applyFontSize(currentFontSize);
+  checkStorage();
+  var cfg = getCfg();
+  if (cfg) {
+    // Config exists — show app immediately then load data
+    showMainApp();
+    loadData(false);
+    startAutoRefresh();
+  } else {
+    // No config — show setup screen
+    showSetupScreen();
+  }
+})();
+</script>
+</body>
+</html>
