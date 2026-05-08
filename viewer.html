@@ -16,14 +16,14 @@
     --border:#2a3050;--accent:#4f7cff;--accent2:#00e5c0;
     --text:#e8ecf8;--text2:#8892b0;--text3:#4a5580;
     --ns:#2e3350;--ns-text:#8892b0;
-    --ip:#0f2d5e;--ip-text:#5aaeff;
+    --ip:#0f2d5e;--ip-text:#ffffff;
     --done:#0a2e20;--done-text:#00d48a;
     --pfc:#332500;--pfc-text:#ffb020;
     --cbd:#2e1010;--cbd-text:#ff4f4f;
     --nr:#16163a;--nr-text:#7070c8;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.5;}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:16px;line-height:1.5;}
 
   /* HEADER */
   .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
@@ -49,6 +49,31 @@
 
   /* VIEWS */
   .view{display:none;}.view.active{display:block;}
+
+
+  /* Edge tracking prevention banner */
+  .storage-warning{background:rgba(255,152,0,0.12);border-bottom:1px solid rgba(255,152,0,0.4);padding:10px 28px;font-size:13px;color:#ffb020;display:none;align-items:center;gap:10px;flex-wrap:wrap;}
+  .storage-warning.visible{display:flex;}
+  .storage-warning a{color:#ffd060;font-weight:600;cursor:pointer;}
+  .storage-warning-close{margin-left:auto;background:none;border:none;color:#ffb020;cursor:pointer;font-size:18px;line-height:1;}
+
+
+  /* MODULE DROPDOWN */
+  .module-dropdown{position:relative;display:inline-block;}
+  .module-btn{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--accent);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;transition:background 0.15s;}
+  .module-btn:hover{background:var(--surface2);}
+  .module-arrow{font-size:10px;color:var(--text3);margin-left:2px;}
+  .module-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:200px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:none;flex-direction:column;overflow:hidden;}
+  .module-menu.open{display:flex;}
+  .module-menu-item{padding:10px 16px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+  .module-menu-item:last-child{border-bottom:none;}
+  .module-menu-item:hover{background:var(--surface2);color:var(--text);}
+  .module-menu-item.active{color:var(--accent);background:rgba(79,124,255,0.08);}
+  /* FONT TOGGLE */
+  .font-toggle{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;}
+  .font-toggle-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;padding:2px 6px;border-radius:4px;line-height:1;font-family:var(--font-body);transition:all 0.15s;}
+  .font-toggle-btn:hover{background:var(--surface3);color:var(--text);}
+  .font-size-label{font-size:11px;color:var(--text3);min-width:28px;text-align:center;}
 
   /* SETUP SCREEN */
   .setup-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);padding:32px;}
@@ -78,7 +103,7 @@
   .client-card:hover::before{opacity:1;}
   .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
   .card-name{font-family:var(--font-display);font-size:14px;font-weight:700;line-height:1.3;}
-  .card-cmms{font-size:10px;background:var(--surface3);color:var(--accent);padding:2px 7px;border-radius:20px;border:1px solid var(--border);white-space:nowrap;flex-shrink:0;}
+  .card-cmms{font-size:10px;background:var(--surface3);color:#ffffff;padding:2px 7px;border-radius:20px;border:1px solid var(--border);white-space:nowrap;flex-shrink:0;}
   .card-meta{color:var(--text2);font-size:11px;margin-bottom:8px;line-height:1.8;}
   .card-meta strong{color:var(--text);}
   .card-last-updated{font-size:10px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;display:inline-block;margin-bottom:8px;}
@@ -236,17 +261,36 @@
 
 <!-- HEADER -->
 <header class="app-header">
-  <div class="app-logo">
-    <span style="color:var(--accent)">CRx</span>
-    <span class="logo-rest">/ Integration Tracker</span>
-    <span class="view-only-badge">VIEW ONLY</span>
+  <div class="module-dropdown" id="moduleDropdown">
+    <button class="module-btn" onclick="toggleModuleMenu()">
+      <span style="color:var(--accent)">CRx</span>
+      <span style="color:var(--text2);font-weight:400;" id="moduleLabel">/ Integration Tracker</span>
+      <span class="module-arrow">&#9662;</span>
+    </button>
+    <div class="module-menu" id="moduleMenu">
+      <div class="module-menu-item active" onclick="switchModule('integration')">&#128268; Integration Tracker</div>
+      <div class="module-menu-item" onclick="switchModule('sso')">&#128272; SSO Tracker</div>
+    </div>
+    <span class="view-only-badge" style="margin-left:10px;">VIEW ONLY</span>
   </div>
   <div class="header-right">
+    <div class="font-toggle" title="Adjust font size">
+      <button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button>
+      <span class="font-size-label" id="fontSizeLabel">16</span>
+      <button class="font-toggle-btn" onclick="adjustFont(1)">A+</button>
+    </div>
     <span class="refresh-badge"><span class="refresh-dot"></span><span id="refreshLabel">Live</span></span>
-    <span class="sync-status" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting…</span></span>
-    <button class="btn btn-ghost btn-sm" onclick="openGhSetup()">⚙ Configure</button>
+    <span class="sync-status" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting&#8230;</span></span>
+    <button class="btn btn-ghost btn-sm" onclick="openGhSetup()">&#9881; Configure</button>
   </div>
 </header>
+
+<!-- EDGE WARNING -->
+<div class="storage-warning" id="storageWarning">
+  <span>&#9888;</span>
+  <span><strong>Storage blocked:</strong> Your browser is blocking localStorage. <a onclick="showEdgeFix()">How to fix in Edge &#8594;</a></span>
+  <button class="storage-warning-close" onclick="document.getElementById('storageWarning').classList.remove('visible')">&#215;</button>
+</div>
 
 <!-- SETUP SCREEN (shown when GitHub not configured) -->
 <div id="setupScreen" style="display:none;">
@@ -414,6 +458,35 @@
 
 </div><!-- /mainApp -->
 
+<!-- SSO TRACKER VIEW (read-only) -->
+<div id="viewSSO" class="view" style="display:none;">
+  <div class="dashboard">
+    <div class="dash-top">
+      <div>
+        <div class="dash-title">&#128272; SSO Tracker</div>
+        <div class="dash-sub">Single Sign On configuration — read only</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="switchModule('integration')">&#8592; Integration Tracker</button>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:18%">Client Name</th>
+            <th style="width:16%">Login Type</th>
+            <th style="width:14%">SSO Provider</th>
+            <th style="width:18%">Comments</th>
+            <th style="width:12%">Date of Start</th>
+            <th style="width:12%">Date of SSO Setup</th>
+          </tr>
+        </thead>
+        <tbody id="ssoTableBody"></tbody>
+      </table>
+      <div id="ssoEmpty" class="no-data" style="display:none;">No SSO entries added yet.</div>
+    </div>
+  </div>
+</div>
+
 <!-- COMMENT VIEW MODAL (read-only) -->
 <div class="modal-overlay" id="commentViewModal">
   <div class="modal">
@@ -529,6 +602,7 @@ async function loadFromGitHub(silent) {
     const meta = await res.json();
     const decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
     viewerDB = JSON.parse(decoded);
+    // SSO data is stored inside the main DB
     setSyncStatus('synced', 'Live \u2713');
     document.getElementById('refreshLabel').textContent = 'Refreshed ' + new Date().toLocaleTimeString();
     showMainApp();
@@ -995,7 +1069,86 @@ function generateExcel() {
   showToast('Excel exported (' + clients.length + ' client' + (clients.length>1?'s':'') + ').', 'success');
 }
 
+
+// ── FONT SIZE ──
+const FONT_KEY = 'crx_font_size';
+let currentFontSize = parseInt(localStorage.getItem(FONT_KEY) || '16');
+
+function applyFontSize(size) {
+  currentFontSize = Math.min(22, Math.max(12, size));
+  document.body.style.fontSize = currentFontSize + 'px';
+  localStorage.setItem(FONT_KEY, currentFontSize);
+  const lbl = document.getElementById('fontSizeLabel');
+  if (lbl) lbl.textContent = currentFontSize;
+}
+function adjustFont(delta) { applyFontSize(currentFontSize + delta); }
+
+// ── EDGE STORAGE CHECK ──
+function checkStorageAccess() {
+  try { localStorage.setItem('_crx_test','1'); localStorage.removeItem('_crx_test'); }
+  catch(e) { var b = document.getElementById('storageWarning'); if(b) b.classList.add('visible'); }
+}
+function showEdgeFix() {
+  var msg = 'To fix in Microsoft Edge: go to Settings > Privacy, search, and services > Tracking prevention > select Basic. Or add this site as an exception under Tracking prevention > Exceptions.';
+  alert(msg);
+}
+
+// ── MODULE SWITCHING (viewer) ──
+function toggleModuleMenu() {
+  var menu = document.getElementById('moduleMenu');
+  if (menu) menu.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('moduleDropdown');
+  if (dd && !dd.contains(e.target)) { var m = document.getElementById('moduleMenu'); if(m) m.classList.remove('open'); }
+});
+function switchModule(module) {
+  var menu = document.getElementById('moduleMenu');
+  if (menu) menu.classList.remove('open');
+  var items = document.querySelectorAll('.module-menu-item');
+  items.forEach(function(item, i) {
+    item.classList.toggle('active', (module === 'integration' && i === 0) || (module === 'sso' && i === 1));
+  });
+  var lbl = document.getElementById('moduleLabel');
+  if (module === 'integration') {
+    if (lbl) lbl.textContent = '/ Integration Tracker';
+    document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+    document.getElementById('viewDashboard').classList.add('active');
+    showDashboard();
+  } else if (module === 'sso') {
+    if (lbl) lbl.textContent = '/ SSO Tracker';
+    document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+    document.getElementById('viewSSO').style.display = 'block';
+    renderSSOViewer();
+  }
+}
+
+// ── SSO VIEWER (read-only) ──
+function renderSSOViewer() {
+  if (!viewerDB._sso || !viewerDB._sso.length) {
+    document.getElementById('ssoTableBody').innerHTML = '';
+    document.getElementById('ssoEmpty').style.display = 'block';
+    return;
+  }
+  document.getElementById('ssoEmpty').style.display = 'none';
+  document.getElementById('ssoTableBody').innerHTML = viewerDB._sso.map(function(e) {
+    var lbg = e.loginType === 'Single Sign On' ? 'var(--done)' : e.loginType === 'ADFS' ? 'var(--ip)' : 'var(--surface3)';
+    var ltx = e.loginType === 'Single Sign On' ? 'var(--done-text)' : e.loginType === 'ADFS' ? 'var(--ip-text)' : 'var(--text2)';
+    var prov = e.loginType === 'Single Sign On' ? (e.provider === 'Others' ? (e.providerOthers || 'Others') : (e.provider || '—')) : '—';
+    return '<tr>' +
+      '<td style="font-weight:600;">' + esc(e.clientName) + '</td>' +
+      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:' + lbg + ';color:' + ltx + ';">' + esc(e.loginType) + '</span></td>' +
+      '<td style="font-size:13px;color:var(--text2);">' + esc(prov) + '</td>' +
+      '<td style="font-size:12px;color:var(--text2);">' + esc(e.comments || '—') + '</td>' +
+      '<td style="font-size:12px;color:var(--text3);">' + esc(e.startDate || '—') + '</td>' +
+      '<td style="font-size:12px;color:var(--text3);">' + esc(e.setupDate || '—') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
 // ── INIT ──
+applyFontSize(currentFontSize);
+checkStorageAccess();
 window.addEventListener('load', function() {
   const cfg = getCfg();
   if (cfg) {
