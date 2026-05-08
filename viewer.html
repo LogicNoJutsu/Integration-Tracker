@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRx Integration Tracker — View Only</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --font-body:'Aptos','Noto Sans','Segoe UI',system-ui,sans-serif;
+    --font-display:'Aptos Display','Noto Sans Display','Segoe UI',system-ui,sans-serif;
+    --bg:#0d0f14;--surface:#151820;--surface2:#1c2030;--surface3:#222840;
+    --border:#2a3050;--accent:#4f7cff;--accent2:#00e5c0;
+    --text:#e8ecf8;--text2:#8892b0;--text3:#4a5580;
+    --ns:#2e3350;--ns-text:#8892b0;
+    --ip:#0f2d5e;--ip-text:#5aaeff;
+    --done:#0a2e20;--done-text:#00d48a;
+    --pfc:#332500;--pfc-text:#ffb020;
+    --cbd:#2e1010;--cbd-text:#ff4f4f;
+    --nr:#16163a;--nr-text:#7070c8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.5;}
+
+  /* HEADER */
+  .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+  .app-logo{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--accent);display:flex;align-items:center;gap:8px;}
+  .app-logo .logo-rest{color:var(--text2);font-weight:400;}
+  .view-only-badge{font-size:11px;background:rgba(255,176,32,0.15);color:#ffb020;border:1px solid rgba(255,176,32,0.3);border-radius:20px;padding:3px 10px;font-weight:600;letter-spacing:0.04em;}
+  .header-right{display:flex;gap:8px;align-items:center;}
+  .sync-status{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text3);display:flex;align-items:center;gap:5px;}
+  .sync-status.syncing{color:var(--ip-text);border-color:var(--ip-text);}
+  .sync-status.synced{color:var(--done-text);border-color:var(--done-text);}
+  .sync-status.error{color:var(--cbd-text);border-color:var(--cbd-text);}
+  .sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+  /* BUTTONS */
+  .btn{font-family:var(--font-body);font-size:13px;padding:7px 14px;border-radius:7px;border:1px solid var(--border);cursor:pointer;transition:all 0.15s;font-weight:500;}
+  .btn-ghost{background:transparent;color:var(--text2);}
+  .btn-ghost:hover{background:var(--surface2);color:var(--text);}
+  .btn-accent2{background:transparent;color:var(--accent2);border-color:var(--accent2);}
+  .btn-accent2:hover{background:rgba(0,229,192,0.08);}
+  .btn-green{background:transparent;color:#00c853;border-color:#00c853;}
+  .btn-green:hover{background:rgba(0,200,83,0.1);}
+  .btn-sm{padding:4px 11px;font-size:12px;}
+
+  /* VIEWS */
+  .view{display:none;}.view.active{display:block;}
+
+  /* SETUP SCREEN */
+  .setup-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);padding:32px;}
+  .setup-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;width:500px;text-align:center;}
+  .setup-icon{font-size:48px;margin-bottom:16px;}
+  .setup-title{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:8px;}
+  .setup-desc{color:var(--text2);font-size:13px;line-height:1.7;margin-bottom:28px;}
+  .setup-form{display:flex;flex-direction:column;gap:12px;text-align:left;}
+  .setup-form label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:4px;display:block;}
+  .setup-form input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;transition:border-color 0.15s;}
+  .setup-form input:focus{border-color:var(--accent);}
+  .setup-info{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px;text-align:left;}
+  .setup-info strong{color:var(--text);}
+
+  /* DASHBOARD */
+  .dashboard{max-width:1600px;margin:0 auto;padding:28px;}
+  .dash-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+  .dash-title{font-family:var(--font-display);font-size:24px;font-weight:800;}
+  .dash-sub{color:var(--text2);font-size:12px;margin-top:3px;}
+  .dash-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+
+  /* CLIENT CARDS */
+  .client-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;}
+  .client-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity 0.18s;}
+  .client-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.3);}
+  .client-card:hover::before{opacity:1;}
+  .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
+  .card-name{font-family:var(--font-display);font-size:14px;font-weight:700;line-height:1.3;}
+  .card-cmms{font-size:10px;background:var(--surface3);color:var(--accent);padding:2px 7px;border-radius:20px;border:1px solid var(--border);white-space:nowrap;flex-shrink:0;}
+  .card-meta{color:var(--text2);font-size:11px;margin-bottom:8px;line-height:1.8;}
+  .card-meta strong{color:var(--text);}
+  .card-last-updated{font-size:10px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;display:inline-block;margin-bottom:8px;}
+  .progress-section{margin-bottom:8px;}
+  .progress-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px;}
+  .progress-bar{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+  .status-pills{display:flex;flex-wrap:wrap;gap:3px;margin-top:8px;}
+  .pill{font-size:9px;padding:2px 6px;border-radius:20px;font-weight:500;}
+  .card-footer{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);align-items:center;}
+
+  /* DETAIL VIEW */
+  .detail-view{max-width:1440px;margin:0 auto;padding:24px 28px;}
+  .breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:16px;}
+  .breadcrumb a{color:var(--accent);cursor:pointer;text-decoration:none;}
+  .breadcrumb a:hover{text-decoration:underline;}
+  .breadcrumb span{color:var(--text3);}
+  .detail-header{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:18px;}
+  .detail-header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .detail-name{font-family:var(--font-display);font-size:22px;font-weight:800;}
+  .detail-meta-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;}
+  .meta-item label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;display:block;}
+  .meta-item .val{font-size:13px;color:var(--text);font-weight:500;}
+  .last-updated-badge{font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 9px;}
+
+  /* TABS */
+  .tabs{display:flex;gap:3px;margin-bottom:18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;}
+  .tab{font-family:var(--font-body);font-size:13px;padding:6px 16px;border-radius:7px;border:none;cursor:pointer;background:transparent;color:var(--text2);transition:all 0.15s;font-weight:500;}
+  .tab.active{background:var(--accent);color:#fff;}
+  .tab:hover:not(.active){background:var(--surface2);color:var(--text);}
+  .tab-content{display:none;}.tab-content.active{display:block;}
+
+  /* INTEGRATION TABLE */
+  .section-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;}
+  .section-title{background:var(--surface2);padding:10px 16px;font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;}
+  th{background:var(--surface3);padding:8px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border);}
+  td{padding:9px 14px;border-bottom:1px solid rgba(42,48,80,0.4);font-size:13px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(79,124,255,0.03);}
+  .task-name{color:var(--text2);}
+
+  /* STATUS BADGE (read-only, not a select) */
+  .status-badge{display:inline-block;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid transparent;}
+  .s-not-started{background:var(--ns);color:var(--ns-text);border-color:rgba(136,146,176,0.2);}
+  .s-in-progress{background:var(--ip);color:var(--ip-text);border-color:rgba(79,159,255,0.3);}
+  .s-completed{background:var(--done);color:var(--done-text);border-color:rgba(0,212,138,0.3);}
+  .s-pending-client{background:var(--pfc);color:var(--pfc-text);border-color:rgba(255,176,32,0.3);}
+  .s-cannot-be-done{background:var(--cbd);color:var(--cbd-text);border-color:rgba(255,79,79,0.3);}
+  .s-not-required{background:var(--nr);color:var(--nr-text);border-color:rgba(112,112,200,0.3);}
+
+  /* COMMENTS READ-ONLY */
+  .comment-thread-view{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;}
+  .comment-bubble{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 13px;}
+  .comment-meta{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px;}
+  .comment-author{color:var(--accent);font-weight:600;}
+  .comment-text{font-size:13px;color:var(--text);line-height:1.6;}
+  .comment-preview-inline{font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:4px 8px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;}
+  .comment-count-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:20px;font-size:9px;padding:1px 6px;margin-left:4px;}
+  .view-comments-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--text2);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;display:inline-flex;align-items:center;gap:4px;}
+  .view-comments-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* DOCS */
+  .docs-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .doc-link{color:var(--accent);text-decoration:none;font-size:13px;}
+  .doc-link:hover{text-decoration:underline;}
+  .doc-type-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--surface3);color:var(--text2);border:1px solid var(--border);}
+  .doc-date{color:var(--text3);font-size:11px;}
+
+  /* NOTIFICATIONS / NOTES (read-only feed) */
+  .feed-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .feed-messages{padding:16px;max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;min-height:120px;}
+
+  /* STATS */
+  .overview-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px;}
+  .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 12px;text-align:center;}
+  .stat-num{font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:2px;}
+  .stat-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;}
+
+  /* TASK VIEW */
+  .task-view-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .task-view-toolbar{padding:10px 14px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;}
+  .ts-filter-select{padding:5px 8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;}
+  .ts-badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid transparent;}
+  .ts-not-started{background:var(--ns);color:var(--ns-text);border-color:rgba(136,146,176,0.2);}
+  .ts-in-progress{background:var(--ip);color:var(--ip-text);border-color:rgba(79,159,255,0.3);}
+  .ts-completed{background:var(--done);color:var(--done-text);border-color:rgba(0,212,138,0.3);}
+  .ts-pending-client{background:var(--pfc);color:var(--pfc-text);border-color:rgba(255,176,32,0.3);}
+  .ts-shared-dev{background:#1a1a4a;color:#a0a0ff;border-color:rgba(160,160,255,0.3);}
+  .ts-cannot-be-done{background:var(--cbd);color:var(--cbd-text);border-color:rgba(255,79,79,0.3);}
+  .overdue-badge{display:inline-block;font-size:9px;font-weight:700;background:#2e1010;color:#ff4f4f;border:1px solid rgba(255,79,79,0.4);border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:middle;}
+  .task-source-label{font-size:10px;color:var(--text3);}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(5px);z-index:200;display:none;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:560px;max-height:85vh;overflow-y:auto;position:relative;}
+  .modal-title{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:18px;}
+  .modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;}
+  .modal-close:hover{color:var(--text);}
+  .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+
+  /* PDF/Excel Modals */
+  .client-checklist{display:flex;flex-direction:column;gap:7px;margin:12px 0;max-height:300px;overflow-y:auto;}
+  .client-check-item{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 13px;cursor:pointer;}
+  .client-check-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+  .client-check-name{font-weight:600;font-size:13px;}
+  .client-check-meta{font-size:11px;color:var(--text2);margin-top:1px;}
+  .pdf-select-all{display:flex;gap:7px;margin-bottom:7px;}
+  .excel-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin:16px 0 7px;}
+  .status-filter-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px;}
+  .status-filter-item{display:flex;align-items:center;gap:7px;border:1px solid var(--border);border-radius:7px;padding:6px 9px;font-size:12px;font-weight:500;}
+  .status-filter-item input[type=checkbox]{width:13px;height:13px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+  .sfi-ns{background:var(--ns);color:var(--ns-text);}
+  .sfi-ip{background:var(--ip);color:var(--ip-text);}
+  .sfi-done{background:var(--done);color:var(--done-text);}
+  .sfi-pfc{background:var(--pfc);color:var(--pfc-text);}
+  .sfi-cbd{background:var(--cbd);color:var(--cbd-text);}
+  .sfi-nr{background:var(--nr);color:var(--nr-text);}
+
+  /* SETUP MODAL */
+  .gh-setup-modal .modal{width:520px;}
+  .github-info{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.7;}
+  .github-info a{color:var(--accent);}
+  .github-info code{background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--accent2);}
+  .form-group{margin-bottom:13px;}
+  .form-group label{display:block;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;font-weight:600;}
+  .form-group input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;transition:border-color 0.15s;}
+  .form-group input:focus{border-color:var(--accent);}
+
+  /* EMPTY / NO DATA */
+  .empty-state{text-align:center;padding:70px 32px;color:var(--text3);}
+  .empty-icon{font-size:44px;margin-bottom:14px;}
+  .empty-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text2);margin-bottom:8px;}
+  .empty-desc{font-size:13px;margin-bottom:20px;}
+  .no-data{color:var(--text3);font-size:12px;text-align:center;padding:24px;}
+
+  /* AUTO-REFRESH indicator */
+  .refresh-badge{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;}
+  .refresh-dot{width:6px;height:6px;border-radius:50%;background:var(--done-text);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:22px;right:22px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:13px;color:var(--text);z-index:999;transform:translateY(80px);opacity:0;transition:all 0.25s;pointer-events:none;display:flex;align-items:center;gap:8px;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.success{border-color:var(--done-text);}
+  .toast.error{border-color:var(--cbd-text);}
+
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="app-logo">
+    <span style="color:var(--accent)">CRx</span>
+    <span class="logo-rest">/ Integration Tracker</span>
+    <span class="view-only-badge">VIEW ONLY</span>
+  </div>
+  <div class="header-right">
+    <span class="refresh-badge"><span class="refresh-dot"></span><span id="refreshLabel">Live</span></span>
+    <span class="sync-status" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting…</span></span>
+    <button class="btn btn-ghost btn-sm" onclick="openGhSetup()">⚙ Configure</button>
+  </div>
+</header>
+
+<!-- SETUP SCREEN (shown when GitHub not configured) -->
+<div id="setupScreen" style="display:none;">
+  <div class="setup-screen">
+    <div class="setup-card">
+      <div class="setup-icon">🔌</div>
+      <div class="setup-title">Connect to Data Source</div>
+      <div class="setup-desc">This is a read-only viewer. Enter the GitHub repository details below to load the latest integration data. You only need to do this once.</div>
+      <div class="setup-info">
+        <strong>Ask your admin for:</strong><br>
+        · Their GitHub username<br>
+        · The repository name<br>
+        · A read-only Personal Access Token (with <code>repo</code> scope)
+      </div>
+      <div class="setup-form">
+        <div>
+          <label>GitHub Username</label>
+          <input type="text" id="setupUser" placeholder="github-username">
+        </div>
+        <div>
+          <label>Repository Name</label>
+          <input type="text" id="setupRepo" placeholder="crx-integration-tracker">
+        </div>
+        <div>
+          <label>Personal Access Token</label>
+          <input type="password" id="setupToken" placeholder="ghp_xxxxxxxxxxxx">
+        </div>
+        <button class="btn btn-primary" style="margin-top:8px;" onclick="saveSetupAndLoad()">Connect &amp; Load Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP (shown after data loaded) -->
+<div id="mainApp" style="display:none;">
+
+  <!-- DASHBOARD -->
+  <div id="viewDashboard" class="view active">
+    <div class="dashboard">
+      <div class="dash-top">
+        <div>
+          <div class="dash-title">Integration Dashboard</div>
+          <div class="dash-sub">Read-only view · Data synced from GitHub</div>
+        </div>
+        <div class="dash-actions">
+          <button class="btn btn-ghost btn-sm" onclick="showTaskView()">&#128203; Task View</button>
+          <button class="btn btn-accent2 btn-sm" onclick="openPdfModal(null)">&#8595; PDF</button>
+          <button class="btn btn-green btn-sm" onclick="openExcelModal(null)">&#8595; Excel</button>
+          <button class="btn btn-ghost btn-sm" onclick="refreshData()">&#8635; Refresh</button>
+        </div>
+      </div>
+      <div class="client-grid" id="clientGrid"></div>
+    </div>
+  </div>
+
+  <!-- TASK VIEW -->
+  <div id="viewTasks" class="view">
+    <div class="dashboard">
+      <div class="dash-top">
+        <div>
+          <div class="dash-title">&#128203; Task View</div>
+          <div class="dash-sub">All flagged tasks — read only</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="showDashboard()">&#8592; Dashboard</button>
+      </div>
+      <div class="task-view-panel">
+        <div class="task-view-toolbar">
+          <select id="tvFilterClient" class="ts-filter-select" onchange="renderTaskView()">
+            <option value="">All Clients</option>
+          </select>
+          <select id="tvFilterStatus" class="ts-filter-select" onchange="renderTaskView()">
+            <option value="">All Statuses</option>
+            <option value="not-started">Not Started</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="pending-client">Pending From Client</option>
+            <option value="shared-dev">Shared With Dev Team</option>
+            <option value="cannot-be-done">Cannot Be Done</option>
+          </select>
+          <select id="tvFilterOverdue" class="ts-filter-select" onchange="renderTaskView()">
+            <option value="">All Tasks</option>
+            <option value="overdue">Overdue Only</option>
+            <option value="incomplete">Incomplete Only</option>
+            <option value="no-date">No Due Date</option>
+          </select>
+          <span id="tvCount" style="font-size:11px;color:var(--text3);"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:13%">Client</th>
+              <th style="width:16%">Task / Source</th>
+              <th style="width:16%">Task Status</th>
+              <th style="width:13%">Due Date</th>
+              <th style="width:12%">Flagged On</th>
+              <th>Comment / Note</th>
+            </tr>
+          </thead>
+          <tbody id="taskViewBody"></tbody>
+        </table>
+        <div id="taskViewEmpty" class="no-data" style="display:none;">No flagged tasks found.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENT DETAIL -->
+  <div id="viewDetail" class="view">
+    <div class="detail-view">
+      <div class="breadcrumb">
+        <a onclick="showDashboard()">Dashboard</a><span>/</span><span id="breadcrumbName">Client</span>
+      </div>
+      <div class="detail-header">
+        <div class="detail-header-top">
+          <div class="detail-name" id="detailName">—</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="last-updated-badge" id="detailUpdated">—</span>
+            <button class="btn btn-accent2 btn-sm" onclick="openPdfModal('current')">&#8595; PDF</button>
+            <button class="btn btn-green btn-sm" onclick="openExcelModal('current')">&#8595; Excel</button>
+          </div>
+        </div>
+        <div class="detail-meta-grid">
+          <div class="meta-item"><label>CMMS Type</label><div class="val" id="detailCmms">—</div></div>
+          <div class="meta-item"><label>CRx Consultant</label><div class="val" id="detailCrx">—</div></div>
+          <div class="meta-item"><label>Client POC</label><div class="val" id="detailPoc">—</div></div>
+          <div class="meta-item"><label>POC Email</label><div class="val" id="detailPocEmail" style="font-size:12px;">—</div></div>
+          <div class="meta-item"><label>Overall Status</label><div class="val" id="detailStatus">—</div></div>
+          <div class="meta-item"><label>Expected Completion</label><div class="val" id="detailExpected">—</div></div>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('tabIntegration',this)">Integration Status</button>
+        <button class="tab" onclick="switchTab('tabClientInfo',this)">Client Information</button>
+        <button class="tab" onclick="switchTab('tabNotifications',this)">Client Notifications</button>
+        <button class="tab" onclick="switchTab('tabComments',this)">Client Notes</button>
+      </div>
+      <div id="tabIntegration" class="tab-content active">
+        <div class="overview-stats" id="overviewStats"></div>
+        <div id="integrationSections"></div>
+      </div>
+      <div id="tabClientInfo" class="tab-content">
+        <div class="docs-panel">
+          <table>
+            <thead><tr><th>Information Type</th><th>Name / Link</th><th>Date Added</th><th>Notes</th></tr></thead>
+            <tbody id="docsTableBody"></tbody>
+          </table>
+          <div id="docsEmpty" class="no-data" style="display:none;">No documents added yet.</div>
+        </div>
+      </div>
+      <div id="tabNotifications" class="tab-content">
+        <div class="feed-panel">
+          <div class="feed-messages" id="notifMessages">
+            <div class="no-data">No notifications.</div>
+          </div>
+        </div>
+      </div>
+      <div id="tabComments" class="tab-content">
+        <div class="feed-panel">
+          <div class="feed-messages" id="globalChatMessages">
+            <div class="no-data">No notes yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /mainApp -->
+
+<!-- COMMENT VIEW MODAL (read-only) -->
+<div class="modal-overlay" id="commentViewModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('commentViewModal')">&#215;</button>
+    <div class="modal-title" id="commentViewTitle">Comments</div>
+    <div class="comment-thread-view" id="commentViewThread"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('commentViewModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF MODAL -->
+<div class="modal-overlay" id="pdfModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('pdfModal')">&#215;</button>
+    <div class="modal-title">Export to PDF</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:10px;">Select clients to include.</p>
+    <div class="pdf-select-all">
+      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="pdfSelectAll(true)">Select All</button>
+      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="pdfSelectAll(false)">Deselect All</button>
+    </div>
+    <div class="client-checklist" id="pdfClientList"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('pdfModal')">Cancel</button>
+      <button class="btn btn-accent2 btn-sm" onclick="generateSelectedPDF()">&#8595; Generate PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXCEL MODAL -->
+<div class="modal-overlay" id="excelModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('excelModal')">&#215;</button>
+    <div class="modal-title">&#8595; Export to Excel</div>
+    <p style="font-size:13px;color:var(--text2);">Each selected client gets its own worksheet.</p>
+    <div class="excel-section-label">Select Clients</div>
+    <div class="pdf-select-all">
+      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="excelSelectAll('client',true)">Select All</button>
+      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="excelSelectAll('client',false)">Deselect All</button>
+    </div>
+    <div class="client-checklist" id="excelClientList"></div>
+    <div class="excel-section-label">Filter by Status</div>
+    <div class="pdf-select-all">
+      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="excelSelectAll('status',true)">Select All</button>
+      <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;" onclick="excelSelectAll('status',false)">Deselect All</button>
+    </div>
+    <div class="status-filter-grid">
+      <label class="status-filter-item sfi-ns"><input type="checkbox" name="excelStatus" value="not-started" checked> Not Started</label>
+      <label class="status-filter-item sfi-ip"><input type="checkbox" name="excelStatus" value="in-progress" checked> In Progress</label>
+      <label class="status-filter-item sfi-done"><input type="checkbox" name="excelStatus" value="completed" checked> Completed</label>
+      <label class="status-filter-item sfi-pfc"><input type="checkbox" name="excelStatus" value="pending-client" checked> Pending From Client</label>
+      <label class="status-filter-item sfi-cbd"><input type="checkbox" name="excelStatus" value="cannot-be-done" checked> Cannot Be Done</label>
+      <label class="status-filter-item sfi-nr"><input type="checkbox" name="excelStatus" value="not-required" checked> Not Required</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('excelModal')">Cancel</button>
+      <button class="btn btn-green btn-sm" onclick="generateExcel()">&#8595; Generate Excel</button>
+    </div>
+  </div>
+</div>
+
+<!-- GH SETUP MODAL -->
+<div class="modal-overlay gh-setup-modal" id="ghSetupModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('ghSetupModal')">&#215;</button>
+    <div class="modal-title">&#9881; Configure Data Source</div>
+    <div class="github-info">Connect to the GitHub repo where the admin stores <code>data.json</code>.</div>
+    <div class="form-group"><label>GitHub Username</label><input type="text" id="cfgUser" placeholder="github-username"></div>
+    <div class="form-group"><label>Repository Name</label><input type="text" id="cfgRepo" placeholder="crx-integration-tracker"></div>
+    <div class="form-group"><label>Personal Access Token</label><input type="password" id="cfgToken" placeholder="ghp_xxxxxxxxxxxx"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('ghSetupModal')">Cancel</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearCfg()">Clear</button>
+      <button class="btn btn-primary btn-sm" onclick="saveSetupAndLoad()">Save &amp; Load</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastIcon">&#10003;</span><span id="toastMsg"></span></div>
+
+<script>
+// ── CONFIG ──
+const CFG_KEY = 'crx_viewer_config';
+let currentClientId = null;
+let viewerDB = { clients: [] };
+let refreshInterval = null;
+
+function getCfg() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY)) || null; } catch { return null; }
+}
+function saveCfg(cfg) { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+function clearCfg() { localStorage.removeItem(CFG_KEY); location.reload(); }
+
+// ── GITHUB LOAD ──
+async function loadFromGitHub(silent) {
+  const cfg = getCfg();
+  if (!cfg) { showSetupScreen(); return; }
+  if (!silent) setSyncStatus('syncing', 'Loading\u2026');
+  try {
+    const url = 'https://api.github.com/repos/' + cfg.user + '/' + cfg.repo + '/contents/data.json';
+    const res = await fetch(url + '?t=' + Date.now(), {
+      headers: {
+        'Authorization': 'token ' + cfg.token,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (!res.ok) {
+      setSyncStatus('error', 'Load failed');
+      if (!silent) showToast('Could not load data. Check your config.', 'error');
+      showSetupScreen(); return;
+    }
+    const meta = await res.json();
+    const decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
+    viewerDB = JSON.parse(decoded);
+    setSyncStatus('synced', 'Live \u2713');
+    document.getElementById('refreshLabel').textContent = 'Refreshed ' + new Date().toLocaleTimeString();
+    showMainApp();
+    renderDashboard();
+  } catch(e) {
+    setSyncStatus('error', 'Error');
+    if (!silent) showToast('Failed to load data.', 'error');
+    console.error(e);
+  }
+}
+
+function refreshData() { loadFromGitHub(false); }
+
+// Auto-refresh every 3 minutes
+function startAutoRefresh() {
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = setInterval(function() { loadFromGitHub(true); }, 3 * 60 * 1000);
+}
+
+// ── SCREENS ──
+function showSetupScreen() {
+  document.getElementById('setupScreen').style.display = 'block';
+  document.getElementById('mainApp').style.display = 'none';
+  // Pre-fill if config exists
+  const cfg = getCfg();
+  if (cfg) {
+    document.getElementById('setupUser').value = cfg.user || '';
+    document.getElementById('setupRepo').value = cfg.repo || '';
+  }
+}
+function showMainApp() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+}
+
+function openGhSetup() {
+  const cfg = getCfg();
+  if (cfg) {
+    document.getElementById('cfgUser').value = cfg.user || '';
+    document.getElementById('cfgRepo').value = cfg.repo || '';
+    document.getElementById('cfgToken').value = cfg.token || '';
+  }
+  openModal('ghSetupModal');
+}
+
+function saveSetupAndLoad() {
+  const user = (document.getElementById('setupUser') || document.getElementById('cfgUser')).value.trim();
+  const repo = (document.getElementById('setupRepo') || document.getElementById('cfgRepo')).value.trim();
+  const tokenEl = document.getElementById('setupToken') || document.getElementById('cfgToken');
+  const token = tokenEl ? tokenEl.value.trim() : (getCfg() || {}).token || '';
+
+  // Handle both setup screen and modal
+  const u = document.getElementById('cfgUser') ? document.getElementById('cfgUser').value.trim() : user;
+  const r = document.getElementById('cfgRepo') ? document.getElementById('cfgRepo').value.trim() : repo;
+  const t = document.getElementById('cfgToken') ? document.getElementById('cfgToken').value.trim() : token;
+
+  const finalUser = u || user;
+  const finalRepo = r || repo;
+  const finalToken = t || token;
+
+  if (!finalUser || !finalRepo || !finalToken) { showToast('Please fill in all fields.', 'error'); return; }
+  saveCfg({ user: finalUser, repo: finalRepo, token: finalToken });
+  closeModal('ghSetupModal');
+  loadFromGitHub(false);
+}
+
+// ── VIEWS ──
+function showView(id) {
+  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+function showDashboard() { currentClientId = null; renderDashboard(); showView('viewDashboard'); }
+function showDetail(clientId) { currentClientId = clientId; renderDetail(); showView('viewDetail'); }
+function showTaskView() { renderTaskView(); showView('viewTasks'); }
+
+// ── HELPERS ──
+const STATUS_MAP = {
+  'not-started':'Not Started','in-progress':'In Progress','completed':'Completed',
+  'pending-client':'Pending From Client','cannot-be-done':'Cannot Be Done','not-required':'Not Required'
+};
+function statusLabel(s) { return STATUS_MAP[s] || s; }
+function statusClass(s) {
+  return {'not-started':'s-not-started','in-progress':'s-in-progress','completed':'s-completed',
+    'pending-client':'s-pending-client','cannot-be-done':'s-cannot-be-done','not-required':'s-not-required'}[s] || '';
+}
+function esc(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function timeAgo(date) {
+  const s = Math.floor((new Date() - date) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  if (s < 604800) return Math.floor(s/86400) + 'd ago';
+  return date.toLocaleDateString();
+}
+function computeStats(client) {
+  const counts = {'not-started':0,'in-progress':0,'completed':0,'pending-client':0,'cannot-be-done':0,'not-required':0};
+  client.sections.forEach(function(s) { s.phases.forEach(function(p) { p.tasks.forEach(function(t) { if (counts[t.status] !== undefined) counts[t.status]++; }); }); });
+  return { total: Object.values(counts).reduce(function(a,b){return a+b;},0), completed: counts['completed'], inProgress: counts['in-progress'], byStatus: counts };
+}
+function setSyncStatus(state, label) {
+  const el = document.getElementById('syncStatus');
+  const lbl = document.getElementById('syncLabel');
+  if (!el) return;
+  el.className = 'sync-status ' + state;
+  lbl.textContent = label;
+}
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById(tabId).classList.add('active');
+  btn.classList.add('active');
+}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(function(o) {
+  o.addEventListener('click', function(e) { if (e.target === o) o.classList.remove('open'); });
+});
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastIcon').textContent = type === 'success' ? '\u2713' : type === 'error' ? '\u2715' : '\u2139';
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = 'toast show ' + (type || '');
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const grid = document.getElementById('clientGrid');
+  if (!viewerDB.clients || !viewerDB.clients.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128268;</div><div class="empty-title">No integrations found</div><div class="empty-desc">Data may still be loading.</div><button class="btn btn-ghost btn-sm" onclick="refreshData()">&#8635; Try Refreshing</button></div>';
+    return;
+  }
+  grid.innerHTML = viewerDB.clients.map(function(c) {
+    const stats = computeStats(c);
+    const pct = stats.total ? Math.round(stats.completed / stats.total * 100) : 0;
+    const pillsHtml = Object.entries(stats.byStatus).filter(function(e) { return e[1] > 0; }).map(function(e) {
+      return '<span class="pill ' + statusClass(e[0]) + '">' + statusLabel(e[0]) + ': ' + e[1] + '</span>';
+    }).join('');
+    const updStr = (c.updatedAt || c.createdAt) ? 'Updated ' + timeAgo(new Date(c.updatedAt || c.createdAt)) : '—';
+    return '<div class="client-card" onclick="showDetail(\'' + c.id + '\')">' +
+      '<div class="card-header"><div class="card-name">' + esc(c.name) + '</div><span class="card-cmms">' + esc(c.cmmsType || '—') + '</span></div>' +
+      '<div class="card-meta"><strong>CRx:</strong> ' + esc(c.crxConsultant || '—') + '<br><strong>POC:</strong> ' + esc(c.clientPoc || '—') + (c.expectedDate ? '<br><strong>Expected:</strong> ' + esc(c.expectedDate) : '') + '</div>' +
+      '<div class="card-last-updated">&#128336; ' + esc(updStr) + '</div>' +
+      '<div class="progress-section"><div class="progress-label"><span>Completion</span><span>' + pct + '%</span></div><div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>' +
+      '<div class="status-pills">' + pillsHtml + '</div>' +
+      '<div class="card-footer" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="showDetail(\'' + c.id + '\')">Open &#8594;</button>' +
+      (stats.inProgress > 0 ? '<span style="font-size:10px;color:var(--ip-text);padding:2px 7px;background:var(--ip);border-radius:4px;">' + stats.inProgress + ' In Progress</span>' : '') + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+// ── DETAIL ──
+function renderDetail() {
+  const c = viewerDB.clients.find(function(x) { return x.id === currentClientId; });
+  if (!c) { showDashboard(); return; }
+  document.getElementById('breadcrumbName').textContent = c.name;
+  document.getElementById('detailName').textContent = c.name;
+  document.getElementById('detailCmms').textContent = c.cmmsType || '—';
+  document.getElementById('detailCrx').textContent = c.crxConsultant || '—';
+  document.getElementById('detailPoc').textContent = c.clientPoc || '—';
+  document.getElementById('detailPocEmail').textContent = c.clientPocEmail || '—';
+  document.getElementById('detailStatus').textContent = c.overallStatus || 'Active';
+  document.getElementById('detailExpected').textContent = c.expectedDate || '—';
+  document.getElementById('detailUpdated').textContent = 'Updated: ' + new Date(c.updatedAt || c.createdAt).toLocaleDateString();
+  renderStats(c); renderSections(c); renderDocs(c); renderNotifications(c); renderGlobalComments(c);
+}
+
+function renderStats(c) {
+  const stats = computeStats(c);
+  const labels = {
+    'not-started':['Not Started','var(--ns-text)'],'in-progress':['In Progress','var(--ip-text)'],
+    'completed':['Completed','var(--done-text)'],'pending-client':['Pending Client','var(--pfc-text)'],
+    'cannot-be-done':['Cannot Do','var(--cbd-text)'],'not-required':['Not Required','var(--nr-text)']
+  };
+  document.getElementById('overviewStats').innerHTML = Object.entries(stats.byStatus).map(function(e) {
+    const info = labels[e[0]];
+    return '<div class="stat-box"><div class="stat-num" style="color:' + info[1] + '">' + e[1] + '</div><div class="stat-label">' + info[0] + '</div></div>';
+  }).join('');
+}
+
+function renderSections(c) {
+  const cont = document.getElementById('integrationSections');
+  cont.innerHTML = c.sections.map(function(sec) {
+    return '<div class="section-card"><div class="section-title">' + esc(sec.label) + '</div>' +
+      sec.phases.map(function(ph) {
+        return '<div><div style="padding:7px 14px 3px;font-size:10px;color:var(--accent2);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">' + esc(ph.label) + '</div>' +
+          '<table><thead><tr><th style="width:28%">Task</th><th style="width:22%">Status</th><th>Latest Comment</th></tr></thead><tbody>' +
+          ph.tasks.map(function(t) {
+            const comments = t.comments || [];
+            const cc = comments.length;
+            const latest = cc > 0 ? comments[comments.length - 1] : null;
+            const latestHtml = latest
+              ? '<div class="comment-preview-inline"><span style="color:var(--accent);font-weight:600;">' + esc(latest.author || 'Anon') + ':</span> ' + esc(latest.text) + '</div>'
+              : '';
+            return '<tr>' +
+              '<td class="task-name">' + esc(t.name) + '</td>' +
+              '<td><span class="status-badge ' + statusClass(t.status) + '">' + statusLabel(t.status) + '</span></td>' +
+              '<td><div style="display:flex;flex-direction:column;gap:4px;">' +
+              (cc > 0 ? '<button class="view-comments-btn" onclick="openCommentView(\'' + sec.id + '\',\'' + ph.id + '\',\'' + t.id + '\',\'' + esc(t.name).replace(/'/g,'_') + '\')">&#128172; <span class="comment-count-badge">' + cc + '</span></button>' : '<span style="font-size:11px;color:var(--text3);">No comments</span>') +
+              latestHtml + '</div></td></tr>';
+          }).join('') +
+          '</tbody></table></div>';
+      }).join('') + '</div>';
+  }).join('');
+}
+
+function openCommentView(secId, phId, taskId, taskName) {
+  const c = viewerDB.clients.find(function(x) { return x.id === currentClientId; });
+  if (!c) return;
+  const sec = c.sections.find(function(s) { return s.id === secId; });
+  const ph = sec.phases.find(function(p) { return p.id === phId; });
+  const task = ph.tasks.find(function(t) { return t.id === taskId; });
+  document.getElementById('commentViewTitle').textContent = '\uD83D\uDCAC ' + (task ? task.name : taskName);
+  const thread = document.getElementById('commentViewThread');
+  const comments = task ? (task.comments || []) : [];
+  if (!comments.length) { thread.innerHTML = '<div class="no-data">No comments on this task.</div>'; }
+  else {
+    thread.innerHTML = comments.map(function(cm) {
+      return '<div class="comment-bubble' + (cm.isTask ? '" style="border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);' : '') + '">' +
+        '<div class="comment-meta"><span class="comment-author">' + esc(cm.author || 'Anonymous') + '</span><span>' + esc(cm.timestamp) + (cm.isTask ? ' <span style="font-size:9px;background:var(--pfc);color:var(--pfc-text);border-radius:3px;padding:1px 5px;margin-left:4px;">TASK</span>' : '') + '</span></div>' +
+        '<div class="comment-text">' + esc(cm.text) + '</div></div>';
+    }).join('');
+  }
+  openModal('commentViewModal');
+}
+
+function renderDocs(c) {
+  const docs = c.docs || [];
+  const tbody = document.getElementById('docsTableBody');
+  const empty = document.getElementById('docsEmpty');
+  if (!docs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = docs.map(function(d) {
+    return '<tr><td><span class="doc-type-badge">' + esc(d.type || '—') + '</span></td>' +
+      '<td>' + (d.link ? '<a class="doc-link" href="' + esc(d.link) + '" target="_blank">' + esc(d.name || d.link) + '</a>' : esc(d.name || '—')) + '</td>' +
+      '<td class="doc-date">' + esc(d.date || '—') + '</td>' +
+      '<td style="font-size:12px;color:var(--text2)">' + esc(d.notes || '') + '</td></tr>';
+  }).join('');
+}
+
+function renderNotifications(c) {
+  const msgs = document.getElementById('notifMessages');
+  const notifs = c.notifications || [];
+  const extras = [];
+  (c.globalComments || []).filter(function(cm) { return cm.isTask; }).forEach(function(cm) { extras.push(Object.assign({}, cm, {_source: 'Client Notes'})); });
+  c.sections.forEach(function(s) { s.phases.forEach(function(p) { p.tasks.forEach(function(t) { (t.comments || []).filter(function(cm) { return cm.isTask; }).forEach(function(cm) { extras.push(Object.assign({}, cm, {_source: t.name})); }); }); }); });
+  const all = notifs.concat(extras).sort(function(a, b) { return (b._ts || 0) - (a._ts || 0); });
+  if (!all.length) { msgs.innerHTML = '<div class="no-data">No notifications.</div>'; return; }
+  msgs.innerHTML = all.map(function(n) {
+    return '<div class="comment-bubble" style="border-color:rgba(255,176,32,0.3);background:rgba(51,37,0,0.2);">' +
+      '<div class="comment-meta"><span style="color:var(--pfc-text);font-weight:600;">' + esc(n.author || 'Anonymous') + (n._source ? ' <span style="color:var(--text3);font-weight:400;">\u00b7 ' + esc(n._source) + '</span>' : '') + '</span><span>' + esc(n.timestamp || '') + '</span></div>' +
+      '<div class="comment-text">' + esc(n.text) + '</div></div>';
+  }).join('');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function renderGlobalComments(c) {
+  const msgs = document.getElementById('globalChatMessages');
+  const comments = c.globalComments || [];
+  if (!comments.length) { msgs.innerHTML = '<div class="no-data">No notes.</div>'; return; }
+  msgs.innerHTML = comments.map(function(cm) {
+    return '<div class="comment-bubble" ' + (cm.isTask ? 'style="border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);"' : '') + '>' +
+      '<div class="comment-meta"><span class="comment-author">' + esc(cm.author || 'Anonymous') + '</span><span>' + esc(cm.timestamp) + (cm.isTask ? ' <span style="font-size:9px;background:var(--pfc);color:var(--pfc-text);border-radius:3px;padding:1px 5px;margin-left:4px;">TASK</span>' : '') + '</span></div>' +
+      '<div class="comment-text">' + esc(cm.text) + '</div></div>';
+  }).join('');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ── TASK VIEW ──
+function renderTaskView() {
+  const cf = document.getElementById('tvFilterClient');
+  if (!cf) return;
+  const prevVal = cf.value;
+  cf.innerHTML = '<option value="">All Clients</option>' +
+    viewerDB.clients.map(function(cc) { return '<option value="' + cc.id + '">' + esc(cc.name) + '</option>'; }).join('');
+  cf.value = prevVal;
+  const filterClient = cf.value;
+  const filterStatus = document.getElementById('tvFilterStatus').value;
+  const filterOverdue = document.getElementById('tvFilterOverdue').value;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const rows = [];
+  viewerDB.clients.forEach(function(cc) {
+    if (filterClient && cc.id !== filterClient) return;
+    cc.sections.forEach(function(sec) { sec.phases.forEach(function(ph) { ph.tasks.forEach(function(t) {
+      (t.comments || []).filter(function(cm) { return cm.isTask; }).forEach(function(cm) {
+        rows.push({ clientName: cc.name, clientId: cc.id, task: t.name, source: 'Integration',
+          date: cm.timestamp, comment: cm.text, author: cm.author,
+          cmStatus: cm.taskStatus || 'not-started', dueDate: cm.dueDate || '' });
+      });
+    }); }); });
+    (cc.globalComments || []).filter(function(cm) { return cm.isTask; }).forEach(function(cm) {
+      rows.push({ clientName: cc.name, clientId: cc.id, task: 'Client Note', source: 'Client Notes',
+        date: cm.timestamp, comment: cm.text, author: cm.author,
+        cmStatus: cm.taskStatus || 'not-started', dueDate: cm.dueDate || '' });
+    });
+  });
+  const tsClassMap = { 'not-started':'ts-not-started','in-progress':'ts-in-progress','completed':'ts-completed','pending-client':'ts-pending-client','shared-dev':'ts-shared-dev','cannot-be-done':'ts-cannot-be-done' };
+  const tsLabelMap = { 'not-started':'Not Started','in-progress':'In Progress','completed':'Completed','pending-client':'Pending From Client','shared-dev':'Shared With Dev Team','cannot-be-done':'Cannot Be Done' };
+  const filtered = rows.filter(function(r) {
+    if (filterStatus && r.cmStatus !== filterStatus) return false;
+    const dd = r.dueDate ? new Date(r.dueDate) : null; if (dd) dd.setHours(0,0,0,0);
+    const isOverdue = dd && dd < today && r.cmStatus !== 'completed';
+    if (filterOverdue === 'overdue' && !isOverdue) return false;
+    if (filterOverdue === 'incomplete' && r.cmStatus === 'completed') return false;
+    if (filterOverdue === 'no-date' && r.dueDate) return false;
+    return true;
+  });
+  const tbody = document.getElementById('taskViewBody');
+  const empty = document.getElementById('taskViewEmpty');
+  const countEl = document.getElementById('tvCount');
+  if (countEl) countEl.textContent = filtered.length + ' task' + (filtered.length !== 1 ? 's' : '');
+  if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = filtered.map(function(r) {
+    const dd = r.dueDate ? new Date(r.dueDate) : null; if (dd) dd.setHours(0,0,0,0);
+    const isOverdue = dd && dd < today && r.cmStatus !== 'completed';
+    const dueTxt = r.dueDate ? '<span style="color:' + (isOverdue ? 'var(--cbd-text)' : 'var(--text2)') + ';font-size:11px;">' + r.dueDate + '</span>' + (isOverdue ? ' <span class="overdue-badge">OVERDUE</span>' : '') : '<span style="color:var(--text3);font-size:11px;">—</span>';
+    const sc = tsClassMap[r.cmStatus] || 'ts-not-started';
+    const sl = tsLabelMap[r.cmStatus] || r.cmStatus;
+    return '<tr>' +
+      '<td><a style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="showDetail(\'' + r.clientId + '\')">' + esc(r.clientName) + '</a></td>' +
+      '<td class="task-name">' + esc(r.task) + '<div class="task-source-label">' + esc(r.source) + '</div></td>' +
+      '<td><span class="ts-badge ' + sc + '">' + sl + '</span></td>' +
+      '<td>' + dueTxt + '</td>' +
+      '<td style="font-size:11px;color:var(--text3);">' + esc(r.date) + '</td>' +
+      '<td style="font-size:12px;"><span style="color:var(--accent);font-weight:600;">' + esc(r.author || 'Anon') + ':</span> ' + esc(r.comment) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+// ── PDF ──
+function openPdfModal(mode) {
+  const currentOnly = mode === 'current';
+  document.getElementById('pdfClientList').innerHTML = viewerDB.clients.map(function(c) {
+    return '<label class="client-check-item"><input type="checkbox" name="pdfClient" value="' + c.id + '" ' + ((!currentOnly || c.id === currentClientId) ? 'checked' : '') + '><div><div class="client-check-name">' + esc(c.name) + '</div><div class="client-check-meta">' + esc(c.cmmsType || '—') + ' \u00b7 ' + esc(c.overallStatus || 'Active') + '</div></div></label>';
+  }).join('');
+  openModal('pdfModal');
+}
+function pdfSelectAll(val) { document.querySelectorAll('#pdfClientList input[type=checkbox]').forEach(function(cb) { cb.checked = val; }); }
+function generateSelectedPDF() {
+  const selected = Array.from(document.querySelectorAll('#pdfClientList input[type=checkbox]:checked')).map(function(cb) { return cb.value; });
+  if (!selected.length) { showToast('Select at least one client.', 'error'); return; }
+  closeModal('pdfModal');
+  buildPDF(viewerDB.clients.filter(function(c) { return selected.includes(c.id); }));
+}
+function buildPDF(clients) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const pageW = 297, pageH = 210, margin = 18;
+  clients.forEach(function(c, ci) {
+    if (ci > 0) doc.addPage();
+    let y = margin;
+    doc.setFillColor(15,24,32); doc.rect(0,0,pageW,14,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(79,124,255);
+    doc.text('CRx Integration Tracker', margin, 9);
+    doc.setTextColor(136,146,176); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.text('Generated: ' + new Date().toLocaleString(), pageW - margin, 9, { align: 'right' });
+    y = 22;
+    doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(30,30,30);
+    doc.text(c.name, margin, y); y += 7;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
+    doc.text(['CMMS: '+(c.cmmsType||'—'),'CRx: '+(c.crxConsultant||'—'),'POC: '+(c.clientPoc||'—'),'Status: '+(c.overallStatus||'Active')].join('   |   '), margin, y);
+    y += 4; doc.setDrawColor(200); doc.line(margin, y, pageW-margin, y); y += 6;
+    c.sections.forEach(function(sec) {
+      if (y > pageH-20) { doc.addPage(); y = 22; }
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(0,180,150);
+      doc.text(sec.label, margin, y); y += 6;
+      sec.phases.forEach(function(ph) {
+        if (y > pageH-16) { doc.addPage(); y = 22; }
+        doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(80,100,180);
+        doc.text(ph.label, margin+4, y); y += 5;
+        ph.tasks.forEach(function(t) {
+          if (y > pageH-10) { doc.addPage(); y = 22; }
+          const sColors = {'not-started':[58,63,92],'in-progress':[15,45,94],'completed':[10,46,32],'pending-client':[51,37,0],'cannot-be-done':[46,16,16],'not-required':[22,22,58]};
+          const rgb = sColors[t.status] || [240,240,240];
+          doc.setFillColor(rgb[0],rgb[1],rgb[2]); doc.rect(margin+8,y-3.5,pageW-margin*2-8,6,'F');
+          doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(220);
+          doc.text('\u2022 '+t.name, margin+10, y);
+          doc.setFont('helvetica','bold'); doc.text(statusLabel(t.status), 175, y);
+          const latest = t.comments && t.comments.length ? t.comments[t.comments.length-1] : null;
+          if (latest) { doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(160); doc.text((latest.author||'') + ': ' + latest.text.substring(0,55) + (latest.text.length>55?'\u2026':''), 215, y); }
+          y += 6.5;
+        }); y += 2;
+      }); y += 3;
+    });
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(160);
+    doc.text('Page '+(ci+1)+' of '+clients.length, pageW/2, pageH-5, {align:'center'});
+  });
+  doc.save(clients.length===1 ? clients[0].name.replace(/\s+/g,'_')+'_integration.pdf' : 'CRx_Integration_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.pdf');
+  showToast('PDF exported (' + clients.length + ' client' + (clients.length>1?'s':'') + ').', 'success');
+}
+
+// ── EXCEL ──
+function openExcelModal(mode) {
+  const currentOnly = mode === 'current';
+  document.getElementById('excelClientList').innerHTML = viewerDB.clients.map(function(c) {
+    return '<label class="client-check-item"><input type="checkbox" name="excelClient" value="' + c.id + '" ' + ((!currentOnly || c.id === currentClientId) ? 'checked' : '') + '><div><div class="client-check-name">' + esc(c.name) + '</div><div class="client-check-meta">' + esc(c.cmmsType || '—') + ' \u00b7 ' + esc(c.overallStatus || 'Active') + '</div></div></label>';
+  }).join('');
+  document.querySelectorAll('#excelModal input[name=excelStatus]').forEach(function(cb) { cb.checked = true; });
+  openModal('excelModal');
+}
+function excelSelectAll(type, val) { document.querySelectorAll('#excelModal input[name=' + (type==='client'?'excelClient':'excelStatus') + ']').forEach(function(cb) { cb.checked = val; }); }
+function generateExcel() {
+  const selectedClients = Array.from(document.querySelectorAll('#excelModal input[name=excelClient]:checked')).map(function(cb) { return cb.value; });
+  const selectedStatuses = Array.from(document.querySelectorAll('#excelModal input[name=excelStatus]:checked')).map(function(cb) { return cb.value; });
+  if (!selectedClients.length) { showToast('Select at least one client.','error'); return; }
+  if (!selectedStatuses.length) { showToast('Select at least one status.','error'); return; }
+  const clients = viewerDB.clients.filter(function(c) { return selectedClients.includes(c.id); });
+  closeModal('excelModal');
+  const wb = XLSX.utils.book_new();
+  function cell(v, opts) {
+    opts = opts || {};
+    const c = { v: v, t: typeof v === 'number' ? 'n' : 's' };
+    if (opts.bold || opts.headerBg || opts.infoBg) {
+      c.s = { font: { bold: !!opts.bold, color: { rgb: opts.fontColor || (opts.headerBg ? 'FFFFFF' : 'C0C8E0') } },
+        fill: { fgColor: { rgb: opts.headerBg || opts.infoBg || '151820' } },
+        alignment: { vertical: 'center', wrapText: !!opts.wrap },
+        border: { top:{style:'thin',color:{rgb:'3A4060'}}, bottom:{style:'thin',color:{rgb:'3A4060'}}, left:{style:'thin',color:{rgb:'3A4060'}}, right:{style:'thin',color:{rgb:'3A4060'}} } };
+    }
+    return c;
+  }
+  const ovRows = [];
+  ovRows.push([cell('CRx Integration Tracker \u2014 Overview', {bold:true,headerBg:'0F1828',fontColor:'4F7CFF'})].concat(Array(9).fill(cell(''))));
+  ovRows.push([cell('Generated: ' + new Date().toLocaleString(), {infoBg:'1C2030'})].concat(Array(9).fill(cell(''))));
+  ovRows.push(Array(10).fill(cell('')));
+  ovRows.push(['Client Name','CMMS Type','CRx Consultant','Client POC','POC Email','Overall Status','In Progress','Completed %','Last Updated','Expected'].map(function(h) { return cell(h,{bold:true,headerBg:'222840',fontColor:'00E5C0'}); }));
+  clients.forEach(function(c) {
+    const stats = computeStats(c); const pct = stats.total ? Math.round(stats.completed/stats.total*100) : 0;
+    ovRows.push([cell(c.name,{bold:true,infoBg:'151820'}),cell(c.cmmsType||'—',{infoBg:'151820'}),cell(c.crxConsultant||'—',{infoBg:'151820'}),cell(c.clientPoc||'—',{infoBg:'151820'}),cell(c.clientPocEmail||'—',{infoBg:'151820'}),cell(c.overallStatus||'Active',{infoBg:'151820'}),cell(stats.inProgress,{infoBg:'151820'}),cell(pct+'%',{infoBg:'151820'}),cell(c.updatedAt?new Date(c.updatedAt).toLocaleDateString():'—',{infoBg:'151820'}),cell(c.expectedDate||'—',{infoBg:'151820'})]);
+  });
+  const ovWS = XLSX.utils.aoa_to_sheet(ovRows);
+  ovWS['!cols'] = [24,16,20,20,24,14,13,13,16,18].map(function(w){return{wch:w};});
+  ovWS['!merges'] = [{s:{r:0,c:0},e:{r:0,c:9}},{s:{r:1,c:0},e:{r:1,c:9}},{s:{r:2,c:0},e:{r:2,c:9}}];
+  XLSX.utils.book_append_sheet(wb, ovWS, 'Overview');
+  clients.forEach(function(c) {
+    const rows = [];
+    [['Client Name',c.name],['CMMS Type',c.cmmsType||'—'],['CRx Consultant',c.crxConsultant||'—'],['Client POC',c.clientPoc||'—'],['POC Email',c.clientPocEmail||'—'],['Overall Status',c.overallStatus||'Active'],['Expected',c.expectedDate||'—'],['Last Updated',c.updatedAt?new Date(c.updatedAt).toLocaleDateString():'—']].forEach(function(pair) {
+      rows.push([cell(pair[0],{bold:true,headerBg:'222840',fontColor:'00E5C0'}),cell(pair[1],{infoBg:'151820'})].concat(Array(5).fill(cell(''))));
+    });
+    rows.push(Array(7).fill(cell('')));
+    rows.push(['Section','Phase','Task','Status','Latest Comment','Comment By','Date'].map(function(h){return cell(h,{bold:true,headerBg:'1C2030',fontColor:'4F7CFF'});}));
+    const allCmts = [];
+    c.sections.forEach(function(sec) { sec.phases.forEach(function(ph) { ph.tasks.forEach(function(t) {
+      if (!selectedStatuses.includes(t.status)) return;
+      const comments = t.comments||[]; const latest = comments.length ? comments[comments.length-1] : null;
+      rows.push([cell(sec.label,{infoBg:'1A1E2E'}),cell(ph.label,{infoBg:'1A1E2E'}),cell(t.name,{infoBg:'1A1E2E'}),cell(statusLabel(t.status),{infoBg:'1A1E2E'}),cell(latest?latest.text:'',{infoBg:'1A1E2E',wrap:true}),cell(latest?latest.author||'':'',{infoBg:'1A1E2E'}),cell(latest?latest.timestamp:'',{infoBg:'1A1E2E'})]);
+      comments.forEach(function(cm) { allCmts.push(Object.assign({section:sec.label,phase:ph.label,task:t.name},cm)); });
+    }); }); });
+    if (allCmts.length) {
+      rows.push(Array(7).fill(cell('')));
+      rows.push([cell('FULL COMMENT HISTORY',{bold:true,headerBg:'0A2030',fontColor:'00E5C0'})].concat(Array(6).fill(cell(''))));
+      rows.push(['Section','Phase','Task','Author','Comment','Date/Time','Task?'].map(function(h){return cell(h,{bold:true,headerBg:'1C2030',fontColor:'8892B0'});}));
+      allCmts.forEach(function(cm) { rows.push([cell(cm.section,{infoBg:'111828'}),cell(cm.phase,{infoBg:'111828'}),cell(cm.task,{infoBg:'111828'}),cell(cm.author||'Anon',{bold:true,infoBg:'111828',fontColor:'4F7CFF'}),cell(cm.text,{infoBg:'111828',wrap:true}),cell(cm.timestamp||'',{infoBg:'111828'}),cell(cm.isTask?'\u2713':'',{infoBg:'111828'})]); });
+    }
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [26,18,26,20,38,16,20].map(function(w){return{wch:w};});
+    ws['!merges'] = []; for (let i=0;i<8;i++) ws['!merges'].push({s:{r:i,c:1},e:{r:i,c:6}});
+    XLSX.utils.book_append_sheet(wb, ws, c.name.replace(/[:\\\/\?\*\[\]]/g,'').substring(0,31));
+  });
+  XLSX.writeFile(wb, clients.length===1 ? clients[0].name.replace(/\s+/g,'_')+'_integration.xlsx' : 'CRx_Integration_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.xlsx');
+  showToast('Excel exported (' + clients.length + ' client' + (clients.length>1?'s':'') + ').', 'success');
+}
+
+// ── INIT ──
+window.addEventListener('load', function() {
+  const cfg = getCfg();
+  if (cfg) {
+    loadFromGitHub(false);
+    startAutoRefresh();
+  } else {
+    showSetupScreen();
+    setSyncStatus('idle', 'Not configured');
+  }
+});
+</script>
+</body>
+</html>
