@@ -1250,7 +1250,7 @@
       "startDate": "",
       "expectedDate": "",
       "createdAt": "2026-05-08T13:51:53.695Z",
-      "updatedAt": "2026-05-08T19:16:00.984Z",
+      "updatedAt": "2026-05-08T19:16:07.233Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1317,25 +1317,25 @@
                 {
                   "id": "l1",
                   "name": "Initial Requirement",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 },
                 {
                   "id": "l2",
                   "name": "Organizational Setup",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 },
                 {
                   "id": "l3",
                   "name": "Asset Setup",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 },
                 {
                   "id": "l4",
                   "name": "Work Order Setup",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 }
               ]
