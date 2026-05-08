@@ -6,7 +6,56 @@
 <title>CRx Integration Tracker — View Only</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+
+// ── SSO VIEWER ──
+var ssoViewSortAsc = true;
+function ssoViewSortToggle() {
+  ssoViewSortAsc = !ssoViewSortAsc;
+  var btn = document.getElementById('ssoSortBtn');
+  if (btn) btn.textContent = ssoViewSortAsc ? '⇅ Client A–Z' : '⇅ Client Z–A';
+  renderSSOViewer();
+}
+function renderSSOViewer() {
+  var tb = document.getElementById('ssoTableBody');
+  var em = document.getElementById('ssoEmpty');
+  if (!tb) return;
+  if (!viewerDB._sso || !viewerDB._sso.length) { tb.innerHTML = ''; if (em) em.style.display = 'block'; return; }
+  if (em) em.style.display = 'none';
+  var ipEl = document.getElementById('ssoFilterIP');
+  var doneEl = document.getElementById('ssoFilterDone');
+  var nrEl = document.getElementById('ssoFilterNR');
+  var nsEl = document.getElementById('ssoFilterNS');
+  var allOk = !ipEl || ((!nsEl||nsEl.checked) && ipEl.checked && doneEl.checked && nrEl.checked);
+  var filters = allOk ? null : [];
+  if (!allOk) {
+    if (nsEl && nsEl.checked) filters.push('Not Started');
+    if (ipEl && ipEl.checked) filters.push('In Progress');
+    if (doneEl && doneEl.checked) filters.push('Completed');
+    if (nrEl && nrEl.checked) filters.push('Not Required');
+  }
+  var entries = (viewerDB._sso || []).slice().sort(function(a, b) {
+    return ssoViewSortAsc ? a.clientName.localeCompare(b.clientName) : b.clientName.localeCompare(a.clientName);
+  });
+  if (filters) entries = entries.filter(function(e) { return filters.indexOf(e.ssoStatus || 'In Progress') > -1; });
+  var ss = {'Not Started':'background:var(--ns);color:var(--ns-text);',
+    'In Progress': 'background:var(--ip);color:var(--ip-text);',
+    'Completed': 'background:var(--done);color:var(--done-text);',
+    'Not Required': 'background:var(--nr);color:var(--nr-text);'
+  };
+  tb.innerHTML = entries.map(function(e) {
+    var s = ss[e.ssoStatus || 'In Progress'] || ss['In Progress'];
+    return '<tr>' +
+      '<td style="font-weight:600;">' + esc(e.clientName) + '</td>' +
+      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--surface3);color:var(--text);">' + esc(e.loginType || '—') + '</span></td>' +
+      '<td style="font-size:12px;color:var(--text3);">' + esc(e.setupDate || '—') + '</td>' +
+      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;' + s + '">' + esc(e.ssoStatus || 'In Progress') + '</span></td>' +
+      '<td style="font-size:12px;color:var(--text2);">' + esc(e.comments || '—') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
@@ -41,9 +90,9 @@
 
 
   /* HEADER */
-  .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+  .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;gap:12px;}
   .header-left{display:flex;align-items:center;}
-  .app-logo-static{display:flex;align-items:center;gap:0;font-family:var(--font-display);}
+  .app-logo-static{display:flex;align-items:center;gap:0;font-family:var(--font-display);flex-wrap:nowrap;white-space:nowrap;}
   .logo-crx-text{color:var(--accent);font-size:17px;font-weight:800;}
   .logo-slash{color:var(--text3);font-size:15px;margin:0 3px;font-weight:400;}
   .logo-module-name{color:var(--text2);font-size:14px;font-weight:500;font-family:var(--font-body);}
@@ -79,10 +128,56 @@
   .storage-warning-close{margin-left:auto;background:none;border:none;color:#ffb020;cursor:pointer;font-size:18px;line-height:1;}
 
 
-  .font-toggle{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;}
+  .font-toggle{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;flex-shrink:0;white-space:nowrap;}
   .font-toggle-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;padding:2px 6px;border-radius:4px;line-height:1;font-family:var(--font-body);transition:all 0.15s;}
   .font-toggle-btn:hover{background:var(--surface3);color:var(--text);}
   .font-size-label{font-size:11px;color:var(--text3);min-width:28px;text-align:center;}
+
+
+  /* VIEWER HEADER RIGHT — clean single row */
+  .vheader-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .vrefresh {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+  .vsync {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    white-space: nowrap;
+    cursor: default;
+  }
+  .vsync.syncing { color: var(--ip-text); border-color: var(--ip-text); }
+  .vsync.synced  { color: var(--done-text); border-color: var(--done-text); }
+  .vsync.error   { color: var(--cbd-text); border-color: var(--cbd-text); }
+  .vconfigure {
+    font-family: var(--font-body);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .vconfigure:hover { background: var(--surface2); color: var(--text); }
 
   /* SETUP SCREEN */
   .setup-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);padding:32px;}
@@ -285,15 +380,15 @@
       <span class="view-only-badge">VIEW ONLY</span>
     </div>
   </div>
-  <div class="header-right">
-    <div class="font-toggle" title="Adjust font size">
+  <div class="vheader-right">
+    <div class="font-toggle">
       <button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button>
       <span class="font-size-label" id="fontSizeLabel">16</span>
       <button class="font-toggle-btn" onclick="adjustFont(1)">A+</button>
     </div>
-    <span class="refresh-badge"><span class="refresh-dot"></span><span id="refreshLabel">Live</span></span>
-    <span class="sync-status" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting&#8230;</span></span>
-    <button class="btn btn-ghost btn-sm" onclick="openGhSetup()">&#9881; Configure</button>
+    <span class="vrefresh"><span class="refresh-dot"></span><span id="refreshLabel">Live</span></span>
+    <span class="vsync" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting&#8230;</span></span>
+    <button class="vconfigure" onclick="openGhSetup()">&#9881; Configure</button>
   </div>
 </header>
 
@@ -476,24 +571,28 @@
     <div class="dash-top">
       <div>
         <div class="dash-title">&#128272; SSO Tracker</div>
-        <div class="dash-sub">Single Sign On configuration — read only</div>
+        <div class="dash-sub">Single Sign On configuration &#8212; read only</div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="switchModule('integration')">&#8592; Integration Tracker</button>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">Filter:</span>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterNS" checked onchange="renderSSOViewer()" style="width:13px;height:13px;accent-color:var(--ns-text);"> Not Started</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterIP" checked onchange="renderSSOViewer()" style="width:13px;height:13px;accent-color:var(--accent);"> In Progress</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterDone" checked onchange="renderSSOViewer()" style="width:13px;height:13px;accent-color:var(--done-text);"> Completed</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterNR" checked onchange="renderSSOViewer()" style="width:13px;height:13px;accent-color:var(--nr-text);"> Not Required</label>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="ssoViewSortToggle()" id="ssoSortBtn">&#8597; Client A&#8211;Z</button>
+      </div>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:18%">Client Name</th>
-            <th style="width:16%">Login Type</th>
-            <th style="width:14%">SSO Provider</th>
-            <th style="width:18%">Comments</th>
-            <th style="width:12%">Date of Start</th>
-            <th style="width:12%">Date of SSO Setup</th>
-          </tr>
-        </thead>
-        <tbody id="ssoTableBody"></tbody>
-      </table>
+      <table><thead><tr>
+        <th style="width:22%;cursor:pointer;" onclick="ssoViewSortToggle()">Client Name &#8597;</th>
+        <th style="width:20%">Login Type</th>
+        <th style="width:16%">Date of SSO Setup</th>
+        <th style="width:14%">Status</th>
+        <th>Comments</th>
+      </tr></thead>
+      <tbody id="ssoTableBody"></tbody></table>
       <div id="ssoEmpty" class="no-data" style="display:none;">No SSO entries added yet.</div>
     </div>
   </div>
@@ -745,432 +844,40 @@ function showToast(msg, type) {
 
 // ── DASHBOARD ──
 function renderDashboard() {
+  const clients = viewerDB.clients || [];
   const grid = document.getElementById('clientGrid');
-  if (!viewerDB.clients || !viewerDB.clients.length) {
+  if (!grid) return;
+  if (!clients.length) {
     grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128268;</div><div class="empty-title">No integrations found</div><div class="empty-desc">Data may still be loading.</div><button class="btn btn-ghost btn-sm" onclick="refreshData()">&#8635; Try Refreshing</button></div>';
     return;
   }
-  grid.innerHTML = viewerDB.clients.map(function(c) {
-    const stats = computeStats(c);
-    const pct = stats.total ? Math.round(stats.completed / stats.total * 100) : 0;
-    const pillsHtml = Object.entries(stats.byStatus).filter(function(e) { return e[1] > 0; }).map(function(e) {
-      return '<span class="pill ' + statusClass(e[0]) + '">' + statusLabel(e[0]) + ': ' + e[1] + '</span>';
-    }).join('');
-    const updStr = (c.updatedAt || c.createdAt) ? 'Updated ' + timeAgo(new Date(c.updatedAt || c.createdAt)) : '—';
-    return '<div class="client-card" onclick="showDetail(\'' + c.id + '\')">' +
-      '<div class="card-header"><div class="card-name">' + esc(c.name) + '</div><span class="card-cmms">' + esc(c.cmmsType || '—') + '</span></div>' +
-      '<div class="card-meta"><strong>CRx:</strong> ' + esc(c.crxConsultant || '—') + '<br><strong>POC:</strong> ' + esc(c.clientPoc || '—') + (c.expectedDate ? '<br><strong>Expected:</strong> ' + esc(c.expectedDate) : '') + '</div>' +
-      '<div class="card-last-updated">&#128336; ' + esc(updStr) + '</div>' +
+  const activeClients = clients.filter(function(c) { return c.overallStatus !== 'Completed' && c.overallStatus !== 'Not Applicable'; });
+  const doneClients = clients.filter(function(c) { return c.overallStatus === 'Completed' || c.overallStatus === 'Not Applicable'; });
+  const scMap = {'Not Started':'var(--ns-text)','Active':'var(--done-text)','Upcoming':'var(--ip-text)','On Hold':'var(--pfc-text)','Completed':'var(--text3)','Not Applicable':'var(--text3)'};
+  function buildCard(c) {
+    var stats = computeStats(c);
+    var pct = stats.total ? Math.round(stats.completed / stats.total * 100) : 0;
+    var pills = Object.entries(stats.byStatus).filter(function(e){return e[1]>0;}).map(function(e){return '<span class="pill '+statusClass(e[0])+'">'+statusLabel(e[0])+': '+e[1]+'</span>';}).join('');
+    var upd = (c.updatedAt||c.createdAt) ? 'Updated '+timeAgo(new Date(c.updatedAt||c.createdAt)) : '—';
+    var sc = scMap[c.overallStatus] || 'var(--text2)';
+    var cid = c.id;
+    return '<div class="client-card" onclick="showDetail(\'' + cid + '\')">' +
+      '<div class="card-header"><div class="card-name">' + esc(c.name) + '</div><span class="card-cmms">' + esc(c.cmmsType||'—') + '</span></div>' +
+      '<div class="card-meta"><strong>CRx:</strong> ' + esc(c.crxConsultant||'—') + '<br><strong>POC:</strong> ' + esc(c.clientPoc||'—') + (c.expectedDate ? '<br><strong>Expected:</strong> ' + esc(c.expectedDate) : '') + '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div class="card-last-updated">&#128336; ' + esc(upd) + '</div>' +
+      '<span style="font-size:10px;font-weight:600;color:' + sc + ';background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">' + esc(c.overallStatus||'Active') + '</span></div>' +
       '<div class="progress-section"><div class="progress-label"><span>Completion</span><span>' + pct + '%</span></div><div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>' +
-      '<div class="status-pills">' + pillsHtml + '</div>' +
-      '<div class="card-footer" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="showDetail(\'' + c.id + '\')">Open &#8594;</button>' +
-      (stats.inProgress > 0 ? '<span style="font-size:10px;color:var(--ip-text);padding:2px 7px;background:var(--ip);border-radius:4px;">' + stats.inProgress + ' In Progress</span>' : '') + '</div>' +
-      '</div>';
-  }).join('');
-}
-
-// ── DETAIL ──
-function renderDetail() {
-  const c = viewerDB.clients.find(function(x) { return x.id === currentClientId; });
-  if (!c) { showDashboard(); return; }
-  document.getElementById('breadcrumbName').textContent = c.name;
-  document.getElementById('detailName').textContent = c.name;
-  document.getElementById('detailCmms').textContent = c.cmmsType || '—';
-  document.getElementById('detailCrx').textContent = c.crxConsultant || '—';
-  document.getElementById('detailPoc').textContent = c.clientPoc || '—';
-  document.getElementById('detailPocEmail').textContent = c.clientPocEmail || '—';
-  document.getElementById('detailStatus').textContent = c.overallStatus || 'Active';
-  document.getElementById('detailExpected').textContent = c.expectedDate || '—';
-  document.getElementById('detailUpdated').textContent = 'Updated: ' + new Date(c.updatedAt || c.createdAt).toLocaleDateString();
-  renderStats(c); renderSections(c); renderDocs(c); renderNotifications(c); renderGlobalComments(c);
-}
-
-function renderStats(c) {
-  const stats = computeStats(c);
-  const labels = {
-    'not-started':['Not Started','var(--ns-text)'],'in-progress':['In Progress','var(--ip-text)'],
-    'completed':['Completed','var(--done-text)'],'pending-client':['Pending Client','var(--pfc-text)'],
-    'cannot-be-done':['Cannot Do','var(--cbd-text)'],'not-required':['Not Required','var(--nr-text)']
-  };
-  document.getElementById('overviewStats').innerHTML = Object.entries(stats.byStatus).map(function(e) {
-    const info = labels[e[0]];
-    return '<div class="stat-box"><div class="stat-num" style="color:' + info[1] + '">' + e[1] + '</div><div class="stat-label">' + info[0] + '</div></div>';
-  }).join('');
-}
-
-function renderSections(c) {
-  const cont = document.getElementById('integrationSections');
-  cont.innerHTML = c.sections.map(function(sec) {
-    return '<div class="section-card"><div class="section-title">' + esc(sec.label) + '</div>' +
-      sec.phases.map(function(ph) {
-        return '<div><div style="padding:7px 14px 3px;font-size:10px;color:var(--accent2);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">' + esc(ph.label) + '</div>' +
-          '<table><thead><tr><th style="width:28%">Task</th><th style="width:22%">Status</th><th>Latest Comment</th></tr></thead><tbody>' +
-          ph.tasks.map(function(t) {
-            const comments = t.comments || [];
-            const cc = comments.length;
-            const latest = cc > 0 ? comments[comments.length - 1] : null;
-            const latestHtml = latest
-              ? '<div class="comment-preview-inline"><span style="color:var(--accent);font-weight:600;">' + esc(latest.author || 'Anon') + ':</span> ' + esc(latest.text) + '</div>'
-              : '';
-            return '<tr>' +
-              '<td class="task-name">' + esc(t.name) + '</td>' +
-              '<td><span class="status-badge ' + statusClass(t.status) + '">' + statusLabel(t.status) + '</span></td>' +
-              '<td><div style="display:flex;flex-direction:column;gap:4px;">' +
-              (cc > 0 ? '<button class="view-comments-btn" onclick="openCommentView(\'' + sec.id + '\',\'' + ph.id + '\',\'' + t.id + '\',\'' + esc(t.name).replace(/'/g,'_') + '\')">&#128172; <span class="comment-count-badge">' + cc + '</span></button>' : '<span style="font-size:11px;color:var(--text3);">No comments</span>') +
-              latestHtml + '</div></td></tr>';
-          }).join('') +
-          '</tbody></table></div>';
-      }).join('') + '</div>';
-  }).join('');
-}
-
-function openCommentView(secId, phId, taskId, taskName) {
-  const c = viewerDB.clients.find(function(x) { return x.id === currentClientId; });
-  if (!c) return;
-  const sec = c.sections.find(function(s) { return s.id === secId; });
-  const ph = sec.phases.find(function(p) { return p.id === phId; });
-  const task = ph.tasks.find(function(t) { return t.id === taskId; });
-  document.getElementById('commentViewTitle').textContent = '\uD83D\uDCAC ' + (task ? task.name : taskName);
-  const thread = document.getElementById('commentViewThread');
-  const comments = task ? (task.comments || []) : [];
-  if (!comments.length) { thread.innerHTML = '<div class="no-data">No comments on this task.</div>'; }
-  else {
-    thread.innerHTML = comments.map(function(cm) {
-      return '<div class="comment-bubble' + (cm.isTask ? '" style="border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);' : '') + '">' +
-        '<div class="comment-meta"><span class="comment-author">' + esc(cm.author || 'Anonymous') + '</span><span>' + esc(cm.timestamp) + (cm.isTask ? ' <span style="font-size:9px;background:var(--pfc);color:var(--pfc-text);border-radius:3px;padding:1px 5px;margin-left:4px;">TASK</span>' : '') + '</span></div>' +
-        '<div class="comment-text">' + esc(cm.text) + '</div></div>';
-    }).join('');
+      '<div class="status-pills">' + pills + '</div>' +
+      '<div class="card-footer" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="showDetail(\'' + cid + '\')">Open &#8594;</button>' +
+      (stats.inProgress > 0 ? '<span style="font-size:10px;color:#fff;padding:2px 7px;background:var(--ip);border-radius:4px;">' + stats.inProgress + ' In Progress</span>' : '') +
+      '</div></div>';
   }
-  openModal('commentViewModal');
-}
-
-function renderDocs(c) {
-  const docs = c.docs || [];
-  const tbody = document.getElementById('docsTableBody');
-  const empty = document.getElementById('docsEmpty');
-  if (!docs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  tbody.innerHTML = docs.map(function(d) {
-    return '<tr><td><span class="doc-type-badge">' + esc(d.type || '—') + '</span></td>' +
-      '<td>' + (d.link ? '<a class="doc-link" href="' + esc(d.link) + '" target="_blank">' + esc(d.name || d.link) + '</a>' : esc(d.name || '—')) + '</td>' +
-      '<td class="doc-date">' + esc(d.date || '—') + '</td>' +
-      '<td style="font-size:12px;color:var(--text2)">' + esc(d.notes || '') + '</td></tr>';
-  }).join('');
-}
-
-function renderNotifications(c) {
-  const msgs = document.getElementById('notifMessages');
-  const notifs = c.notifications || [];
-  const extras = [];
-  (c.globalComments || []).filter(function(cm) { return cm.isTask; }).forEach(function(cm) { extras.push(Object.assign({}, cm, {_source: 'Client Notes'})); });
-  c.sections.forEach(function(s) { s.phases.forEach(function(p) { p.tasks.forEach(function(t) { (t.comments || []).filter(function(cm) { return cm.isTask; }).forEach(function(cm) { extras.push(Object.assign({}, cm, {_source: t.name})); }); }); }); });
-  const all = notifs.concat(extras).sort(function(a, b) { return (b._ts || 0) - (a._ts || 0); });
-  if (!all.length) { msgs.innerHTML = '<div class="no-data">No notifications.</div>'; return; }
-  msgs.innerHTML = all.map(function(n) {
-    return '<div class="comment-bubble" style="border-color:rgba(255,176,32,0.3);background:rgba(51,37,0,0.2);">' +
-      '<div class="comment-meta"><span style="color:var(--pfc-text);font-weight:600;">' + esc(n.author || 'Anonymous') + (n._source ? ' <span style="color:var(--text3);font-weight:400;">\u00b7 ' + esc(n._source) + '</span>' : '') + '</span><span>' + esc(n.timestamp || '') + '</span></div>' +
-      '<div class="comment-text">' + esc(n.text) + '</div></div>';
-  }).join('');
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function renderGlobalComments(c) {
-  const msgs = document.getElementById('globalChatMessages');
-  const comments = c.globalComments || [];
-  if (!comments.length) { msgs.innerHTML = '<div class="no-data">No notes.</div>'; return; }
-  msgs.innerHTML = comments.map(function(cm) {
-    return '<div class="comment-bubble" ' + (cm.isTask ? 'style="border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);"' : '') + '>' +
-      '<div class="comment-meta"><span class="comment-author">' + esc(cm.author || 'Anonymous') + '</span><span>' + esc(cm.timestamp) + (cm.isTask ? ' <span style="font-size:9px;background:var(--pfc);color:var(--pfc-text);border-radius:3px;padding:1px 5px;margin-left:4px;">TASK</span>' : '') + '</span></div>' +
-      '<div class="comment-text">' + esc(cm.text) + '</div></div>';
-  }).join('');
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-// ── TASK VIEW ──
-function renderTaskView() {
-  const cf = document.getElementById('tvFilterClient');
-  if (!cf) return;
-  const prevVal = cf.value;
-  cf.innerHTML = '<option value="">All Clients</option>' +
-    viewerDB.clients.map(function(cc) { return '<option value="' + cc.id + '">' + esc(cc.name) + '</option>'; }).join('');
-  cf.value = prevVal;
-  const filterClient = cf.value;
-  const filterStatus = document.getElementById('tvFilterStatus').value;
-  const filterOverdue = document.getElementById('tvFilterOverdue').value;
-  const today = new Date(); today.setHours(0,0,0,0);
-  const rows = [];
-  viewerDB.clients.forEach(function(cc) {
-    if (filterClient && cc.id !== filterClient) return;
-    cc.sections.forEach(function(sec) { sec.phases.forEach(function(ph) { ph.tasks.forEach(function(t) {
-      (t.comments || []).filter(function(cm) { return cm.isTask; }).forEach(function(cm) {
-        rows.push({ clientName: cc.name, clientId: cc.id, task: t.name, source: 'Integration',
-          date: cm.timestamp, comment: cm.text, author: cm.author,
-          cmStatus: cm.taskStatus || 'not-started', dueDate: cm.dueDate || '' });
-      });
-    }); }); });
-    (cc.globalComments || []).filter(function(cm) { return cm.isTask; }).forEach(function(cm) {
-      rows.push({ clientName: cc.name, clientId: cc.id, task: 'Client Note', source: 'Client Notes',
-        date: cm.timestamp, comment: cm.text, author: cm.author,
-        cmStatus: cm.taskStatus || 'not-started', dueDate: cm.dueDate || '' });
-    });
-  });
-  const tsClassMap = { 'not-started':'ts-not-started','in-progress':'ts-in-progress','completed':'ts-completed','pending-client':'ts-pending-client','shared-dev':'ts-shared-dev','cannot-be-done':'ts-cannot-be-done' };
-  const tsLabelMap = { 'not-started':'Not Started','in-progress':'In Progress','completed':'Completed','pending-client':'Pending From Client','shared-dev':'Shared With Dev Team','cannot-be-done':'Cannot Be Done' };
-  const filtered = rows.filter(function(r) {
-    if (filterStatus && r.cmStatus !== filterStatus) return false;
-    const dd = r.dueDate ? new Date(r.dueDate) : null; if (dd) dd.setHours(0,0,0,0);
-    const isOverdue = dd && dd < today && r.cmStatus !== 'completed';
-    if (filterOverdue === 'overdue' && !isOverdue) return false;
-    if (filterOverdue === 'incomplete' && r.cmStatus === 'completed') return false;
-    if (filterOverdue === 'no-date' && r.dueDate) return false;
-    return true;
-  });
-  const tbody = document.getElementById('taskViewBody');
-  const empty = document.getElementById('taskViewEmpty');
-  const countEl = document.getElementById('tvCount');
-  if (countEl) countEl.textContent = filtered.length + ' task' + (filtered.length !== 1 ? 's' : '');
-  if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  tbody.innerHTML = filtered.map(function(r) {
-    const dd = r.dueDate ? new Date(r.dueDate) : null; if (dd) dd.setHours(0,0,0,0);
-    const isOverdue = dd && dd < today && r.cmStatus !== 'completed';
-    const dueTxt = r.dueDate ? '<span style="color:' + (isOverdue ? 'var(--cbd-text)' : 'var(--text2)') + ';font-size:11px;">' + r.dueDate + '</span>' + (isOverdue ? ' <span class="overdue-badge">OVERDUE</span>' : '') : '<span style="color:var(--text3);font-size:11px;">—</span>';
-    const sc = tsClassMap[r.cmStatus] || 'ts-not-started';
-    const sl = tsLabelMap[r.cmStatus] || r.cmStatus;
-    return '<tr>' +
-      '<td><a style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="showDetail(\'' + r.clientId + '\')">' + esc(r.clientName) + '</a></td>' +
-      '<td class="task-name">' + esc(r.task) + '<div class="task-source-label">' + esc(r.source) + '</div></td>' +
-      '<td><span class="ts-badge ' + sc + '">' + sl + '</span></td>' +
-      '<td>' + dueTxt + '</td>' +
-      '<td style="font-size:11px;color:var(--text3);">' + esc(r.date) + '</td>' +
-      '<td style="font-size:12px;"><span style="color:var(--accent);font-weight:600;">' + esc(r.author || 'Anon') + ':</span> ' + esc(r.comment) + '</td>' +
-      '</tr>';
-  }).join('');
-}
-
-// ── PDF ──
-function openPdfModal(mode) {
-  const currentOnly = mode === 'current';
-  document.getElementById('pdfClientList').innerHTML = viewerDB.clients.map(function(c) {
-    return '<label class="client-check-item"><input type="checkbox" name="pdfClient" value="' + c.id + '" ' + ((!currentOnly || c.id === currentClientId) ? 'checked' : '') + '><div><div class="client-check-name">' + esc(c.name) + '</div><div class="client-check-meta">' + esc(c.cmmsType || '—') + ' \u00b7 ' + esc(c.overallStatus || 'Active') + '</div></div></label>';
-  }).join('');
-  openModal('pdfModal');
-}
-function pdfSelectAll(val) { document.querySelectorAll('#pdfClientList input[type=checkbox]').forEach(function(cb) { cb.checked = val; }); }
-function generateSelectedPDF() {
-  const selected = Array.from(document.querySelectorAll('#pdfClientList input[type=checkbox]:checked')).map(function(cb) { return cb.value; });
-  if (!selected.length) { showToast('Select at least one client.', 'error'); return; }
-  closeModal('pdfModal');
-  buildPDF(viewerDB.clients.filter(function(c) { return selected.includes(c.id); }));
-}
-function buildPDF(clients) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const pageW = 297, pageH = 210, margin = 18;
-  clients.forEach(function(c, ci) {
-    if (ci > 0) doc.addPage();
-    let y = margin;
-    doc.setFillColor(15,24,32); doc.rect(0,0,pageW,14,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(79,124,255);
-    doc.text('CRx Integration Tracker', margin, 9);
-    doc.setTextColor(136,146,176); doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    doc.text('Generated: ' + new Date().toLocaleString(), pageW - margin, 9, { align: 'right' });
-    y = 22;
-    doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(30,30,30);
-    doc.text(c.name, margin, y); y += 7;
-    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
-    doc.text(['CMMS: '+(c.cmmsType||'—'),'CRx: '+(c.crxConsultant||'—'),'POC: '+(c.clientPoc||'—'),'Status: '+(c.overallStatus||'Active')].join('   |   '), margin, y);
-    y += 4; doc.setDrawColor(200); doc.line(margin, y, pageW-margin, y); y += 6;
-    c.sections.forEach(function(sec) {
-      if (y > pageH-20) { doc.addPage(); y = 22; }
-      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(0,180,150);
-      doc.text(sec.label, margin, y); y += 6;
-      sec.phases.forEach(function(ph) {
-        if (y > pageH-16) { doc.addPage(); y = 22; }
-        doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(80,100,180);
-        doc.text(ph.label, margin+4, y); y += 5;
-        ph.tasks.forEach(function(t) {
-          if (y > pageH-10) { doc.addPage(); y = 22; }
-          const sColors = {'not-started':[58,63,92],'in-progress':[15,45,94],'completed':[10,46,32],'pending-client':[51,37,0],'cannot-be-done':[46,16,16],'not-required':[22,22,58]};
-          const rgb = sColors[t.status] || [240,240,240];
-          doc.setFillColor(rgb[0],rgb[1],rgb[2]); doc.rect(margin+8,y-3.5,pageW-margin*2-8,6,'F');
-          doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(220);
-          doc.text('\u2022 '+t.name, margin+10, y);
-          doc.setFont('helvetica','bold'); doc.text(statusLabel(t.status), 175, y);
-          const latest = t.comments && t.comments.length ? t.comments[t.comments.length-1] : null;
-          if (latest) { doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(160); doc.text((latest.author||'') + ': ' + latest.text.substring(0,55) + (latest.text.length>55?'\u2026':''), 215, y); }
-          y += 6.5;
-        }); y += 2;
-      }); y += 3;
-    });
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(160);
-    doc.text('Page '+(ci+1)+' of '+clients.length, pageW/2, pageH-5, {align:'center'});
-  });
-  doc.save(clients.length===1 ? clients[0].name.replace(/\s+/g,'_')+'_integration.pdf' : 'CRx_Integration_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.pdf');
-  showToast('PDF exported (' + clients.length + ' client' + (clients.length>1?'s':'') + ').', 'success');
-}
-
-// ── EXCEL ──
-function openExcelModal(mode) {
-  const currentOnly = mode === 'current';
-  document.getElementById('excelClientList').innerHTML = viewerDB.clients.map(function(c) {
-    return '<label class="client-check-item"><input type="checkbox" name="excelClient" value="' + c.id + '" ' + ((!currentOnly || c.id === currentClientId) ? 'checked' : '') + '><div><div class="client-check-name">' + esc(c.name) + '</div><div class="client-check-meta">' + esc(c.cmmsType || '—') + ' \u00b7 ' + esc(c.overallStatus || 'Active') + '</div></div></label>';
-  }).join('');
-  document.querySelectorAll('#excelModal input[name=excelStatus]').forEach(function(cb) { cb.checked = true; });
-  openModal('excelModal');
-}
-function excelSelectAll(type, val) { document.querySelectorAll('#excelModal input[name=' + (type==='client'?'excelClient':'excelStatus') + ']').forEach(function(cb) { cb.checked = val; }); }
-function generateExcel() {
-  const selectedClients = Array.from(document.querySelectorAll('#excelModal input[name=excelClient]:checked')).map(function(cb) { return cb.value; });
-  const selectedStatuses = Array.from(document.querySelectorAll('#excelModal input[name=excelStatus]:checked')).map(function(cb) { return cb.value; });
-  if (!selectedClients.length) { showToast('Select at least one client.','error'); return; }
-  if (!selectedStatuses.length) { showToast('Select at least one status.','error'); return; }
-  const clients = viewerDB.clients.filter(function(c) { return selectedClients.includes(c.id); });
-  closeModal('excelModal');
-  const wb = XLSX.utils.book_new();
-  function cell(v, opts) {
-    opts = opts || {};
-    const c = { v: v, t: typeof v === 'number' ? 'n' : 's' };
-    if (opts.bold || opts.headerBg || opts.infoBg) {
-      c.s = { font: { bold: !!opts.bold, color: { rgb: opts.fontColor || (opts.headerBg ? 'FFFFFF' : 'C0C8E0') } },
-        fill: { fgColor: { rgb: opts.headerBg || opts.infoBg || '151820' } },
-        alignment: { vertical: 'center', wrapText: !!opts.wrap },
-        border: { top:{style:'thin',color:{rgb:'3A4060'}}, bottom:{style:'thin',color:{rgb:'3A4060'}}, left:{style:'thin',color:{rgb:'3A4060'}}, right:{style:'thin',color:{rgb:'3A4060'}} } };
-    }
-    return c;
+  var html = '';
+  if (activeClients.length) html += '<div class="client-grid">' + activeClients.map(buildCard).join('') + '</div>';
+  if (doneClients.length) {
+    html += '<div style="display:flex;align-items:center;gap:12px;margin:28px 0 16px;"><div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;">Completed &amp; Not Applicable</span><div style="flex:1;height:1px;background:var(--border);"></div></div>';
+    html += '<div class="client-grid" style="opacity:0.75;">' + doneClients.map(buildCard).join('') + '</div>';
   }
-  const ovRows = [];
-  ovRows.push([cell('CRx Integration Tracker \u2014 Overview', {bold:true,headerBg:'0F1828',fontColor:'4F7CFF'})].concat(Array(9).fill(cell(''))));
-  ovRows.push([cell('Generated: ' + new Date().toLocaleString(), {infoBg:'1C2030'})].concat(Array(9).fill(cell(''))));
-  ovRows.push(Array(10).fill(cell('')));
-  ovRows.push(['Client Name','CMMS Type','CRx Consultant','Client POC','POC Email','Overall Status','In Progress','Completed %','Last Updated','Expected'].map(function(h) { return cell(h,{bold:true,headerBg:'222840',fontColor:'00E5C0'}); }));
-  clients.forEach(function(c) {
-    const stats = computeStats(c); const pct = stats.total ? Math.round(stats.completed/stats.total*100) : 0;
-    ovRows.push([cell(c.name,{bold:true,infoBg:'151820'}),cell(c.cmmsType||'—',{infoBg:'151820'}),cell(c.crxConsultant||'—',{infoBg:'151820'}),cell(c.clientPoc||'—',{infoBg:'151820'}),cell(c.clientPocEmail||'—',{infoBg:'151820'}),cell(c.overallStatus||'Active',{infoBg:'151820'}),cell(stats.inProgress,{infoBg:'151820'}),cell(pct+'%',{infoBg:'151820'}),cell(c.updatedAt?new Date(c.updatedAt).toLocaleDateString():'—',{infoBg:'151820'}),cell(c.expectedDate||'—',{infoBg:'151820'})]);
-  });
-  const ovWS = XLSX.utils.aoa_to_sheet(ovRows);
-  ovWS['!cols'] = [24,16,20,20,24,14,13,13,16,18].map(function(w){return{wch:w};});
-  ovWS['!merges'] = [{s:{r:0,c:0},e:{r:0,c:9}},{s:{r:1,c:0},e:{r:1,c:9}},{s:{r:2,c:0},e:{r:2,c:9}}];
-  XLSX.utils.book_append_sheet(wb, ovWS, 'Overview');
-  clients.forEach(function(c) {
-    const rows = [];
-    [['Client Name',c.name],['CMMS Type',c.cmmsType||'—'],['CRx Consultant',c.crxConsultant||'—'],['Client POC',c.clientPoc||'—'],['POC Email',c.clientPocEmail||'—'],['Overall Status',c.overallStatus||'Active'],['Expected',c.expectedDate||'—'],['Last Updated',c.updatedAt?new Date(c.updatedAt).toLocaleDateString():'—']].forEach(function(pair) {
-      rows.push([cell(pair[0],{bold:true,headerBg:'222840',fontColor:'00E5C0'}),cell(pair[1],{infoBg:'151820'})].concat(Array(5).fill(cell(''))));
-    });
-    rows.push(Array(7).fill(cell('')));
-    rows.push(['Section','Phase','Task','Status','Latest Comment','Comment By','Date'].map(function(h){return cell(h,{bold:true,headerBg:'1C2030',fontColor:'4F7CFF'});}));
-    const allCmts = [];
-    c.sections.forEach(function(sec) { sec.phases.forEach(function(ph) { ph.tasks.forEach(function(t) {
-      if (!selectedStatuses.includes(t.status)) return;
-      const comments = t.comments||[]; const latest = comments.length ? comments[comments.length-1] : null;
-      rows.push([cell(sec.label,{infoBg:'1A1E2E'}),cell(ph.label,{infoBg:'1A1E2E'}),cell(t.name,{infoBg:'1A1E2E'}),cell(statusLabel(t.status),{infoBg:'1A1E2E'}),cell(latest?latest.text:'',{infoBg:'1A1E2E',wrap:true}),cell(latest?latest.author||'':'',{infoBg:'1A1E2E'}),cell(latest?latest.timestamp:'',{infoBg:'1A1E2E'})]);
-      comments.forEach(function(cm) { allCmts.push(Object.assign({section:sec.label,phase:ph.label,task:t.name},cm)); });
-    }); }); });
-    if (allCmts.length) {
-      rows.push(Array(7).fill(cell('')));
-      rows.push([cell('FULL COMMENT HISTORY',{bold:true,headerBg:'0A2030',fontColor:'00E5C0'})].concat(Array(6).fill(cell(''))));
-      rows.push(['Section','Phase','Task','Author','Comment','Date/Time','Task?'].map(function(h){return cell(h,{bold:true,headerBg:'1C2030',fontColor:'8892B0'});}));
-      allCmts.forEach(function(cm) { rows.push([cell(cm.section,{infoBg:'111828'}),cell(cm.phase,{infoBg:'111828'}),cell(cm.task,{infoBg:'111828'}),cell(cm.author||'Anon',{bold:true,infoBg:'111828',fontColor:'4F7CFF'}),cell(cm.text,{infoBg:'111828',wrap:true}),cell(cm.timestamp||'',{infoBg:'111828'}),cell(cm.isTask?'\u2713':'',{infoBg:'111828'})]); });
-    }
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [26,18,26,20,38,16,20].map(function(w){return{wch:w};});
-    ws['!merges'] = []; for (let i=0;i<8;i++) ws['!merges'].push({s:{r:i,c:1},e:{r:i,c:6}});
-    XLSX.utils.book_append_sheet(wb, ws, c.name.replace(/[:\\\/\?\*\[\]]/g,'').substring(0,31));
-  });
-  XLSX.writeFile(wb, clients.length===1 ? clients[0].name.replace(/\s+/g,'_')+'_integration.xlsx' : 'CRx_Integration_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.xlsx');
-  showToast('Excel exported (' + clients.length + ' client' + (clients.length>1?'s':'') + ').', 'success');
+  grid.innerHTML = html;
 }
 
-
-// ── FONT SIZE ──
-const FONT_KEY = 'crx_font_size';
-let currentFontSize = parseInt(localStorage.getItem(FONT_KEY) || '16');
-
-function applyFontSize(size) {
-  currentFontSize = Math.min(22, Math.max(12, size));
-  document.documentElement.style.setProperty('--page-font-size', currentFontSize + 'px');
-  localStorage.setItem(FONT_KEY, currentFontSize);
-  const lbl = document.getElementById('fontSizeLabel');
-  if (lbl) lbl.textContent = currentFontSize;
-}
-function adjustFont(delta) { applyFontSize(currentFontSize + delta); }
-
-// ── EDGE STORAGE CHECK ──
-function checkStorageAccess() {
-  try { localStorage.setItem('_crx_test','1'); localStorage.removeItem('_crx_test'); }
-  catch(e) { var b = document.getElementById('storageWarning'); if(b) b.classList.add('visible'); }
-}
-function showEdgeFix() {
-  var msg = 'To fix in Microsoft Edge: go to Settings > Privacy, search, and services > Tracking prevention > select Basic. Or add this site as an exception under Tracking prevention > Exceptions.';
-  alert(msg);
-}
-
-// ── MODULE SWITCHING (viewer) ──
-function toggleModuleMenu() {
-  var menu = document.getElementById('moduleMenu');
-  if (menu) menu.classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-  var dd = document.getElementById('moduleDropdown');
-  if (dd && !dd.contains(e.target)) { var m = document.getElementById('moduleMenu'); if(m) m.classList.remove('open'); }
-});
-function switchModule(module) {
-  var menu = document.getElementById('moduleMenu');
-  if (menu) menu.classList.remove('open');
-  var items = document.querySelectorAll('.module-menu-item');
-  items.forEach(function(item, i) {
-    item.classList.toggle('active', (module === 'integration' && i === 0) || (module === 'sso' && i === 1));
-  });
-  var lbl = document.getElementById('moduleLabel');
-  if (module === 'integration') {
-    if (lbl) lbl.textContent = '/ Integration Tracker';
-    document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
-    document.getElementById('viewDashboard').classList.add('active');
-    showDashboard();
-  } else if (module === 'sso') {
-    if (lbl) lbl.textContent = '/ SSO Tracker';
-    document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
-    document.getElementById('viewSSO').style.display = 'block';
-    renderSSOViewer();
-  }
-}
-
-// ── SSO VIEWER (read-only) ──
-function renderSSOViewer() {
-  if (!viewerDB._sso || !viewerDB._sso.length) {
-    document.getElementById('ssoTableBody').innerHTML = '';
-    document.getElementById('ssoEmpty').style.display = 'block';
-    return;
-  }
-  document.getElementById('ssoEmpty').style.display = 'none';
-  document.getElementById('ssoTableBody').innerHTML = viewerDB._sso.map(function(e) {
-    var lbg = e.loginType === 'Single Sign On' ? 'var(--done)' : e.loginType === 'ADFS' ? 'var(--ip)' : 'var(--surface3)';
-    var ltx = e.loginType === 'Single Sign On' ? 'var(--done-text)' : e.loginType === 'ADFS' ? 'var(--ip-text)' : 'var(--text2)';
-    var prov = e.loginType === 'Single Sign On' ? (e.provider === 'Others' ? (e.providerOthers || 'Others') : (e.provider || '—')) : '—';
-    return '<tr>' +
-      '<td style="font-weight:600;">' + esc(e.clientName) + '</td>' +
-      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:' + lbg + ';color:' + ltx + ';">' + esc(e.loginType) + '</span></td>' +
-      '<td style="font-size:13px;color:var(--text2);">' + esc(prov) + '</td>' +
-      '<td style="font-size:12px;color:var(--text2);">' + esc(e.comments || '—') + '</td>' +
-      '<td style="font-size:12px;color:var(--text3);">' + esc(e.startDate || '—') + '</td>' +
-      '<td style="font-size:12px;color:var(--text3);">' + esc(e.setupDate || '—') + '</td>' +
-      '</tr>';
-  }).join('');
-}
-
-// ── INIT ──
-applyFontSize(currentFontSize);
-checkStorageAccess();
-window.addEventListener('load', function() {
-  const cfg = getCfg();
-  if (cfg) {
-    loadFromGitHub(false);
-    startAutoRefresh();
-  } else {
-    showSetupScreen();
-    setSyncStatus('idle', 'Not configured');
-  }
-});
-</script>
-</body>
-</html>
