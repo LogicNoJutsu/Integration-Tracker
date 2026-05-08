@@ -35,6 +35,37 @@
     --nr: #16163a;       --nr-text: #7070c8;
   }
 
+  /* PAGE CONTENT FONT SCALE — header is excluded and stays fixed */
+  .view, .dashboard, .detail-view { font-size: var(--page-font-size, 16px); }
+  .app-header, .app-header * { font-size: unset !important; }
+  .app-header .btn { font-size: 12px !important; }
+  .app-header .sync-status { font-size: 11px !important; }
+  .app-header .font-size-label { font-size: 11px !important; }
+  .app-header .font-toggle-btn { font-size: 13px !important; }
+  .app-header .switch-btn { font-size: 11px !important; }
+  .app-header .logo-crx-text { font-size: 17px !important; }
+  .app-header .logo-module-name { font-size: 14px !important; }
+  .app-header .logo-slash { font-size: 15px !important; }
+
+  /* HEADER */
+  .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+  .header-left{display:flex;align-items:center;}
+  .app-logo-static{display:flex;align-items:center;gap:0;font-family:var(--font-display);}
+  .logo-crx-text{color:var(--accent);font-size:17px;font-weight:800;}
+  .logo-slash{color:var(--text3);font-size:15px;margin:0 3px;font-weight:400;}
+  .logo-module-name{color:var(--text2);font-size:14px;font-weight:500;font-family:var(--font-body);}
+  .switch-wrapper{position:relative;display:inline-block;margin-left:10px;}
+  .switch-btn{font-family:var(--font-body);font-size:11px;font-weight:500;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 8px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+  .switch-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--surface3);}
+  .module-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:200px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;flex-direction:column;overflow:hidden;}
+  .module-menu.open{display:flex;}
+  .module-menu-item{padding:11px 16px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border-bottom:1px solid var(--border);font-family:var(--font-body);}
+  .module-menu-item:last-child{border-bottom:none;}
+  .module-menu-item:hover{background:var(--surface2);color:var(--text);}
+  .module-menu-item.active{color:var(--accent);background:rgba(79,124,255,0.08);}
+
+
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -496,31 +527,30 @@
 
 <!-- ═══════════════════ HEADER ═══════════════════ -->
 <header class="app-header">
-  <div class="module-dropdown" id="moduleDropdown">
-    <button class="module-btn" onclick="toggleModuleMenu()">
-      <span style="color:var(--accent)">CRx</span>
-      <span class="logo-rest" id="moduleLabel">/ Integration Tracker</span>
-      <span class="module-arrow">▾</span>
-    </button>
-    <div class="module-menu" id="moduleMenu">
-      <div class="module-menu-item active" onclick="switchModule('integration')">
-        <span class="module-icon">🔌</span> Integration Tracker
-      </div>
-      <div class="module-menu-item" onclick="switchModule('sso')">
-        <span class="module-icon">🔐</span> SSO Tracker
+  <div class="header-left">
+    <div class="app-logo-static">
+      <span class="logo-crx-text">CRx</span>
+      <span class="logo-slash">/</span>
+      <span class="logo-module-name" id="moduleLabel">Integration Tracker</span>
+      <div class="switch-wrapper" id="moduleDropdown">
+        <button class="switch-btn" onclick="toggleModuleMenu()">Switch &#9662;</button>
+        <div class="module-menu" id="moduleMenu">
+          <div class="module-menu-item active" onclick="switchModule('integration')">&#128268; Integration Tracker</div>
+          <div class="module-menu-item" onclick="switchModule('sso')">&#128272; SSO Tracker</div>
+        </div>
       </div>
     </div>
   </div>
   <div class="header-actions" id="headerActions">
     <div class="font-toggle" title="Adjust font size">
-      <button class="font-toggle-btn" onclick="adjustFont(-1)" title="Decrease font size">A−</button>
+      <button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button>
       <span class="font-size-label" id="fontSizeLabel">16</span>
-      <button class="font-toggle-btn" onclick="adjustFont(1)" title="Increase font size">A+</button>
+      <button class="font-toggle-btn" onclick="adjustFont(1)">A+</button>
     </div>
-    <span class="sync-status" id="syncStatus" onclick="openGithubSetup()" title="Click to configure GitHub sync">
+    <span class="sync-status" id="syncStatus" onclick="openGithubSetup()" title="GitHub Sync">
       <span class="sync-dot"></span><span id="syncLabel">Not synced</span>
     </span>
-    <button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">⚙ GitHub</button>
+    <button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">&#9881; GitHub</button>
     <button class="btn btn-primary btn-sm" onclick="openAddClientModal()">+ New Client</button>
   </div>
 </header>
@@ -2083,7 +2113,7 @@ let currentFontSize = parseInt(localStorage.getItem(FONT_KEY) || '16');
 
 function applyFontSize(size) {
   currentFontSize = Math.min(22, Math.max(12, size));
-  document.body.style.fontSize = currentFontSize + 'px';
+  document.documentElement.style.setProperty('--page-font-size', currentFontSize + 'px');
   localStorage.setItem(FONT_KEY, currentFontSize);
   const lbl = document.getElementById('fontSizeLabel');
   if (lbl) lbl.textContent = currentFontSize;
