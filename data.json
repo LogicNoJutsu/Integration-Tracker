@@ -1250,7 +1250,7 @@
       "startDate": "",
       "expectedDate": "",
       "createdAt": "2026-05-08T13:51:53.695Z",
-      "updatedAt": "2026-05-08T19:16:23.853Z",
+      "updatedAt": "2026-05-08T19:16:27.154Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1317,13 +1317,13 @@
                 {
                   "id": "l1",
                   "name": "Initial Requirement",
-                  "status": "completed",
+                  "status": "not-started",
                   "comments": []
                 },
                 {
                   "id": "l2",
                   "name": "Organizational Setup",
-                  "status": "completed",
+                  "status": "not-started",
                   "comments": []
                 },
                 {
