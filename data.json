@@ -1250,7 +1250,7 @@
       "startDate": "",
       "expectedDate": "",
       "createdAt": "2026-05-08T13:51:53.695Z",
-      "updatedAt": "2026-05-08T19:15:58.933Z",
+      "updatedAt": "2026-05-08T19:16:00.984Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1347,7 +1347,7 @@
                 {
                   "id": "l5",
                   "name": "PM Work Order Setup",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 },
                 {
