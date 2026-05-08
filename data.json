@@ -1250,7 +1250,7 @@
       "startDate": "",
       "expectedDate": "",
       "createdAt": "2026-05-08T13:51:53.695Z",
-      "updatedAt": "2026-05-08T19:16:29.676Z",
+      "updatedAt": "2026-05-08T19:16:32.107Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1353,7 +1353,7 @@
                 {
                   "id": "l6",
                   "name": "Automated Asset Reports",
-                  "status": "completed",
+                  "status": "not-started",
                   "comments": []
                 }
               ]
