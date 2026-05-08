@@ -1521,5 +1521,18 @@
       ],
       "notifications": []
     }
+  ],
+  "_sso": [
+    {
+      "id": "sso_1778267106637",
+      "clientName": "IOWA",
+      "loginType": "ADFS",
+      "provider": "Microsoft",
+      "providerOthers": "",
+      "comments": "",
+      "startDate": "",
+      "setupDate": "",
+      "updatedAt": "2026-05-08T19:05:06.637Z"
+    }
   ]
 }
