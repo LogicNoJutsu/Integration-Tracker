@@ -9,7 +9,7 @@
       "overallStatus": "Active",
       "startDate": "2026-03-02",
       "createdAt": "2026-05-07T15:28:47.055Z",
-      "updatedAt": "2026-05-07T18:21:49.636Z",
+      "updatedAt": "2026-05-08T11:12:40.993Z",
       "sections": [
         {
           "id": "test_instance",
@@ -143,7 +143,8 @@
           "text": "Need to complete the sync Peninsula region The sync documents are shared with Avinash that needs to be synced in CRX as well",
           "timestamp": "May 7, 2026, 2:21 PM",
           "isTask": true,
-          "_ts": 1778178060459
+          "_ts": 1778178060459,
+          "taskStatus": "pending-client"
         }
       ],
       "expectedDate": "",
