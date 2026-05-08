@@ -1250,7 +1250,7 @@
       "startDate": "",
       "expectedDate": "",
       "createdAt": "2026-05-08T13:51:53.695Z",
-      "updatedAt": "2026-05-08T19:16:21.190Z",
+      "updatedAt": "2026-05-08T19:16:23.853Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1293,13 +1293,13 @@
                 {
                   "id": "t5",
                   "name": "PM Work Order Setup",
-                  "status": "completed",
+                  "status": "not-started",
                   "comments": []
                 },
                 {
                   "id": "t6",
                   "name": "Automated Asset Reports",
-                  "status": "completed",
+                  "status": "not-started",
                   "comments": []
                 }
               ]
