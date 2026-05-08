@@ -1376,7 +1376,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-08T17:56:16.593Z",
-      "updatedAt": "2026-05-08T17:58:25.537Z",
+      "updatedAt": "2026-05-08T17:58:28.808Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1425,7 +1425,7 @@
                 {
                   "id": "t6",
                   "name": "Automated Asset Reports",
-                  "status": "not-started",
+                  "status": "not-required",
                   "comments": []
                 }
               ]
@@ -1443,7 +1443,7 @@
                 {
                   "id": "l1",
                   "name": "Initial Requirement",
-                  "status": "not-started",
+                  "status": "not-required",
                   "comments": []
                 },
                 {
