@@ -28,7 +28,7 @@
     --text3: #4a5580;
 
     --ns: #2e3350;       --ns-text: #8892b0;
-    --ip: #0f2d5e;       --ip-text: #5aaeff;
+    --ip: #0f2d5e;       --ip-text: #ffffff;
     --done: #0a2e20;     --done-text: #00d48a;
     --pfc: #332500;      --pfc-text: #ffb020;
     --cbd: #2e1010;      --cbd-text: #ff4f4f;
@@ -43,7 +43,7 @@
     color: var(--text);
     min-height: 100vh;
     overflow-x: hidden;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.5;
   }
 
@@ -156,7 +156,7 @@
   .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
   .card-name { font-family: var(--font-display); font-size: 14px; font-weight: 700; }
   .card-cmms {
-    font-size: 11px; background: var(--surface3); color: var(--accent);
+    font-size: 11px; background: var(--surface3); color: #ffffff;
     padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border); white-space: nowrap;
   }
   .card-meta { color: var(--text2); font-size: 11px; margin-bottom: 12px; line-height: 1.9; }
@@ -496,15 +496,32 @@
 
 <!-- ═══════════════════ HEADER ═══════════════════ -->
 <header class="app-header">
-  <div class="app-logo">
-    <span class="logo-crx">CRx</span><span class="logo-rest">/ Integration Tracker</span>
+  <div class="module-dropdown" id="moduleDropdown">
+    <button class="module-btn" onclick="toggleModuleMenu()">
+      <span style="color:var(--accent)">CRx</span>
+      <span class="logo-rest" id="moduleLabel">/ Integration Tracker</span>
+      <span class="module-arrow">▾</span>
+    </button>
+    <div class="module-menu" id="moduleMenu">
+      <div class="module-menu-item active" onclick="switchModule('integration')">
+        <span class="module-icon">🔌</span> Integration Tracker
+      </div>
+      <div class="module-menu-item" onclick="switchModule('sso')">
+        <span class="module-icon">🔐</span> SSO Tracker
+      </div>
+    </div>
   </div>
   <div class="header-actions" id="headerActions">
+    <div class="font-toggle" title="Adjust font size">
+      <button class="font-toggle-btn" onclick="adjustFont(-1)" title="Decrease font size">A−</button>
+      <span class="font-size-label" id="fontSizeLabel">16</span>
+      <button class="font-toggle-btn" onclick="adjustFont(1)" title="Increase font size">A+</button>
+    </div>
     <span class="sync-status" id="syncStatus" onclick="openGithubSetup()" title="Click to configure GitHub sync">
       <span class="sync-dot"></span><span id="syncLabel">Not synced</span>
     </span>
-    <button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">⚙ GitHub Sync</button>
-    <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>
+    <button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">⚙ GitHub</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddClientModal()">+ New Client</button>
   </div>
 </header>
 
@@ -775,6 +792,74 @@
   </div>
 </div>
 
+
+<!-- ═══════════════════ SSO TRACKER VIEW ═══════════════════ -->
+<div id="viewSSO" class="view">
+  <div class="dashboard">
+    <div class="dash-top">
+      <div>
+        <div class="dash-title">&#128272; SSO Tracker</div>
+        <div class="dash-sub">Single Sign On configuration status across all clients</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddSSOModal()">+ Add Client</button>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <table id="ssoTable">
+        <thead>
+          <tr>
+            <th style="width:18%">Client Name</th>
+            <th style="width:16%">Login Type</th>
+            <th style="width:14%">SSO Provider</th>
+            <th style="width:16%">Comments</th>
+            <th style="width:13%">Date of Start</th>
+            <th style="width:13%">Date of SSO Setup</th>
+            <th style="width:10%"></th>
+          </tr>
+        </thead>
+        <tbody id="ssoTableBody"></tbody>
+      </table>
+      <div id="ssoEmpty" class="no-comments" style="display:none;">No SSO entries yet. Click "+ Add Client" to get started.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SSO ADD/EDIT MODAL -->
+<div class="modal-overlay" id="ssoModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('ssoModal')">&#215;</button>
+    <div class="modal-title" id="ssoModalTitle">Add SSO Entry</div>
+    <div class="form-group"><label>Client Name *</label><input type="text" id="fSsoClient" placeholder="Client name"></div>
+    <div class="form-group">
+      <label>Login Type</label>
+      <select id="fSsoLoginType" onchange="handleSSOLoginTypeChange()">
+        <option value="Password">Password</option>
+        <option value="Single Sign On">Single Sign On</option>
+        <option value="ADFS">ADFS</option>
+      </select>
+    </div>
+    <div class="form-group" id="ssoProviderGroup" style="display:none;">
+      <label>SSO Provider</label>
+      <select id="fSsoProvider" onchange="handleSSOProviderChange()">
+        <option value="Microsoft">Microsoft</option>
+        <option value="Others">Others</option>
+      </select>
+    </div>
+    <div class="form-group" id="ssoOthersGroup" style="display:none;">
+      <label>Provider Details</label>
+      <textarea id="fSsoOthers" placeholder="Describe the SSO provider..."></textarea>
+    </div>
+    <div class="form-group"><label>Comments</label><textarea id="fSsoComments" placeholder="Any additional notes..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Date of Start</label><input type="date" id="fSsoStartDate"></div>
+      <div class="form-group"><label>Date of SSO Setup</label><input type="date" id="fSsoSetupDate"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('ssoModal')">Cancel</button>
+      <button class="btn btn-primary" id="ssoModalSaveBtn" onclick="saveSSO()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════ GITHUB SETUP MODAL ═══════════════════ -->
 <div class="modal-overlay github-modal" id="githubModal">
   <div class="modal">
@@ -904,6 +989,8 @@ async function loadFromGitHub() {
     const decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
     const remoteDB = JSON.parse(decoded);
     localStorage.setItem(DB_KEY, JSON.stringify(remoteDB));
+    // Also restore SSO data if included
+    if (remoteDB._sso) { localStorage.setItem(SSO_KEY, JSON.stringify(remoteDB._sso)); }
     setSyncStatus('synced', 'Synced ✓');
     setTimeout(function() { setSyncStatus('synced', 'GitHub synced'); }, 2000);
     renderDashboard();
@@ -1000,52 +1087,40 @@ let ghFileSha = null; // store current file SHA for updates
 async function syncToGitHub(db, isTest = false) {
   const cfg = getGhConfig();
   if (!cfg) return;
-
-  // Debounce — wait 1.5s after last change before syncing
   if (syncTimeout) clearTimeout(syncTimeout);
-  syncTimeout = setTimeout(async () => {
+  syncTimeout = setTimeout(async function() {
     setSyncStatus('syncing', 'Syncing…');
     try {
       const content = btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2))));
-      const url = `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/data.json`;
+      const url = 'https://api.github.com/repos/' + cfg.user + '/' + cfg.repo + '/contents/data.json';
       const headers = {
-        'Authorization': `token ${cfg.token}`,
+        'Authorization': 'token ' + cfg.token,
         'Content-Type': 'application/json',
         'Accept': 'application/vnd.github.v3+json'
       };
-
-      // Get current SHA if file exists
+      // Always fetch latest SHA before writing — prevents conflict errors
       let sha = ghFileSha;
-      if (!sha) {
-        try {
-          const getRes = await fetch(url, { headers });
-          if (getRes.ok) {
-            const existing = await getRes.json();
-            sha = existing.sha;
-            ghFileSha = sha;
-          }
-        } catch {}
-      }
-
-      const body = { message: `CRx Tracker sync — ${new Date().toLocaleString()}`, content };
+      try {
+        const getRes = await fetch(url, { headers });
+        if (getRes.ok) { const ex = await getRes.json(); sha = ex.sha; ghFileSha = sha; }
+      } catch(e2) {}
+      const body = { message: 'CRx Tracker sync — ' + new Date().toLocaleString(), content };
       if (sha) body.sha = sha;
-
       const res = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
       if (res.ok) {
         const data = await res.json();
-        ghFileSha = data.content?.sha || sha;
+        ghFileSha = (data.content && data.content.sha) ? data.content.sha : sha;
         setSyncStatus('synced', 'Synced ✓');
         if (isTest) showToast('GitHub sync working! Data saved.', 'success');
-        // Reset to "synced" after 3s
-        setTimeout(() => setSyncStatus('synced', 'GitHub synced'), 3000);
+        setTimeout(function() { setSyncStatus('synced', 'GitHub synced'); }, 3000);
       } else {
         const err = await res.json();
         setSyncStatus('error', 'Sync failed');
-        if (isTest) showToast('Error: ' + (err.message || 'Check token/repo name.'), 'error');
+        if (isTest) showToast('Error: ' + (err.message || 'Check token/repo.'), 'error');
       }
-    } catch (e) {
+    } catch(e) {
       setSyncStatus('error', 'Sync error');
-      if (isTest) showToast('Network error. Check connection.', 'error');
+      if (isTest) showToast('Network error.', 'error');
     }
   }, isTest ? 0 : 1500);
 }
@@ -1227,12 +1302,7 @@ function showDashboard() {
   currentClientId = null;
   renderDashboard();
   showView('viewDashboard');
-  document.getElementById('headerActions').innerHTML = `
-    <span class="sync-status" id="syncStatus" onclick="openGithubSetup()" title="Click to configure GitHub sync">
-      <span class="sync-dot"></span><span id="syncLabel">Not synced</span>
-    </span>
-    <button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">⚙ GitHub Sync</button>
-    <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>`;
+  rebuildHeaderActions();
   const cfg = getGhConfig();
   if (cfg) setSyncStatus('synced', 'GitHub configured');
 }
@@ -2006,7 +2076,227 @@ function fmtTime() {
   return new Date().toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
 }
 
+
+// ─── FONT SIZE ───
+const FONT_KEY = 'crx_font_size';
+let currentFontSize = parseInt(localStorage.getItem(FONT_KEY) || '16');
+
+function applyFontSize(size) {
+  currentFontSize = Math.min(22, Math.max(12, size));
+  document.body.style.fontSize = currentFontSize + 'px';
+  localStorage.setItem(FONT_KEY, currentFontSize);
+  const lbl = document.getElementById('fontSizeLabel');
+  if (lbl) lbl.textContent = currentFontSize;
+}
+
+function adjustFont(delta) {
+  applyFontSize(currentFontSize + delta);
+}
+
+// ─── HEADER REBUILD ───
+function rebuildHeaderActions() {
+  const el = document.getElementById('headerActions');
+  if (!el) return;
+  el.innerHTML = '<div class="font-toggle" title="Adjust font size">' +
+    '<button class="font-toggle-btn" onclick="adjustFont(-1)" title="Decrease">A&#8722;</button>' +
+    '<span class="font-size-label" id="fontSizeLabel">' + currentFontSize + '</span>' +
+    '<button class="font-toggle-btn" onclick="adjustFont(1)" title="Increase">A+</button>' +
+    '</div>' +
+    '<span class="sync-status" id="syncStatus" onclick="openGithubSetup()" title="GitHub Sync">' +
+    '<span class="sync-dot"></span><span id="syncLabel">Not synced</span>' +
+    '</span>' +
+    '<button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">&#9881; GitHub</button>' +
+    '<button class="btn btn-primary btn-sm" onclick="openAddClientModal()">+ New Client</button>';
+  const cfg = getGhConfig();
+  if (cfg) setSyncStatus('synced', 'GitHub configured');
+}
+
+// ─── MODULE SWITCHING ───
+let currentModule = 'integration';
+
+function toggleModuleMenu() {
+  const menu = document.getElementById('moduleMenu');
+  if (menu) menu.classList.toggle('open');
+}
+
+// Close module menu when clicking outside
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('moduleDropdown');
+  if (dd && !dd.contains(e.target)) {
+    const menu = document.getElementById('moduleMenu');
+    if (menu) menu.classList.remove('open');
+  }
+});
+
+function switchModule(module) {
+  currentModule = module;
+  const menu = document.getElementById('moduleMenu');
+  if (menu) menu.classList.remove('open');
+  const items = document.querySelectorAll('.module-menu-item');
+  items.forEach(function(item, i) {
+    item.classList.toggle('active', (module === 'integration' && i === 0) || (module === 'sso' && i === 1));
+  });
+  const lbl = document.getElementById('moduleLabel');
+  if (module === 'integration') {
+    if (lbl) lbl.textContent = '/ Integration Tracker';
+    showDashboard();
+  } else if (module === 'sso') {
+    if (lbl) lbl.textContent = '/ SSO Tracker';
+    showSSO();
+  }
+}
+
+// ─── EDGE STORAGE CHECK ───
+function checkStorageAccess() {
+  try {
+    localStorage.setItem('_crx_test', '1');
+    localStorage.removeItem('_crx_test');
+  } catch(e) {
+    const banner = document.getElementById('storageWarning');
+    if (banner) banner.style.display = 'flex';
+  }
+}
+
+function showEdgeFix() {
+  var msg = 'To fix in Microsoft Edge: go to Settings > Privacy, search, and services > Tracking prevention > select Basic. Or add this site as an exception under Tracking prevention > Exceptions.';
+  alert(msg);
+}
+
+// ─── SSO TRACKER ───
+const SSO_KEY = 'crx_sso_data';
+let editingSSOId = null;
+
+function loadSSO() {
+  try { return JSON.parse(localStorage.getItem(SSO_KEY)) || []; } catch { return []; }
+}
+function saveSSO_data(entries) {
+  localStorage.setItem(SSO_KEY, JSON.stringify(entries));
+  // Sync SSO data to GitHub alongside main data
+  const cfg = getGhConfig();
+  if (cfg) {
+    const db = loadDB();
+    db._sso = entries;
+    syncToGitHub(db);
+  }
+}
+
+function showSSO() {
+  renderSSO();
+  showView('viewSSO');
+  rebuildHeaderActions();
+}
+
+function renderSSO() {
+  const entries = loadSSO();
+  const tbody = document.getElementById('ssoTableBody');
+  const empty = document.getElementById('ssoEmpty');
+  if (!tbody) return;
+  if (!entries.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = entries.map(function(e) {
+    const loginBadgeColor = e.loginType === 'Single Sign On' ? 'var(--done)' : e.loginType === 'ADFS' ? 'var(--ip)' : 'var(--surface3)';
+    const loginTextColor = e.loginType === 'Single Sign On' ? 'var(--done-text)' : e.loginType === 'ADFS' ? 'var(--ip-text)' : 'var(--text2)';
+    const providerText = e.loginType === 'Single Sign On' ? (e.provider === 'Others' ? (e.providerOthers || 'Others') : (e.provider || '—')) : '—';
+    return '<tr>' +
+      '<td style="font-weight:600;">' + esc(e.clientName) + '</td>' +
+      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:' + loginBadgeColor + ';color:' + loginTextColor + ';">' + esc(e.loginType) + '</span></td>' +
+      '<td style="font-size:13px;color:var(--text2);">' + esc(providerText) + '</td>' +
+      '<td style="font-size:12px;color:var(--text2);">' + esc(e.comments || '—') + '</td>' +
+      '<td style="font-size:12px;color:var(--text3);">' + esc(e.startDate || '—') + '</td>' +
+      '<td style="font-size:12px;color:var(--text3);">' + esc(e.setupDate || '—') + '</td>' +
+      '<td style="display:flex;gap:6px;">' +
+      '<button class="btn btn-ghost btn-xs" onclick="openEditSSOModal(\'' + e.id + '\')">Edit</button>' +
+      '<button class="btn btn-danger btn-xs" onclick="deleteSSO(\'' + e.id + '\')">&#215;</button>' +
+      '</td></tr>';
+  }).join('');
+}
+
+function openAddSSOModal() {
+  editingSSOId = null;
+  document.getElementById('ssoModalTitle').textContent = 'Add SSO Entry';
+  document.getElementById('ssoModalSaveBtn').textContent = 'Save Entry';
+  document.getElementById('fSsoClient').value = '';
+  document.getElementById('fSsoLoginType').value = 'Password';
+  document.getElementById('fSsoProvider').value = 'Microsoft';
+  document.getElementById('fSsoOthers').value = '';
+  document.getElementById('fSsoComments').value = '';
+  document.getElementById('fSsoStartDate').value = '';
+  document.getElementById('fSsoSetupDate').value = '';
+  document.getElementById('ssoProviderGroup').style.display = 'none';
+  document.getElementById('ssoOthersGroup').style.display = 'none';
+  openModal('ssoModal');
+}
+
+function openEditSSOModal(id) {
+  const entries = loadSSO();
+  const e = entries.find(function(x) { return x.id === id; });
+  if (!e) return;
+  editingSSOId = id;
+  document.getElementById('ssoModalTitle').textContent = 'Edit SSO Entry';
+  document.getElementById('ssoModalSaveBtn').textContent = 'Save Changes';
+  document.getElementById('fSsoClient').value = e.clientName || '';
+  document.getElementById('fSsoLoginType').value = e.loginType || 'Password';
+  document.getElementById('fSsoProvider').value = e.provider || 'Microsoft';
+  document.getElementById('fSsoOthers').value = e.providerOthers || '';
+  document.getElementById('fSsoComments').value = e.comments || '';
+  document.getElementById('fSsoStartDate').value = e.startDate || '';
+  document.getElementById('fSsoSetupDate').value = e.setupDate || '';
+  document.getElementById('ssoProviderGroup').style.display = e.loginType === 'Single Sign On' ? 'block' : 'none';
+  document.getElementById('ssoOthersGroup').style.display = (e.loginType === 'Single Sign On' && e.provider === 'Others') ? 'block' : 'none';
+  openModal('ssoModal');
+}
+
+function handleSSOLoginTypeChange() {
+  const val = document.getElementById('fSsoLoginType').value;
+  document.getElementById('ssoProviderGroup').style.display = val === 'Single Sign On' ? 'block' : 'none';
+  if (val !== 'Single Sign On') document.getElementById('ssoOthersGroup').style.display = 'none';
+}
+
+function handleSSOProviderChange() {
+  const val = document.getElementById('fSsoProvider').value;
+  document.getElementById('ssoOthersGroup').style.display = val === 'Others' ? 'block' : 'none';
+}
+
+function saveSSO() {
+  const clientName = document.getElementById('fSsoClient').value.trim();
+  if (!clientName) { showToast('Client name is required.', 'error'); return; }
+  const entries = loadSSO();
+  const entry = {
+    id: editingSSOId || 'sso_' + Date.now(),
+    clientName,
+    loginType: document.getElementById('fSsoLoginType').value,
+    provider: document.getElementById('fSsoProvider').value,
+    providerOthers: document.getElementById('fSsoOthers').value.trim(),
+    comments: document.getElementById('fSsoComments').value.trim(),
+    startDate: document.getElementById('fSsoStartDate').value,
+    setupDate: document.getElementById('fSsoSetupDate').value,
+    updatedAt: new Date().toISOString()
+  };
+  if (editingSSOId) {
+    const idx = entries.findIndex(function(x) { return x.id === editingSSOId; });
+    if (idx > -1) entries[idx] = entry;
+  } else {
+    entries.push(entry);
+  }
+  saveSSO_data(entries);
+  closeModal('ssoModal');
+  renderSSO();
+  showToast(editingSSOId ? 'Entry updated.' : 'Entry added!', 'success');
+}
+
+function deleteSSO(id) {
+  const entries = loadSSO().filter(function(x) { return x.id !== id; });
+  saveSSO_data(entries);
+  renderSSO();
+}
+
 // ─── INIT ───
+applyFontSize(currentFontSize);
+checkStorageAccess();
 renderDashboard();
 // If GitHub is configured, load latest data from there on startup
 window.addEventListener('load', function() {
