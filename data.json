@@ -1088,7 +1088,7 @@
       "startDate": "2026-01-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:41:30.681Z",
-      "updatedAt": "2026-05-08T11:42:47.567Z",
+      "updatedAt": "2026-05-08T11:44:02.682Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1204,6 +1204,13 @@
           "type": "Document",
           "name": "CRx X Hexmodal Integration document",
           "link": "https://hcfcompliancecom.sharepoint.com/:w:/s/CRxSupport/IQAP6ogTJUwwS76d8Ju1TKs-AZwHFR-ZhjCe9CVfmLiv3ro?e=T4erhG",
+          "notes": "",
+          "date": "5/8/2026"
+        },
+        {
+          "type": "Document",
+          "name": "Hexmodal Building mapping",
+          "link": "https://hcfcompliancecom.sharepoint.com/:w:/s/CRxSupport/IQD_3y4fZeq8RrszMBflwlffAdWTXJ6vkEBn8r-Qzu84erY?e=Mmb7ng",
           "notes": "",
           "date": "5/8/2026"
         }
