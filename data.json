@@ -1088,7 +1088,7 @@
       "startDate": "2026-01-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:41:30.681Z",
-      "updatedAt": "2026-05-08T12:24:22.156Z",
+      "updatedAt": "2026-05-08T17:40:49.144Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1229,6 +1229,13 @@
           "timestamp": "May 8, 2026, 8:24 AM",
           "isTask": true,
           "_ts": 1778243062156
+        },
+        {
+          "author": "VG",
+          "text": "We have shared the documentation for the process with the development team",
+          "timestamp": "May 8, 2026, 1:40 PM",
+          "isTask": false,
+          "_ts": 1778262049144
         }
       ]
     },
