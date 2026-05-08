@@ -803,7 +803,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:39:15.224Z",
-      "updatedAt": "2026-05-08T11:28:46.117Z",
+      "updatedAt": "2026-05-08T11:30:09.579Z",
       "sections": [
         {
           "id": "test_instance",
@@ -921,7 +921,8 @@
           "text": "On the DNV Asset List, they have listed many more assets which are in their CMMS than what we are able to find. I suspect this is because things are mislabeled/categorized in their system. We need to confirm with the client whether the data over there is correct in the API or not",
           "timestamp": "May 8, 2026, 7:28 AM",
           "isTask": true,
-          "_ts": 1778239726117
+          "_ts": 1778239726117,
+          "taskStatus": "pending-client"
         }
       ]
     },
