@@ -484,7 +484,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:12.397Z",
-      "updatedAt": "2026-05-07T16:45:10.325Z",
+      "updatedAt": "2026-05-08T11:26:36.388Z",
       "sections": [
         {
           "id": "test_instance",
@@ -602,7 +602,15 @@
         }
       ],
       "docs": [],
-      "globalComments": []
+      "globalComments": [
+        {
+          "author": "VG",
+          "text": "Currently all of their asset subcategories are listed as general due to which we are not able to map them correctly in CRX I have notified Kevin on the same and this needs to be notified to client so that it can be fixed at their end",
+          "timestamp": "May 8, 2026, 7:26 AM",
+          "isTask": true,
+          "_ts": 1778239596388
+        }
+      ]
     },
     {
       "id": "c_1778171929957",
