@@ -1376,7 +1376,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-08T17:56:16.593Z",
-      "updatedAt": "2026-05-08T17:56:16.593Z",
+      "updatedAt": "2026-05-08T17:57:04.059Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1487,7 +1487,15 @@
           ]
         }
       ],
-      "docs": [],
+      "docs": [
+        {
+          "type": "API Documentation",
+          "name": "CRx Integration Process If CMMS doest have API",
+          "link": "https://hcfcompliancecom.sharepoint.com/:w:/s/CRxSupport/IQC9_Wsgb1NYRokcbqeIjmb5Ad_ZHA0SVHjewlYx6kPYwRk?e=qNhOfG",
+          "notes": "This document Describes what needs to be done if the client doesn't have any active APIs",
+          "date": "5/8/2026"
+        }
+      ],
       "globalComments": [],
       "notifications": []
     }
