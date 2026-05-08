@@ -1376,7 +1376,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-08T17:56:16.593Z",
-      "updatedAt": "2026-05-08T17:57:04.059Z",
+      "updatedAt": "2026-05-08T17:58:05.316Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1493,6 +1493,13 @@
           "name": "CRx Integration Process If CMMS doest have API",
           "link": "https://hcfcompliancecom.sharepoint.com/:w:/s/CRxSupport/IQC9_Wsgb1NYRokcbqeIjmb5Ad_ZHA0SVHjewlYx6kPYwRk?e=qNhOfG",
           "notes": "This document Describes what needs to be done if the client doesn't have any active APIs",
+          "date": "5/8/2026"
+        },
+        {
+          "type": "Additional Documents",
+          "name": "Zimbra Helen Keller set up",
+          "link": "https://hcfcompliancecom-my.sharepoint.com/:w:/g/personal/venky_crxweb_com/IQBxvh8AhwfcS5QXvSw1XSfsAQUOSl1Igy3G8UTIKMDGUgQ?e=OFrh70",
+          "notes": "This document describes how to set up the Zimbra account at client's end",
           "date": "5/8/2026"
         }
       ],
