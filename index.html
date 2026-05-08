@@ -539,28 +539,36 @@
       <button class="btn btn-ghost btn-sm" onclick="showDashboard()">&#8592; Dashboard</button>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-      <div style="padding:12px 16px;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;">
-        <select id="tvFilterClient" onchange="renderTaskView()" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-family:var(--font-body);font-size:13px;outline:none;">
+      <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;">
+        <select id="tvFilterClient" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;">
           <option value="">All Clients</option>
         </select>
-        <select id="tvFilterStatus" onchange="renderTaskView()" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-family:var(--font-body);font-size:13px;outline:none;">
+        <select id="tvFilterStatus" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;">
           <option value="">All Statuses</option>
           <option value="not-started">Not Started</option>
           <option value="in-progress">In Progress</option>
           <option value="completed">Completed</option>
           <option value="pending-client">Pending From Client</option>
           <option value="cannot-be-done">Cannot Be Done</option>
-          <option value="not-required">Not Required</option>
+          <option value="shared-dev">Shared With Dev Team</option>
+          <option value="cannot-be-done">Cannot Be Done</option>
         </select>
-        <span id="tvCount" style="font-size:12px;color:var(--text3);"></span>
+        <select id="tvFilterOverdue" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;">
+          <option value="">All Tasks</option>
+          <option value="overdue">Overdue Only</option>
+          <option value="incomplete">Incomplete Only</option>
+          <option value="no-date">No Due Date</option>
+        </select>
+        <span id="tvCount" style="font-size:11px;color:var(--text3);white-space:nowrap;"></span>
       </div>
       <table>
         <thead>
           <tr>
-            <th style="width:16%">Client</th>
-            <th style="width:22%">Task / Source</th>
-            <th style="width:16%">Status</th>
-            <th style="width:14%">Date</th>
+            <th style="width:13%">Client</th>
+            <th style="width:16%">Task / Source</th>
+            <th style="width:16%">Task Status</th>
+            <th style="width:13%">Due Date</th>
+            <th style="width:12%">Flagged On</th>
             <th>Comment / Note</th>
           </tr>
         </thead>
@@ -877,6 +885,34 @@ function saveDB(db) {
   syncToGitHub(db);
 }
 
+// Load from GitHub on startup — pulls latest shared data into localStorage
+async function loadFromGitHub() {
+  const cfg = getGhConfig();
+  if (!cfg) return;
+  setSyncStatus('syncing', 'Loading data…');
+  try {
+    const url = 'https://api.github.com/repos/' + cfg.user + '/' + cfg.repo + '/contents/data.json';
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': 'token ' + cfg.token,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (!res.ok) { setSyncStatus('error', 'Load failed'); return; }
+    const meta = await res.json();
+    ghFileSha = meta.sha;
+    const decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
+    const remoteDB = JSON.parse(decoded);
+    localStorage.setItem(DB_KEY, JSON.stringify(remoteDB));
+    setSyncStatus('synced', 'Synced ✓');
+    setTimeout(function() { setSyncStatus('synced', 'GitHub synced'); }, 2000);
+    renderDashboard();
+  } catch(e) {
+    setSyncStatus('error', 'Load error');
+    console.error('GitHub load error:', e);
+  }
+}
+
 function defaultSections() {
   return [
     {
@@ -1015,9 +1051,12 @@ async function syncToGitHub(db, isTest = false) {
 }
 
 // On load, check if already configured
-window.addEventListener('load', () => {
+window.addEventListener('load', function() {
   const cfg = getGhConfig();
-  if (cfg) setSyncStatus('synced', 'GitHub configured');
+  if (cfg) {
+    setSyncStatus('synced', 'GitHub configured');
+    loadFromGitHub();
+  }
 });
 
 // ═══════════════════════════════════════════════
@@ -1046,39 +1085,142 @@ function renderTaskView() {
   if (!cf) return;
   const prevVal = cf.value;
   cf.innerHTML = '<option value="">All Clients</option>' +
-    db.clients.map(cc => '<option value="' + cc.id + '">' + esc(cc.name) + '</option>').join('');
+    db.clients.map(function(cc) { return '<option value="' + cc.id + '">' + esc(cc.name) + '</option>'; }).join('');
   cf.value = prevVal;
+
   const filterClient = cf.value;
   const filterStatus = document.getElementById('tvFilterStatus').value;
+  const filterOverdue = document.getElementById('tvFilterOverdue').value;
+  const today = new Date(); today.setHours(0,0,0,0);
   const rows = [];
-  db.clients.forEach(cc => {
+
+  db.clients.forEach(function(cc) {
     if (filterClient && cc.id !== filterClient) return;
-    cc.sections.forEach(sec => sec.phases.forEach(ph => ph.tasks.forEach(t => {
-      (t.comments || []).filter(cm => cm.isTask).forEach(cm => {
-        if (filterStatus && t.status !== filterStatus) return;
-        rows.push({ clientName: cc.name, clientId: cc.id, task: t.name, status: t.status, date: cm.timestamp, comment: cm.text, author: cm.author, source: 'Integration' });
+    cc.sections.forEach(function(sec) {
+      sec.phases.forEach(function(ph) {
+        ph.tasks.forEach(function(t) {
+          (t.comments || []).filter(function(cm) { return cm.isTask; }).forEach(function(cm) {
+            rows.push({
+              clientName: cc.name, clientId: cc.id,
+              task: t.name, taskStatus: t.status,
+              source: 'Integration',
+              date: cm.timestamp, comment: cm.text, author: cm.author,
+              taskId: cc.id + '|' + sec.id + '|' + ph.id + '|' + t.id + '|' + cm.timestamp,
+              cmStatus: cm.taskStatus || 'not-started',
+              dueDate: cm.dueDate || '',
+            });
+          });
+        });
       });
-    })));
-    (cc.globalComments || []).filter(cm => cm.isTask).forEach(cm => {
-      rows.push({ clientName: cc.name, clientId: cc.id, task: 'Client Note', status: '—', date: cm.timestamp, comment: cm.text, author: cm.author, source: 'Client Notes' });
+    });
+    (cc.globalComments || []).filter(function(cm) { return cm.isTask; }).forEach(function(cm) {
+      rows.push({
+        clientName: cc.name, clientId: cc.id,
+        task: 'Client Note', taskStatus: '—',
+        source: 'Client Notes',
+        date: cm.timestamp, comment: cm.text, author: cm.author,
+        taskId: cc.id + '|global|' + cm.timestamp,
+        cmStatus: cm.taskStatus || 'not-started',
+        dueDate: cm.dueDate || '',
+      });
     });
   });
+
+  // Apply filters
+  const filtered = rows.filter(function(r) {
+    if (filterStatus && r.cmStatus !== filterStatus) return false;
+    const dueDate = r.dueDate ? new Date(r.dueDate) : null;
+    if (dueDate) dueDate.setHours(0,0,0,0);
+    const isOverdue = dueDate && dueDate < today && r.cmStatus !== 'completed';
+    const isIncomplete = r.cmStatus !== 'completed';
+    if (filterOverdue === 'overdue' && !isOverdue) return false;
+    if (filterOverdue === 'incomplete' && !isIncomplete) return false;
+    if (filterOverdue === 'no-date' && r.dueDate) return false;
+    return true;
+  });
+
   const tbody = document.getElementById('taskViewBody');
   const empty = document.getElementById('taskViewEmpty');
   const countEl = document.getElementById('tvCount');
-  if (countEl) countEl.textContent = rows.length + ' task' + (rows.length !== 1 ? 's' : '');
-  if (!rows.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  if (countEl) countEl.textContent = filtered.length + ' task' + (filtered.length !== 1 ? 's' : '');
+  if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  tbody.innerHTML = rows.map(function(r) {
-    var statusCell = r.status === '\u2014' ? '<span style="color:var(--text3)">\u2014</span>' : '<span class="pill ' + statusClass(r.status) + '">' + statusLabel(r.status) + '</span>';
+
+  tbody.innerHTML = filtered.map(function(r) {
+    const dueDate = r.dueDate ? new Date(r.dueDate) : null;
+    if (dueDate) dueDate.setHours(0,0,0,0);
+    const isOverdue = dueDate && dueDate < today && r.cmStatus !== 'completed';
+    const overdueBadge = isOverdue ? '<span class="overdue-badge">OVERDUE</span>' : '';
+    const dueDateDisplay = r.dueDate
+      ? '<span style="font-size:11px;color:' + (isOverdue ? 'var(--cbd-text)' : 'var(--text2)') + ';">' + r.dueDate + '</span>' + overdueBadge
+      : '<span style="font-size:11px;color:var(--text3);">—</span>';
+
+    const taskStatusOptions = [
+      ['not-started','Not Started'],
+      ['in-progress','In Progress'],
+      ['completed','Completed'],
+      ['pending-client','Pending From Client'],
+      ['shared-dev','Shared With Dev Team'],
+      ['cannot-be-done','Cannot Be Done'],
+    ];
+    const tsClass = {
+      'not-started':'ts-not-started','in-progress':'ts-in-progress','completed':'ts-completed',
+      'pending-client':'ts-pending-client','shared-dev':'ts-shared-dev','cannot-be-done':'ts-cannot-be-done'
+    }[r.cmStatus] || 'ts-not-started';
+
+    const statusOpts = taskStatusOptions.map(function(o) {
+      return '<option value="' + o[0] + '"' + (r.cmStatus === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+    }).join('');
+
+    const safeId = r.taskId.replace(/'/g, '_');
+
     return '<tr>' +
       '<td><a style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="showDetail(\'' + r.clientId + '\')">' + esc(r.clientName) + '</a></td>' +
       '<td class="task-name">' + esc(r.task) + '<div style="font-size:10px;color:var(--text3);">' + esc(r.source) + '</div></td>' +
-      '<td>' + statusCell + '</td>' +
+      '<td><select class="ts-select ' + tsClass + '" onchange="updateCmTaskStatus(\'' + safeId + '\',this.value,this)">' + statusOpts + '</select></td>' +
+      '<td><input type="date" class="due-date-input" value="' + esc(r.dueDate) + '" onchange="updateCmDueDate(\'' + safeId + '\',this.value)" style="' + (isOverdue ? 'border-color:var(--cbd-text);color:var(--cbd-text);' : '') + '">' + (isOverdue ? overdueBadge : '') + '</td>' +
       '<td style="font-size:11px;color:var(--text3);">' + esc(r.date) + '</td>' +
       '<td style="font-size:12px;"><span style="color:var(--accent);font-weight:600;">' + esc(r.author || 'Anon') + ':</span> ' + esc(r.comment) + '</td>' +
       '</tr>';
   }).join('');
+}
+
+// Update task status on a flagged comment
+function updateCmTaskStatus(taskId, newStatus, selEl) {
+  selEl.className = 'ts-select ' + ({'not-started':'ts-not-started','in-progress':'ts-in-progress','completed':'ts-completed','pending-client':'ts-pending-client','shared-dev':'ts-shared-dev','cannot-be-done':'ts-cannot-be-done'}[newStatus] || 'ts-not-started');
+  saveCmField(taskId, 'taskStatus', newStatus);
+}
+
+// Update due date on a flagged comment
+function updateCmDueDate(taskId, newDate) {
+  saveCmField(taskId, 'dueDate', newDate);
+}
+
+// Save a field on a flagged comment by its composite taskId key
+function saveCmField(taskId, field, value) {
+  const db = loadDB();
+  const parts = taskId.split('|');
+  const clientId = parts[0];
+  const cc = db.clients.find(function(x) { return x.id === clientId; });
+  if (!cc) return;
+
+  if (parts[1] === 'global') {
+    const ts = parts[2];
+    const cm = (cc.globalComments || []).find(function(x) { return x.timestamp === ts || (x.timestamp || '').replace(/'/g,'_') === ts; });
+    if (cm) { cm[field] = value; }
+  } else {
+    const secId = parts[1], phId = parts[2], tId = parts[3], ts = parts[4];
+    const sec = (cc.sections || []).find(function(s) { return s.id === secId; });
+    if (!sec) return;
+    const ph = (sec.phases || []).find(function(p) { return p.id === phId; });
+    if (!ph) return;
+    const t = (ph.tasks || []).find(function(t) { return t.id === tId; });
+    if (!t) return;
+    const cm = (t.comments || []).find(function(x) { return x.timestamp === ts || (x.timestamp || '').replace(/'/g,'_') === ts; });
+    if (cm) { cm[field] = value; }
+  }
+  cc.updatedAt = new Date().toISOString();
+  saveDB(db);
 }
 
 function showDashboard() {
@@ -1866,6 +2008,14 @@ function fmtTime() {
 
 // ─── INIT ───
 renderDashboard();
+// If GitHub is configured, load latest data from there on startup
+window.addEventListener('load', function() {
+  const cfg = getGhConfig();
+  if (cfg) {
+    setSyncStatus('synced', 'GitHub configured');
+    loadFromGitHub();
+  }
+});
 </script>
 </body>
 </html>
