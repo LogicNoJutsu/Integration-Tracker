@@ -449,7 +449,7 @@ function renderSSOViewer() {
           <button class="btn btn-ghost btn-sm" onclick="refreshData()">&#8635; Refresh</button>
         </div>
       </div>
-      <div class="client-grid" id="clientGrid"></div>
+      <div id="clientGrid"></div>
     </div>
   </div>
 
@@ -873,10 +873,10 @@ function renderDashboard() {
       '</div></div>';
   }
   var html = '';
-  if (activeClients.length) html += '<div class="client-grid">' + activeClients.map(buildCard).join('') + '</div>';
+  if (activeClients.length) html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">' + activeClients.map(buildCard).join('') + '</div>';
   if (doneClients.length) {
     html += '<div style="display:flex;align-items:center;gap:12px;margin:28px 0 16px;"><div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;">Completed &amp; Not Applicable</span><div style="flex:1;height:1px;background:var(--border);"></div></div>';
-    html += '<div class="client-grid" style="opacity:0.75;">' + doneClients.map(buildCard).join('') + '</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;opacity:0.75;">' + doneClients.map(buildCard).join('') + '</div>';
   }
   grid.innerHTML = html;
 }
