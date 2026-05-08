@@ -50,7 +50,7 @@
   /* HEADER */
   .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
   .header-left{display:flex;align-items:center;}
-  .app-logo-static{display:flex;align-items:center;gap:0;font-family:var(--font-display);}
+  .app-logo-static{display:flex;align-items:center;gap:0;font-family:var(--font-display);flex-wrap:nowrap;white-space:nowrap;}
   .logo-crx-text{color:var(--accent);font-size:17px;font-weight:800;}
   .logo-slash{color:var(--text3);font-size:15px;margin:0 3px;font-weight:400;}
   .logo-module-name{color:var(--text2);font-size:14px;font-weight:500;font-family:var(--font-body);}
@@ -749,10 +749,12 @@
       <div class="form-group">
         <label>Overall Status</label>
         <select id="fOverallStatus">
+          <option value="Not Started">Not Started</option>
           <option value="Active">Active</option>
+          <option value="Upcoming">Upcoming</option>
           <option value="On Hold">On Hold</option>
           <option value="Completed">Completed</option>
-          <option value="Not Started">Not Started</option>
+          <option value="Not Applicable">Not Applicable</option>
         </select>
       </div>
       <div class="form-group">
@@ -829,21 +831,38 @@
     <div class="dash-top">
       <div>
         <div class="dash-title">&#128272; SSO Tracker</div>
-        <div class="dash-sub">Single Sign On configuration status across all clients</div>
+        <div class="dash-sub">Single Sign On configuration across all clients</div>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="openAddSSOModal()">+ Add Client</button>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;" id="ssoStatusFilters">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">Filter:</span>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;">
+            <input type="checkbox" id="ssoFilterNS" value="Not Started" checked onchange="renderSSO()" style="width:13px;height:13px;accent-color:var(--ns-text);"> Not Started
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;">
+            <input type="checkbox" id="ssoFilterIP" value="In Progress" checked onchange="renderSSO()" style="width:13px;height:13px;accent-color:var(--accent);"> In Progress
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;">
+            <input type="checkbox" id="ssoFilterDone" value="Completed" checked onchange="renderSSO()" style="width:13px;height:13px;accent-color:var(--done-text);"> Completed
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;">
+            <input type="checkbox" id="ssoFilterNR" value="Not Required" checked onchange="renderSSO()" style="width:13px;height:13px;accent-color:var(--nr-text);"> Not Required
+          </label>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="ssoSortToggle()" id="ssoSortBtn">&#8597; Client A&#8211;Z</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddSSOModal()">+ Add Client</button>
+      </div>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
       <table id="ssoTable">
         <thead>
           <tr>
-            <th style="width:18%">Client Name</th>
-            <th style="width:16%">Login Type</th>
-            <th style="width:14%">SSO Provider</th>
-            <th style="width:16%">Comments</th>
-            <th style="width:13%">Date of Start</th>
-            <th style="width:13%">Date of SSO Setup</th>
-            <th style="width:10%"></th>
+            <th style="width:22%;cursor:pointer;" onclick="ssoSortToggle()">Client Name &#8597;</th>
+            <th style="width:20%">Login Type</th>
+            <th style="width:16%">Date of SSO Setup</th>
+            <th style="width:14%">Status</th>
+            <th>Comments</th>
+            <th style="width:9%"></th>
           </tr>
         </thead>
         <tbody id="ssoTableBody"></tbody>
@@ -861,34 +880,33 @@
     <div class="form-group"><label>Client Name *</label><input type="text" id="fSsoClient" placeholder="Client name"></div>
     <div class="form-group">
       <label>Login Type</label>
-      <select id="fSsoLoginType" onchange="handleSSOLoginTypeChange()">
+      <select id="fSsoLoginType">
         <option value="Password">Password</option>
-        <option value="Single Sign On">Single Sign On</option>
+        <option value="Single Sign On - Microsoft">Single Sign On &#8212; Microsoft</option>
+        <option value="Single Sign On - Others">Single Sign On &#8212; Others</option>
         <option value="ADFS">ADFS</option>
+        <option value="SAML">SAML</option>
+        <option value="OAuth 2.0">OAuth 2.0</option>
       </select>
     </div>
-    <div class="form-group" id="ssoProviderGroup" style="display:none;">
-      <label>SSO Provider</label>
-      <select id="fSsoProvider" onchange="handleSSOProviderChange()">
-        <option value="Microsoft">Microsoft</option>
-        <option value="Others">Others</option>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="fSsoStatus">
+        <option value="Not Started">Not Started</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Completed">Completed</option>
+        <option value="Not Required">Not Required</option>
       </select>
     </div>
-    <div class="form-group" id="ssoOthersGroup" style="display:none;">
-      <label>Provider Details</label>
-      <textarea id="fSsoOthers" placeholder="Describe the SSO provider..."></textarea>
-    </div>
+    <div class="form-group"><label>Date of SSO Setup</label><input type="date" id="fSsoSetupDate"></div>
     <div class="form-group"><label>Comments</label><textarea id="fSsoComments" placeholder="Any additional notes..."></textarea></div>
-    <div class="form-row">
-      <div class="form-group"><label>Date of Start</label><input type="date" id="fSsoStartDate"></div>
-      <div class="form-group"><label>Date of SSO Setup</label><input type="date" id="fSsoSetupDate"></div>
-    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('ssoModal')">Cancel</button>
       <button class="btn btn-primary" id="ssoModalSaveBtn" onclick="saveSSO()">Save Entry</button>
     </div>
   </div>
 </div>
+
 
 <!-- ═══════════════════ GITHUB SETUP MODAL ═══════════════════ -->
 <div class="modal-overlay github-modal" id="githubModal">
@@ -1349,45 +1367,39 @@ function renderDashboard() {
   const db = loadDB();
   const grid = document.getElementById('clientGrid');
   if (!db.clients.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-      <div class="empty-icon">🔌</div>
-      <div class="empty-title">No integrations yet</div>
-      <div class="empty-desc">Create your first client integration to get started.</div>
-      <button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button>
-    </div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128268;</div><div class="empty-title">No integrations yet</div><div class="empty-desc">Create your first client integration to get started.</div><button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button></div>`;
     return;
   }
-  grid.innerHTML = db.clients.map(c => {
+  const activeClients = db.clients.filter(c => c.overallStatus !== 'Completed' && c.overallStatus !== 'Not Applicable');
+  const doneClients = db.clients.filter(c => c.overallStatus === 'Completed' || c.overallStatus === 'Not Applicable');
+  const statusColors = {'Not Started':'var(--ns-text)','Active':'var(--done-text)','Upcoming':'var(--ip-text)','On Hold':'var(--pfc-text)','Completed':'var(--text3)','Not Applicable':'var(--text3)'};
+  function buildCard(c) {
     const stats = computeStats(c);
     const pct = stats.total ? Math.round(stats.completed / stats.total * 100) : 0;
-    const inProgress = stats.inProgress;
-    const pillsHtml = Object.entries(stats.byStatus)
-      .filter(([,n]) => n > 0)
-      .map(([s,n]) => `<span class="pill ${statusClass(s)}">${statusLabel(s)}: ${n}</span>`).join('');
-    const lastUpdated = c.updatedAt || c.createdAt;
-    const updatedStr = lastUpdated ? 'Updated ' + timeAgo(new Date(lastUpdated)) : '—';
+    const pills = Object.entries(stats.byStatus).filter(([,n])=>n>0).map(([s,n])=>`<span class="pill ${statusClass(s)}">${statusLabel(s)}: ${n}</span>`).join('');
+    const upd = (c.updatedAt||c.createdAt) ? 'Updated '+timeAgo(new Date(c.updatedAt||c.createdAt)) : '—';
+    const sc = statusColors[c.overallStatus] || 'var(--text2)';
     return `<div class="client-card" onclick="showDetail('${c.id}')">
-      <div class="card-header">
-        <div class="card-name">${esc(c.name)}</div>
-        <span class="card-cmms">${esc(c.cmmsType || '—')}</span>
+      <div class="card-header"><div class="card-name">${esc(c.name)}</div><span class="card-cmms">${esc(c.cmmsType||'—')}</span></div>
+      <div class="card-meta"><strong>CRx Consultant:</strong> ${esc(c.crxConsultant||'—')}<br><strong>Client POC:</strong> ${esc(c.clientPoc||'—')}${c.expectedDate?`<br><strong>Expected:</strong> ${esc(c.expectedDate)}`:''}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div class="card-last-updated">&#128336; ${esc(upd)}</div>
+        <span style="font-size:10px;font-weight:600;color:${sc};background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">${esc(c.overallStatus||'Active')}</span>
       </div>
-      <div class="card-meta">
-        <strong>CRx Consultant:</strong> ${esc(c.crxConsultant || '—')}<br>
-        <strong>Client POC:</strong> ${esc(c.clientPoc || '—')}<br>
-        <strong>Status:</strong> ${esc(c.overallStatus || 'Active')}${c.expectedDate ? `<br><strong>Expected:</strong> ${esc(c.expectedDate)}` : ''}
-      </div>
-      <div class="card-last-updated">🕐 ${esc(updatedStr)}</div>
-      <div class="progress-section">
-        <div class="progress-label"><span>Completion</span><span>${pct}%</span></div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-      </div>
-      <div class="status-pills">${pillsHtml}</div>
+      <div class="progress-section"><div class="progress-label"><span>Completion</span><span>${pct}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div></div>
+      <div class="status-pills">${pills}</div>
       <div class="card-actions" onclick="event.stopPropagation()">
         <button class="btn btn-ghost btn-sm" onclick="showDetail('${c.id}')">Open →</button>
-        ${inProgress > 0 ? `<span style="font-size:11px;color:var(--ip-text);padding:3px 8px;background:var(--ip);border-radius:4px;">${inProgress} In Progress</span>` : ''}
-      </div>
-    </div>`;
-  }).join('');
+        ${stats.inProgress>0?`<span style="font-size:10px;color:#fff;padding:2px 7px;background:var(--ip);border-radius:4px;">${stats.inProgress} In Progress</span>`:''}
+      </div></div>`;
+  }
+  let html = '';
+  if (activeClients.length) html += `<div class="client-grid">${activeClients.map(buildCard).join('')}</div>`;
+  if (doneClients.length) {
+    html += `<div style="display:flex;align-items:center;gap:12px;margin:28px 0 16px;"><div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;">Completed &amp; Not Applicable</span><div style="flex:1;height:1px;background:var(--border);"></div></div>`;
+    html += `<div class="client-grid" style="opacity:0.75;">${doneClients.map(buildCard).join('')}</div>`;
+  }
+  grid.innerHTML = html;
 }
 
 function timeAgo(date) {
@@ -1556,7 +1568,7 @@ function openAddClientModal() {
   document.getElementById('clientModalTitle').textContent = 'New Client Integration';
   document.getElementById('clientModalSaveBtn').textContent = 'Create Client';
   ['fClientName','fCmmsType','fCrxConsultant','fClientPoc','fClientPocEmail','fStartDate','fExpectedDate'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('fOverallStatus').value = 'Active';
+  document.getElementById('fOverallStatus').value = 'Not Started';
   openModal('clientModal');
 }
 function openEditClientModal() {
@@ -1585,7 +1597,7 @@ function saveClient() {
     crxConsultant: document.getElementById('fCrxConsultant').value.trim(),
     clientPoc: document.getElementById('fClientPoc').value.trim(),
     clientPocEmail: document.getElementById('fClientPocEmail').value.trim(),
-    overallStatus: document.getElementById('fOverallStatus').value,
+    overallStatus: document.getElementById('fOverallStatus').value || 'Not Started',
     startDate: document.getElementById('fStartDate').value,
     expectedDate: document.getElementById('fExpectedDate').value,
   };
@@ -2195,134 +2207,100 @@ function showEdgeFix() {
 // ─── SSO TRACKER ───
 const SSO_KEY = 'crx_sso_data';
 let editingSSOId = null;
+let ssoSortAsc = true;
 
 function loadSSO() {
   try { return JSON.parse(localStorage.getItem(SSO_KEY)) || []; } catch { return []; }
 }
 function saveSSO_data(entries) {
   localStorage.setItem(SSO_KEY, JSON.stringify(entries));
-  // Sync SSO data to GitHub alongside main data
   const cfg = getGhConfig();
-  if (cfg) {
-    const db = loadDB();
-    db._sso = entries;
-    syncToGitHub(db);
-  }
+  if (cfg) { const db = loadDB(); db._sso = entries; syncToGitHub(db); }
 }
+function showSSO() { renderSSO(); showView('viewSSO'); rebuildHeaderActions(); }
 
-function showSSO() {
+function ssoSortToggle() {
+  ssoSortAsc = !ssoSortAsc;
+  const btn = document.getElementById('ssoSortBtn');
+  if (btn) btn.textContent = ssoSortAsc ? '⇅ Client A–Z' : '⇅ Client Z–A';
   renderSSO();
-  showView('viewSSO');
-  rebuildHeaderActions();
 }
-
+function getActiveSSOFilters() {
+  const ns = document.getElementById('ssoFilterNS');
+  const ip = document.getElementById('ssoFilterIP');
+  const done = document.getElementById('ssoFilterDone');
+  const nr = document.getElementById('ssoFilterNR');
+  if (!ip) return null;
+  const f = [];
+  if (ns && ns.checked) f.push('Not Started');
+  if (ip.checked) f.push('In Progress');
+  if (done.checked) f.push('Completed');
+  if (nr.checked) f.push('Not Required');
+  return f.length === 4 ? null : f;
+}
 function renderSSO() {
-  const entries = loadSSO();
+  let entries = loadSSO();
   const tbody = document.getElementById('ssoTableBody');
   const empty = document.getElementById('ssoEmpty');
   if (!tbody) return;
-  if (!entries.length) {
-    tbody.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
+  entries = entries.slice().sort(function(a,b) { return ssoSortAsc ? a.clientName.localeCompare(b.clientName) : b.clientName.localeCompare(a.clientName); });
+  const filters = getActiveSSOFilters();
+  if (filters) entries = entries.filter(function(e) { return filters.includes(e.ssoStatus || 'In Progress'); });
+  if (!entries.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
+  const ss = {'Not Started':'background:var(--ns);color:var(--ns-text);','In Progress':'background:var(--ip);color:var(--ip-text);','Completed':'background:var(--done);color:var(--done-text);','Not Required':'background:var(--nr);color:var(--nr-text);'};
   tbody.innerHTML = entries.map(function(e) {
-    const loginBadgeColor = e.loginType === 'Single Sign On' ? 'var(--done)' : e.loginType === 'ADFS' ? 'var(--ip)' : 'var(--surface3)';
-    const loginTextColor = e.loginType === 'Single Sign On' ? 'var(--done-text)' : e.loginType === 'ADFS' ? 'var(--ip-text)' : 'var(--text2)';
-    const providerText = e.loginType === 'Single Sign On' ? (e.provider === 'Others' ? (e.providerOthers || 'Others') : (e.provider || '—')) : '—';
+    const s = ss[e.ssoStatus||'In Progress'] || ss['In Progress'];
     return '<tr>' +
       '<td style="font-weight:600;">' + esc(e.clientName) + '</td>' +
-      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:' + loginBadgeColor + ';color:' + loginTextColor + ';">' + esc(e.loginType) + '</span></td>' +
-      '<td style="font-size:13px;color:var(--text2);">' + esc(providerText) + '</td>' +
-      '<td style="font-size:12px;color:var(--text2);">' + esc(e.comments || '—') + '</td>' +
-      '<td style="font-size:12px;color:var(--text3);">' + esc(e.startDate || '—') + '</td>' +
-      '<td style="font-size:12px;color:var(--text3);">' + esc(e.setupDate || '—') + '</td>' +
-      '<td style="display:flex;gap:6px;">' +
+      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--surface3);color:var(--text);">' + esc(e.loginType||'—') + '</span></td>' +
+      '<td style="font-size:12px;color:var(--text3);">' + esc(e.setupDate||'—') + '</td>' +
+      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;' + s + '">' + esc(e.ssoStatus||'Not Started') + '</span></td>' +
+      '<td style="font-size:12px;color:var(--text2);">' + esc(e.comments||'—') + '</td>' +
+      '<td style="display:flex;gap:5px;">' +
       '<button class="btn btn-ghost btn-xs" onclick="openEditSSOModal(\'' + e.id + '\')">Edit</button>' +
       '<button class="btn btn-danger btn-xs" onclick="deleteSSO(\'' + e.id + '\')">&#215;</button>' +
       '</td></tr>';
   }).join('');
 }
-
 function openAddSSOModal() {
   editingSSOId = null;
   document.getElementById('ssoModalTitle').textContent = 'Add SSO Entry';
   document.getElementById('ssoModalSaveBtn').textContent = 'Save Entry';
-  document.getElementById('fSsoClient').value = '';
+  ['fSsoClient','fSsoComments','fSsoSetupDate'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('fSsoLoginType').value = 'Password';
-  document.getElementById('fSsoProvider').value = 'Microsoft';
-  document.getElementById('fSsoOthers').value = '';
-  document.getElementById('fSsoComments').value = '';
-  document.getElementById('fSsoStartDate').value = '';
-  document.getElementById('fSsoSetupDate').value = '';
-  document.getElementById('ssoProviderGroup').style.display = 'none';
-  document.getElementById('ssoOthersGroup').style.display = 'none';
+  document.getElementById('fSsoStatus').value = 'Not Started';
   openModal('ssoModal');
 }
-
 function openEditSSOModal(id) {
-  const entries = loadSSO();
-  const e = entries.find(function(x) { return x.id === id; });
+  const e = loadSSO().find(function(x){return x.id===id;});
   if (!e) return;
   editingSSOId = id;
   document.getElementById('ssoModalTitle').textContent = 'Edit SSO Entry';
   document.getElementById('ssoModalSaveBtn').textContent = 'Save Changes';
-  document.getElementById('fSsoClient').value = e.clientName || '';
-  document.getElementById('fSsoLoginType').value = e.loginType || 'Password';
-  document.getElementById('fSsoProvider').value = e.provider || 'Microsoft';
-  document.getElementById('fSsoOthers').value = e.providerOthers || '';
-  document.getElementById('fSsoComments').value = e.comments || '';
-  document.getElementById('fSsoStartDate').value = e.startDate || '';
-  document.getElementById('fSsoSetupDate').value = e.setupDate || '';
-  document.getElementById('ssoProviderGroup').style.display = e.loginType === 'Single Sign On' ? 'block' : 'none';
-  document.getElementById('ssoOthersGroup').style.display = (e.loginType === 'Single Sign On' && e.provider === 'Others') ? 'block' : 'none';
+  document.getElementById('fSsoClient').value = e.clientName||'';
+  document.getElementById('fSsoLoginType').value = e.loginType||'Password';
+  document.getElementById('fSsoStatus').value = e.ssoStatus||'In Progress';
+  document.getElementById('fSsoSetupDate').value = e.setupDate||'';
+  document.getElementById('fSsoComments').value = e.comments||'';
   openModal('ssoModal');
 }
-
-function handleSSOLoginTypeChange() {
-  const val = document.getElementById('fSsoLoginType').value;
-  document.getElementById('ssoProviderGroup').style.display = val === 'Single Sign On' ? 'block' : 'none';
-  if (val !== 'Single Sign On') document.getElementById('ssoOthersGroup').style.display = 'none';
-}
-
-function handleSSOProviderChange() {
-  const val = document.getElementById('fSsoProvider').value;
-  document.getElementById('ssoOthersGroup').style.display = val === 'Others' ? 'block' : 'none';
-}
-
 function saveSSO() {
   const clientName = document.getElementById('fSsoClient').value.trim();
-  if (!clientName) { showToast('Client name is required.', 'error'); return; }
+  if (!clientName) { showToast('Client name is required.','error'); return; }
   const entries = loadSSO();
-  const entry = {
-    id: editingSSOId || 'sso_' + Date.now(),
-    clientName,
+  const entry = { id: editingSSOId||'sso_'+Date.now(), clientName,
     loginType: document.getElementById('fSsoLoginType').value,
-    provider: document.getElementById('fSsoProvider').value,
-    providerOthers: document.getElementById('fSsoOthers').value.trim(),
-    comments: document.getElementById('fSsoComments').value.trim(),
-    startDate: document.getElementById('fSsoStartDate').value,
+    ssoStatus: document.getElementById('fSsoStatus').value,
     setupDate: document.getElementById('fSsoSetupDate').value,
-    updatedAt: new Date().toISOString()
-  };
-  if (editingSSOId) {
-    const idx = entries.findIndex(function(x) { return x.id === editingSSOId; });
-    if (idx > -1) entries[idx] = entry;
-  } else {
-    entries.push(entry);
-  }
-  saveSSO_data(entries);
-  closeModal('ssoModal');
-  renderSSO();
-  showToast(editingSSOId ? 'Entry updated.' : 'Entry added!', 'success');
+    comments: document.getElementById('fSsoComments').value.trim(),
+    updatedAt: new Date().toISOString() };
+  if (editingSSOId) { const i=entries.findIndex(function(x){return x.id===editingSSOId;}); if(i>-1) entries[i]=entry; }
+  else entries.push(entry);
+  saveSSO_data(entries); closeModal('ssoModal'); renderSSO();
+  showToast(editingSSOId?'Entry updated.':'Entry added!','success');
 }
-
-function deleteSSO(id) {
-  const entries = loadSSO().filter(function(x) { return x.id !== id; });
-  saveSSO_data(entries);
-  renderSSO();
-}
+function deleteSSO(id) { saveSSO_data(loadSSO().filter(function(x){return x.id!==id;})); renderSSO(); }
 
 // ─── INIT ───
 applyFontSize(currentFontSize);
