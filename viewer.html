@@ -55,6 +55,20 @@ function renderSSOViewer() {
   }).join('');
 }
 
+// ── INIT ──
+applyFontSize(currentFontSize);
+checkStorageAccess();
+window.addEventListener('load', function() {
+  const cfg = getCfg();
+  if (cfg) {
+    loadFromGitHub(false);
+    startAutoRefresh();
+  } else {
+    showSetupScreen();
+    setSyncStatus('idle', 'Not configured');
+  }
+});
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
