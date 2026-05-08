@@ -1376,7 +1376,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-08T17:56:16.593Z",
-      "updatedAt": "2026-05-08T17:58:36.626Z",
+      "updatedAt": "2026-05-08T18:02:42.478Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1503,7 +1503,15 @@
           "date": "5/8/2026"
         }
       ],
-      "globalComments": [],
+      "globalComments": [
+        {
+          "author": "VG",
+          "text": "Helen Keller was using a web-based email system rather than a dedicated email application. Due to this limitation, whenever a user-tagged email draft was generated, CRX was unable to identify a compatible email application to send the email automatically.\n\nTo address this issue, we implemented an integration within CRX that automatically loads the drafted email directly into the Webmail browser interface. This enhancement allows the Helen Keller team to seamlessly review and send emails through their existing Webmail system.\n\nThe solution has been implemented and successfully tested with the client.",
+          "timestamp": "May 8, 2026, 2:02 PM",
+          "isTask": false,
+          "_ts": 1778263362478
+        }
+      ],
       "notifications": []
     }
   ]
