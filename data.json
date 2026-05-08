@@ -622,7 +622,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:49.957Z",
-      "updatedAt": "2026-05-08T11:29:47.087Z",
+      "updatedAt": "2026-05-08T11:30:01.915Z",
       "sections": [
         {
           "id": "test_instance",
@@ -788,7 +788,8 @@
           "text": "Iowa\n \nThey are making these changes on their side. \nExit Signs and Exit Lights will be removed from Lighting Fixtures category and placed into the currently existing and mapped Exit Sign category.\nThey are moving Emergency Lights from Electrical category into Lighting Fixtures category. Lighting Fixtures will now only have Emergency Lights inside of it.",
           "timestamp": "May 8, 2026, 7:29 AM",
           "isTask": true,
-          "_ts": 1778239787087
+          "_ts": 1778239787087,
+          "taskStatus": "pending-client"
         }
       ]
     },
