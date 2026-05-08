@@ -41,7 +41,7 @@
 
 
   /* HEADER */
-  .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+  .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;gap:12px;}
   .header-left{display:flex;align-items:center;}
   .app-logo-static{display:flex;align-items:center;gap:0;font-family:var(--font-display);}
   .logo-crx-text{color:var(--accent);font-size:17px;font-weight:800;}
@@ -79,10 +79,56 @@
   .storage-warning-close{margin-left:auto;background:none;border:none;color:#ffb020;cursor:pointer;font-size:18px;line-height:1;}
 
 
-  .font-toggle{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;}
+  .font-toggle{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;flex-shrink:0;white-space:nowrap;}
   .font-toggle-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;padding:2px 6px;border-radius:4px;line-height:1;font-family:var(--font-body);transition:all 0.15s;}
   .font-toggle-btn:hover{background:var(--surface3);color:var(--text);}
   .font-size-label{font-size:11px;color:var(--text3);min-width:28px;text-align:center;}
+
+
+  /* VIEWER HEADER RIGHT — clean single row */
+  .vheader-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .vrefresh {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+  .vsync {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    white-space: nowrap;
+    cursor: default;
+  }
+  .vsync.syncing { color: var(--ip-text); border-color: var(--ip-text); }
+  .vsync.synced  { color: var(--done-text); border-color: var(--done-text); }
+  .vsync.error   { color: var(--cbd-text); border-color: var(--cbd-text); }
+  .vconfigure {
+    font-family: var(--font-body);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .vconfigure:hover { background: var(--surface2); color: var(--text); }
 
   /* SETUP SCREEN */
   .setup-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);padding:32px;}
@@ -285,15 +331,15 @@
       <span class="view-only-badge">VIEW ONLY</span>
     </div>
   </div>
-  <div class="header-right">
-    <div class="font-toggle" title="Adjust font size">
+  <div class="vheader-right">
+    <div class="font-toggle">
       <button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button>
       <span class="font-size-label" id="fontSizeLabel">16</span>
       <button class="font-toggle-btn" onclick="adjustFont(1)">A+</button>
     </div>
-    <span class="refresh-badge"><span class="refresh-dot"></span><span id="refreshLabel">Live</span></span>
-    <span class="sync-status" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting&#8230;</span></span>
-    <button class="btn btn-ghost btn-sm" onclick="openGhSetup()">&#9881; Configure</button>
+    <span class="vrefresh"><span class="refresh-dot"></span><span id="refreshLabel">Live</span></span>
+    <span class="vsync" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting&#8230;</span></span>
+    <button class="vconfigure" onclick="openGhSetup()">&#9881; Configure</button>
   </div>
 </header>
 
