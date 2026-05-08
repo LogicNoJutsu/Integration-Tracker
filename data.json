@@ -804,7 +804,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:39:15.224Z",
-      "updatedAt": "2026-05-08T11:39:28.871Z",
+      "updatedAt": "2026-05-08T11:39:32.767Z",
       "sections": [
         {
           "id": "test_instance",
@@ -823,7 +823,7 @@
                 {
                   "id": "t2",
                   "name": "Organizational Setup",
-                  "status": "not-started",
+                  "status": "in-progress",
                   "comments": []
                 },
                 {
