@@ -908,7 +908,7 @@
       "startDate": "2026-02-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:40:26.352Z",
-      "updatedAt": "2026-05-07T18:23:47.775Z",
+      "updatedAt": "2026-05-08T11:12:26.582Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1037,7 +1037,8 @@
           "text": "Assets Have been updated by Oneida team and are ready to be synced in CRx Previously there was an issue where the asset numbers were different in CRX and their work order system due to which we were not able to. This has been updated to Avinash and he needs to update it at his end",
           "timestamp": "May 7, 2026, 2:23 PM",
           "isTask": true,
-          "_ts": 1778178227775
+          "_ts": 1778178227775,
+          "taskStatus": "shared-dev"
         }
       ]
     },
