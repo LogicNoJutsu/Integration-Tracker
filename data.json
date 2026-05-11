@@ -1610,6 +1610,15 @@
       "setupDate": "2026-05-04",
       "comments": "",
       "updatedAt": "2026-05-11T11:07:21.854Z"
+    },
+    {
+      "id": "sso_1778498474113",
+      "clientName": "Billings Clinic Offsite",
+      "loginType": "Password",
+      "ssoStatus": "Completed",
+      "setupDate": "2026-03-26",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:21:14.113Z"
     }
   ]
 }
