@@ -1673,6 +1673,15 @@
       "setupDate": "",
       "comments": "",
       "updatedAt": "2026-05-11T11:24:58.264Z"
+    },
+    {
+      "id": "sso_1778499624261",
+      "clientName": "Rutland Regional Medical Center- Offsite",
+      "loginType": "Single Sign On - Microsoft",
+      "ssoStatus": "Not Started",
+      "setupDate": "2025-07-25",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:40:24.261Z"
     }
   ]
 }
