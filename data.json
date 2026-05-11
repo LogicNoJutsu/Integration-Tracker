@@ -1547,6 +1547,15 @@
       "setupDate": "2016-08-24",
       "comments": "",
       "updatedAt": "2026-05-11T11:05:30.292Z"
+    },
+    {
+      "id": "sso_1778497560726",
+      "clientName": "Tidal Health- AGH",
+      "loginType": "Password",
+      "ssoStatus": "Not Started",
+      "setupDate": "",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:06:00.726Z"
     }
   ]
 }
