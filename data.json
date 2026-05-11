@@ -1583,6 +1583,15 @@
       "setupDate": "2026-05-04",
       "comments": "",
       "updatedAt": "2026-05-11T11:06:42.037Z"
+    },
+    {
+      "id": "sso_1778497616667",
+      "clientName": "DSH-Metropolitan",
+      "loginType": "Password",
+      "ssoStatus": "Completed",
+      "setupDate": "2026-05-04",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:06:56.667Z"
     }
   ]
 }
