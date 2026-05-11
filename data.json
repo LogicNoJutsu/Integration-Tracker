@@ -1538,6 +1538,15 @@
       "setupDate": "2026-03-09",
       "comments": "",
       "updatedAt": "2026-05-08T20:33:15.779Z"
+    },
+    {
+      "id": "sso_1778497530292",
+      "clientName": "Akron Children's Hospital",
+      "loginType": "Password",
+      "ssoStatus": "Completed",
+      "setupDate": "2016-08-24",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:05:30.292Z"
     }
   ]
 }
