@@ -1592,6 +1592,15 @@
       "setupDate": "2026-05-04",
       "comments": "",
       "updatedAt": "2026-05-11T11:06:56.667Z"
+    },
+    {
+      "id": "sso_1778497629921",
+      "clientName": "DSH-Napa",
+      "loginType": "Password",
+      "ssoStatus": "Completed",
+      "setupDate": "2026-05-04",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:07:09.921Z"
     }
   ]
 }
