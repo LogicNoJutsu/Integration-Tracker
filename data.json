@@ -1682,6 +1682,15 @@
       "setupDate": "2025-07-25",
       "comments": "",
       "updatedAt": "2026-05-11T11:40:24.261Z"
+    },
+    {
+      "id": "sso_1778499720278",
+      "clientName": "Geisinger- Lewistown Hospital (Offsites)",
+      "loginType": "ADFS",
+      "ssoStatus": "Completed",
+      "setupDate": "2025-05-05",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:42:00.279Z"
     }
   ]
 }
