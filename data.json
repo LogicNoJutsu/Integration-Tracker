@@ -1628,6 +1628,15 @@
       "setupDate": "2026-03-26",
       "comments": "",
       "updatedAt": "2026-05-11T11:21:29.817Z"
+    },
+    {
+      "id": "sso_1778498603533",
+      "clientName": "Kittitas Valley Healthcare Offsite",
+      "loginType": "Password",
+      "ssoStatus": "Completed",
+      "setupDate": "2026-03-13",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:23:23.533Z"
     }
   ]
 }
