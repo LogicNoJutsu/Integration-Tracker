@@ -1574,6 +1574,15 @@
       "setupDate": "2026-05-04",
       "comments": "",
       "updatedAt": "2026-05-11T11:06:27.136Z"
+    },
+    {
+      "id": "sso_1778497602037",
+      "clientName": "DSH-Coalinga",
+      "loginType": "Password",
+      "ssoStatus": "Not Started",
+      "setupDate": "2026-05-04",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:06:42.037Z"
     }
   ]
 }
