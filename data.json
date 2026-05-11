@@ -1601,6 +1601,15 @@
       "setupDate": "2026-05-04",
       "comments": "",
       "updatedAt": "2026-05-11T11:07:09.921Z"
+    },
+    {
+      "id": "sso_1778497641854",
+      "clientName": "DSH Patton",
+      "loginType": "Password",
+      "ssoStatus": "Completed",
+      "setupDate": "2026-05-04",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:07:21.854Z"
     }
   ]
 }
