@@ -1691,6 +1691,15 @@
       "setupDate": "2025-05-05",
       "comments": "",
       "updatedAt": "2026-05-11T11:42:00.279Z"
+    },
+    {
+      "id": "sso_1778499780007",
+      "clientName": "Froedtert- All Hospitals",
+      "loginType": "Password",
+      "ssoStatus": "Completed",
+      "setupDate": "2025-05-09",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:43:00.007Z"
     }
   ]
 }
