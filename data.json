@@ -1546,7 +1546,7 @@
       "startDate": "",
       "expectedDate": "",
       "createdAt": "2026-05-11T14:44:25.789Z",
-      "updatedAt": "2026-05-11T14:44:25.789Z",
+      "updatedAt": "2026-05-11T14:46:08.991Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1559,19 +1559,19 @@
                 {
                   "id": "t1",
                   "name": "Initial Requirement",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 },
                 {
                   "id": "t2",
                   "name": "Organizational Setup",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 },
                 {
                   "id": "t3",
                   "name": "Asset Setup",
-                  "status": "not-started",
+                  "status": "completed",
                   "comments": []
                 },
                 {
