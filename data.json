@@ -1556,6 +1556,15 @@
       "setupDate": "",
       "comments": "",
       "updatedAt": "2026-05-11T11:06:00.726Z"
+    },
+    {
+      "id": "sso_1778497570979",
+      "clientName": "Newark Beth Israel Medical Center",
+      "loginType": "Password",
+      "ssoStatus": "Not Started",
+      "setupDate": "",
+      "comments": "",
+      "updatedAt": "2026-05-11T11:06:10.980Z"
     }
   ]
 }
