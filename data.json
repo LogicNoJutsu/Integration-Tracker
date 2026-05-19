@@ -347,7 +347,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:36:37.004Z",
-      "updatedAt": "2026-05-08T11:12:43.178Z",
+      "updatedAt": "2026-05-19T14:30:23.416Z",
       "sections": [
         {
           "id": "test_instance",
@@ -478,6 +478,13 @@
           "isTask": true,
           "_ts": 1778237904309,
           "taskStatus": "pending-client"
+        },
+        {
+          "author": "VG",
+          "text": "We have sent the email to CereCore team for getting Null value in Buildings/ Structure location Type",
+          "timestamp": "May 19, 2026, 10:30 AM",
+          "isTask": true,
+          "_ts": 1779201023416
         }
       ]
     },
