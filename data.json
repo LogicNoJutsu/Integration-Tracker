@@ -498,7 +498,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:12.397Z",
-      "updatedAt": "2026-05-18T11:14:08.989Z",
+      "updatedAt": "2026-05-19T14:41:06.526Z",
       "sections": [
         {
           "id": "test_instance",
@@ -639,6 +639,13 @@
           "timestamp": "May 11, 2026, 8:04 AM",
           "isTask": false,
           "_ts": 1778501091766
+        },
+        {
+          "author": "VG",
+          "text": "Currently all the ACID subtypes are under category as General which will need to be updated by the client if client is not able to update in that case we can work at Our end to look for other options",
+          "timestamp": "May 19, 2026, 10:41 AM",
+          "isTask": true,
+          "_ts": 1779201666526
         }
       ]
     },
