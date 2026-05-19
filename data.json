@@ -652,7 +652,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:49.957Z",
-      "updatedAt": "2026-05-19T14:38:40.387Z",
+      "updatedAt": "2026-05-19T14:38:43.951Z",
       "sections": [
         {
           "id": "test_instance",
@@ -689,7 +689,7 @@
                 {
                   "id": "t4",
                   "name": "Work Order Setup",
-                  "status": "in-progress",
+                  "status": "completed",
                   "comments": [
                     {
                       "author": "VG",
