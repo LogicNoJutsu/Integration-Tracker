@@ -652,7 +652,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:49.957Z",
-      "updatedAt": "2026-05-08T20:03:07.306Z",
+      "updatedAt": "2026-05-19T14:38:40.387Z",
       "sections": [
         {
           "id": "test_instance",
@@ -677,7 +677,7 @@
                 {
                   "id": "t3",
                   "name": "Asset Setup",
-                  "status": "in-progress",
+                  "status": "completed",
                   "comments": [
                     {
                       "author": "VG",
