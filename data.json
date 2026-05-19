@@ -840,7 +840,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:39:15.224Z",
-      "updatedAt": "2026-05-08T11:40:09.287Z",
+      "updatedAt": "2026-05-19T14:32:40.038Z",
       "sections": [
         {
           "id": "test_instance",
@@ -967,6 +967,13 @@
           "isTask": true,
           "_ts": 1778239726117,
           "taskStatus": "pending-client"
+        },
+        {
+          "author": "VG",
+          "text": "Need to add frequency field on the PM work orders in custom field",
+          "timestamp": "May 19, 2026, 10:32 AM",
+          "isTask": true,
+          "_ts": 1779201160038
         }
       ]
     },
