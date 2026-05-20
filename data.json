@@ -155,6 +155,515 @@
           "timestamp": "May 7, 2026, 2:21 PM",
           "_ts": 1778178109636
         }
+      ],
+      "checklist": [
+        {
+          "id": "stage1",
+          "label": "STAGE 1 — TEST INSTANCE INTEGRATION",
+          "phases": [
+            {
+              "id": "s1p1",
+              "label": "PHASE 1 — CORE SETUP",
+              "steps": [
+                {
+                  "id": "s1p1s1",
+                  "label": "Step 1 — Initial Requirement (2 Days)",
+                  "items": [
+                    {
+                      "id": "c1",
+                      "action": "Share Test URL of the CMMS system",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c2",
+                      "action": "Share User ID and Password for CMMS frontend",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c3",
+                      "action": "Share User credentials / Token / API Key for CMMS login",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c4",
+                      "action": "Share API Documentation URL (if available)",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c5",
+                      "action": "Share Segments information (if applicable)",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c6",
+                      "action": "CRx gains access to CMMS and verifies APIs being received",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c7",
+                      "action": "Client provides two copies of Open Work Orders in PDF format",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c8",
+                      "action": "Client provides two copies of Closed Work Orders in PDF format",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c9",
+                      "action": "Client provides full list of status codes used in their CMMS",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c10",
+                      "action": "Client provides list of all fields used in their CMMS",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c11",
+                      "action": "Client provides Frequency Field for Assets",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "s1p1s2",
+                  "label": "Step 2 — Organizational Setup (7 Days)",
+                  "items": [
+                    {
+                      "id": "c12",
+                      "action": "CRx creates duplicate of client CRx system on test server",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c13",
+                      "action": "Sync Sites data from client CMMS into duplicate CRx instance",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c14",
+                      "action": "Sync Buildings data from client CMMS",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c15",
+                      "action": "Sync Floors data from client CMMS",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c16",
+                      "action": "Sync Rooms data from client CMMS",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "s1p1s3",
+                  "label": "Step 3 — Asset Setup (5–7 Days)",
+                  "items": [
+                    {
+                      "id": "c17",
+                      "action": "CRx retrieves Asset Types from client CMMS",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c18",
+                      "action": "CRx retrieves Asset Sub Types from client CMMS",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c19",
+                      "action": "CRx maps client asset subcategories to CRx categories and shares mapping with client",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c20",
+                      "action": "Client reviews and approves the asset category mapping",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c21",
+                      "action": "CRx imports all assets (incl. location, category, subcategory) into CRx",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "s1p1s4",
+                  "label": "Step 4 — Work Order Setup (7–10 Days)",
+                  "items": [
+                    {
+                      "id": "c22",
+                      "action": "Client adds CRx or Compliance as a Type Code for Work Orders requested from CRx",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c23",
+                      "action": "Client provides the status code CRx will use when requesting Work Orders",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c24",
+                      "action": "CRx sets up Work Order request creation from CRx into client CMMS",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c25",
+                      "action": "CRx syncs Work Order Number generated in CMMS back to CRx",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c26",
+                      "action": "CRx syncs Work Order status and comments in real-time",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "s1p2",
+              "label": "PHASE 2 — ADVANCED SETUP",
+              "steps": [
+                {
+                  "id": "s1p2s5",
+                  "label": "Step 5 — PM Work Order Setup (5–7 Days)",
+                  "items": [
+                    {
+                      "id": "c27",
+                      "action": "CRx retrieves PM Work Orders from client CMMS",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c28",
+                      "action": "CRx verifies frequency data for assets is received correctly",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c29",
+                      "action": "CRx confirms all relevant assets are available in CRx",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "s1p2s6",
+                  "label": "Step 6 — Automated Asset Reports (7–10 Days)",
+                  "items": [
+                    {
+                      "id": "c30",
+                      "action": "CRx begins receiving PM Work Orders (prerequisite check)",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c31",
+                      "action": "Ensure all assets are inspected on EPs (prerequisite for this feature)",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c32",
+                      "action": "CRx auto-generates asset inspection reports",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c33",
+                      "action": "CRx uploads reports to relevant Asset-related EPs",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c34",
+                      "action": "CRx marks EPs as compliant",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "stage2",
+          "label": "STAGE 2 — LIVE INSTANCE INTEGRATION",
+          "phases": [
+            {
+              "id": "s2p1",
+              "label": "PHASE 1 — CORE SETUP",
+              "steps": [
+                {
+                  "id": "s2p1s1",
+                  "label": "Step 1 — Initial Requirement (1–2 Days)",
+                  "items": [
+                    {
+                      "id": "c35",
+                      "action": "Share Live URL of the CMMS system",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c36",
+                      "action": "Share User ID and Password for live CMMS frontend",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c37",
+                      "action": "Share User credentials / Token / API Key for live CMMS login",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c38",
+                      "action": "Share API Documentation URL for live instance (if available)",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "s2p1s2",
+                  "label": "Step 2 — Organizational Setup (2–3 Days)",
+                  "items": [
+                    {
+                      "id": "c39",
+                      "action": "Sync live Sites data from CMMS into CRx",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c40",
+                      "action": "Sync live Buildings data",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c41",
+                      "action": "Sync live Floors data",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c42",
+                      "action": "Sync live Rooms data",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "s2p1s3",
+                  "label": "Step 3 — Asset Setup (5 Days)",
+                  "items": [
+                    {
+                      "id": "c43",
+                      "action": "CRx retrieves live Asset Types and Sub Types from CMMS",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c44",
+                      "action": "Client confirms asset mapping for live instance",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c45",
+                      "action": "CRx imports all live assets with full location and category details",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "s2p1s4",
+                  "label": "Step 4 — Work Order Setup (5–7 Days)",
+                  "items": [
+                    {
+                      "id": "c46",
+                      "action": "Client provides two copies of live Open Work Orders in PDF format",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c47",
+                      "action": "Client provides two copies of live Closed Work Orders in PDF format",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c48",
+                      "action": "Client provides updated status codes list for live instance",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c49",
+                      "action": "Client provides updated fields list for live instance",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c50",
+                      "action": "Client provides Frequency Field for live Assets",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c51",
+                      "action": "Client provides status code CRx will use to request live Work Orders",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c52",
+                      "action": "CRx sets up live Work Order creation, sync, and real-time status updates",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "s2p2",
+              "label": "PHASE 2 — ADVANCED SETUP",
+              "steps": [
+                {
+                  "id": "s2p2s5",
+                  "label": "Step 5 — PM Work Order Setup (5–7 Days)",
+                  "items": [
+                    {
+                      "id": "c53",
+                      "action": "CRx retrieves and syncs live PM Work Orders from CMMS",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c54",
+                      "action": "CRx verifies frequency and asset availability in live instance",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "s2p2s6",
+                  "label": "Step 6 — Automated Asset Reports (5–7 Days)",
+                  "items": [
+                    {
+                      "id": "c55",
+                      "action": "Ensure all live assets are inspected on EPs",
+                      "actionBy": "Client",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c56",
+                      "action": "CRx auto-generates live asset inspection reports and uploads to EPs",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    },
+                    {
+                      "id": "c57",
+                      "action": "CRx marks live EPs as compliant",
+                      "actionBy": "CRx",
+                      "status": "not-started",
+                      "comment": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
       ]
     },
     {
