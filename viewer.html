@@ -474,8 +474,28 @@
 const VIEWER_MODE = true;
 
 const DB_KEY='crx_tracker_v2';
-function loadDB(){try{return JSON.parse(localStorage.getItem(DB_KEY))||{clients:[]};}catch{return{clients:[]};}}
-function saveDB(db){localStorage.setItem(DB_KEY,JSON.stringify(db));syncToGitHub(db);}
+
+// Hybrid storage: localStorage with in-memory fallback (handles iframe/tracking-blocked environments)
+let _memoryStore = {};
+function _storageGet(key){
+  try{ const v=localStorage.getItem(key); return v; }
+  catch(e){ return _memoryStore[key]||null; }
+}
+function _storageSet(key,val){
+  try{ localStorage.setItem(key,val); }
+  catch(e){ /* blocked */ }
+  _memoryStore[key]=val; // always keep in memory too
+}
+function loadDB(){
+  try{
+    const raw=_storageGet(DB_KEY);
+    return (raw?JSON.parse(raw):null)||{clients:[]};
+  }catch{return{clients:[]};}
+}
+function saveDB(db){
+  _storageSet(DB_KEY,JSON.stringify(db));
+  syncToGitHub(db);
+}
 
 function defaultChecklist(){
   return[
@@ -606,13 +626,27 @@ function defaultSections(){
 
 // GITHUB
 const GH_KEY='crx_github_config';
+
+// ─── GITHUB CONFIG (fill these in to avoid re-entering every time) ───
+// Leave as empty strings '' if you prefer to enter via the GitHub button
+const GITHUB_USER  = '';   // e.g. 'venky123'
+const GITHUB_REPO  = '';   // e.g. 'crx-tracker'
+const GITHUB_TOKEN = '';   // e.g. 'ghp_xxxxxxxxxxxx'
+// ─────────────────────────────────────────────────────────────────────
 let syncTimeout=null,ghFileSha=null;
-function getGhConfig(){try{return JSON.parse(localStorage.getItem(GH_KEY))||null;}catch{return null;}}
+function getGhConfig(){
+  // Priority 1: hardcoded constants in the file (works in any environment)
+  if(GITHUB_USER && GITHUB_REPO && GITHUB_TOKEN){
+    return {user:GITHUB_USER, repo:GITHUB_REPO, token:GITHUB_TOKEN};
+  }
+  // Priority 2: previously saved config in storage
+  try{const r=_storageGet(GH_KEY);return(r?JSON.parse(r):null)||null;}catch{return null;}
+}
 function openGithubSetup(){const cfg=getGhConfig();if(cfg){document.getElementById('fGhUser').value=cfg.user||'';document.getElementById('fGhRepo').value=cfg.repo||'';document.getElementById('fGhToken').value=cfg.token||'';}openModal('githubModal');}
-function saveGithubConfig(){const user=document.getElementById('fGhUser').value.trim(),repo=document.getElementById('fGhRepo').value.trim(),token=document.getElementById('fGhToken').value.trim();if(!user||!repo||!token){showToast('Please fill in all fields.','error');return;}localStorage.setItem(GH_KEY,JSON.stringify({user,repo,token}));closeModal('githubModal');setSyncStatus('syncing','Testing\u2026');syncToGitHub(loadDB(),true);}
-function clearGithubConfig(){localStorage.removeItem(GH_KEY);setSyncStatus('idle','Not synced');closeModal('githubModal');showToast('GitHub config cleared.','');}
+function saveGithubConfig(){const user=document.getElementById('fGhUser').value.trim(),repo=document.getElementById('fGhRepo').value.trim(),token=document.getElementById('fGhToken').value.trim();if(!user||!repo||!token){showToast('Please fill in all fields.','error');return;}_storageSet(GH_KEY,JSON.stringify({user,repo,token}));closeModal('githubModal');setSyncStatus('syncing','Testing\u2026');syncToGitHub(loadDB(),true);}
+function clearGithubConfig(){try{localStorage.removeItem(GH_KEY);}catch(e){} delete _memoryStore[GH_KEY];setSyncStatus('idle','Not synced');closeModal('githubModal');showToast('GitHub config cleared.','');}
 function setSyncStatus(state,label){const el=document.getElementById('syncStatus'),lbl=document.getElementById('syncLabel');if(!el)return;el.className='sync-status '+state;lbl.textContent=label;}
-async function loadFromGitHub(){const cfg=getGhConfig();if(!cfg)return;setSyncStatus('syncing','Loading data\u2026');try{const url='https://api.github.com/repos/'+cfg.user+'/'+cfg.repo+'/contents/data.json';const res=await fetch(url,{headers:{'Authorization':'token '+cfg.token,'Accept':'application/vnd.github.v3+json'}});if(!res.ok){setSyncStatus('error','Load failed');return;}const meta=await res.json();ghFileSha=meta.sha;const decoded=decodeURIComponent(escape(atob(meta.content.replace(/\n/g,''))));const remoteDB=JSON.parse(decoded);localStorage.setItem(DB_KEY,JSON.stringify(remoteDB));if(remoteDB._sso)localStorage.setItem(SSO_KEY,JSON.stringify(remoteDB._sso));setSyncStatus('synced','Synced \u2713');setTimeout(function(){setSyncStatus('synced','GitHub synced');},2000);renderDashboard();}catch(e){setSyncStatus('error','Load error');}}
+async function loadFromGitHub(){const cfg=getGhConfig();if(!cfg)return;setSyncStatus('syncing','Loading data\u2026');try{const url='https://api.github.com/repos/'+cfg.user+'/'+cfg.repo+'/contents/data.json';const res=await fetch(url,{headers:{'Authorization':'token '+cfg.token,'Accept':'application/vnd.github.v3+json'}});if(!res.ok){setSyncStatus('error','Load failed');renderDashboard();return;}const meta=await res.json();ghFileSha=meta.sha;const bytes=atob(meta.content.replace(/\n/g,''));const decoded=new TextDecoder('utf-8').decode(new Uint8Array([...bytes].map(c=>c.charCodeAt(0))));const remoteDB=JSON.parse(decoded);_storageSet(DB_KEY,JSON.stringify(remoteDB));if(remoteDB._sso)_storageSet(SSO_KEY,JSON.stringify(remoteDB._sso));setSyncStatus('synced','Synced \u2713');setTimeout(function(){setSyncStatus('synced','GitHub synced');},2000);renderDashboard();}catch(e){setSyncStatus('error','Load error');renderDashboard();}}
 async function syncToGitHub(db,isTest=false){const cfg=getGhConfig();if(!cfg)return;if(syncTimeout)clearTimeout(syncTimeout);syncTimeout=setTimeout(async function(){setSyncStatus('syncing','Syncing\u2026');try{const content=btoa(unescape(encodeURIComponent(JSON.stringify(db,null,2))));const url='https://api.github.com/repos/'+cfg.user+'/'+cfg.repo+'/contents/data.json';const headers={'Authorization':'token '+cfg.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};let sha=ghFileSha;try{const gr=await fetch(url,{headers});if(gr.ok){const ex=await gr.json();sha=ex.sha;ghFileSha=sha;}}catch(e2){}const body={message:'CRx Tracker sync \u2014 '+new Date().toLocaleString(),content};if(sha)body.sha=sha;const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});if(res.ok){const data=await res.json();ghFileSha=(data.content&&data.content.sha)?data.content.sha:sha;setSyncStatus('synced','Synced \u2713');if(isTest)showToast('GitHub sync working!','success');setTimeout(function(){setSyncStatus('synced','GitHub synced');},3000);}else{setSyncStatus('error','Sync failed');if(isTest)showToast('Error: check token/repo.','error');}}catch(e){setSyncStatus('error','Sync error');}},isTest?0:1500);}
 window.addEventListener('load',function(){const cfg=getGhConfig();if(cfg){setSyncStatus('synced','GitHub configured');loadFromGitHub();}});
 
@@ -905,8 +939,8 @@ function fmtTime(){return new Date().toLocaleString('en-US',{month:'short',day:'
 
 // FONT SIZE
 const FONT_KEY='crx_font_size';
-let currentFontSize=parseInt(localStorage.getItem(FONT_KEY)||'16');
-function applyFontSize(size){currentFontSize=Math.min(22,Math.max(12,size));document.documentElement.style.setProperty('--page-font-size',currentFontSize+'px');localStorage.setItem(FONT_KEY,currentFontSize);const lbl=document.getElementById('fontSizeLabel');if(lbl)lbl.textContent=currentFontSize;}
+let currentFontSize=parseInt((_storageGet(FONT_KEY))||'16');
+function applyFontSize(size){currentFontSize=Math.min(22,Math.max(12,size));document.documentElement.style.setProperty('--page-font-size',currentFontSize+'px');_storageSet(FONT_KEY,currentFontSize);const lbl=document.getElementById('fontSizeLabel');if(lbl)lbl.textContent=currentFontSize;}
 function adjustFont(delta){applyFontSize(currentFontSize+delta);}
 function rebuildHeaderActions(){const el=document.getElementById('headerActions');if(!el)return;if(VIEWER_MODE){el.innerHTML='<div class="font-toggle"><button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button><span class="font-size-label" id="fontSizeLabel">'+currentFontSize+'</span><button class="font-toggle-btn" onclick="adjustFont(1)">A+</button></div><span style="font-size:11px;background:rgba(79,124,255,0.15);color:var(--accent);border:1px solid rgba(79,124,255,0.3);border-radius:20px;padding:3px 12px;font-weight:700;">&#128274; View Only</span><span class="sync-status" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Loading…</span></span>';const cfg=getGhConfig();if(cfg){setSyncStatus('synced','GitHub synced');}return;}el.innerHTML='<div class="font-toggle"><button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button><span class="font-size-label" id="fontSizeLabel">'+currentFontSize+'</span><button class="font-toggle-btn" onclick="adjustFont(1)">A+</button></div><span class="sync-status" id="syncStatus" onclick="openGithubSetup()"><span class="sync-dot"></span><span id="syncLabel">Not synced</span></span><button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">&#9881; GitHub</button><button class="btn btn-primary btn-sm" onclick="openAddClientModal()">+ New Client</button>';const cfg=getGhConfig();if(cfg)setSyncStatus('synced','GitHub configured');}
 
@@ -919,8 +953,8 @@ function switchModule(module){currentModule=module;const menu=document.getElemen
 // SSO
 const SSO_KEY='crx_sso_data';
 let editingSSOId=null,ssoSortAsc=true;
-function loadSSO(){try{return JSON.parse(localStorage.getItem(SSO_KEY))||[];}catch{return[];}}
-function saveSSO_data(entries){localStorage.setItem(SSO_KEY,JSON.stringify(entries));const cfg=getGhConfig();if(cfg){const db=loadDB();db._sso=entries;syncToGitHub(db);}}
+function loadSSO(){try{const r=_storageGet(SSO_KEY);return(r?JSON.parse(r):null)||[];}catch{return[];}}
+function saveSSO_data(entries){_storageSet(SSO_KEY,JSON.stringify(entries));const cfg=getGhConfig();if(cfg){const db=loadDB();db._sso=entries;syncToGitHub(db);}}
 function showSSO(){renderSSO();showView('viewSSO');rebuildHeaderActions();}
 function ssoSortToggle(){ssoSortAsc=!ssoSortAsc;const btn=document.getElementById('ssoSortBtn');if(btn)btn.textContent=ssoSortAsc?'\u21c5 Client A\u2013Z':'\u21c5 Client Z\u2013A';renderSSO();}
 function getActiveSSOFilters(){const ns=document.getElementById('ssoFilterNS'),ip=document.getElementById('ssoFilterIP'),done=document.getElementById('ssoFilterDone'),nr=document.getElementById('ssoFilterNR');if(!ip)return null;const f=[];if(ns&&ns.checked)f.push('Not Started');if(ip.checked)f.push('In Progress');if(done.checked)f.push('Completed');if(nr.checked)f.push('Not Required');return f.length===4?null:f;}
@@ -932,7 +966,13 @@ function deleteSSO(id){saveSSO_data(loadSSO().filter(function(x){return x.id!==i
 
 // INIT
 applyFontSize(currentFontSize);
-renderDashboard();
+// If GitHub config exists, show loading state immediately instead of empty dashboard
+if(getGhConfig()){
+  const grid=document.getElementById('clientGrid');
+  if(grid)grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:80px 32px;color:var(--text3);"><div style="font-size:32px;margin-bottom:16px;">&#8635;</div><div style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text2);margin-bottom:8px;">Loading your data…</div><div style="font-size:13px;">Fetching from GitHub</div></div>';
+}else{
+  renderDashboard();
+}
 
 // APPLY VIEWER MODE
 if(VIEWER_MODE){
