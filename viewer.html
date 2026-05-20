@@ -690,7 +690,17 @@ async function loadFromGitHub(){
     renderDashboard();
   }
 }
-async function syncToGitHub(db,isTest=false){const cfg=getGhConfig();if(!cfg)return;if(syncTimeout)clearTimeout(syncTimeout);syncTimeout=setTimeout(async function(){setSyncStatus('syncing','Syncing\u2026');try{const content=btoa(unescape(encodeURIComponent(JSON.stringify(db,null,2))));const url='https://api.github.com/repos/'+cfg.user+'/'+cfg.repo+'/contents/data.json';const headers={'Authorization':'token '+cfg.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};let sha=ghFileSha;try{const gr=await fetch(url,{headers});if(gr.ok){const ex=await gr.json();sha=ex.sha;ghFileSha=sha;}}catch(e2){}const body={message:'CRx Tracker sync \u2014 '+new Date().toLocaleString(),content};if(sha)body.sha=sha;const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});if(res.ok){const data=await res.json();ghFileSha=(data.content&&data.content.sha)?data.content.sha:sha;setSyncStatus('synced','Synced \u2713');if(isTest)showToast('GitHub sync working!','success');setTimeout(function(){setSyncStatus('synced','GitHub synced');},3000);}else{setSyncStatus('error','Sync failed');if(isTest)showToast('Error: check token/repo.','error');}}catch(e){setSyncStatus('error','Sync error');}},isTest?0:1500);}
+async function syncToGitHub(db,isTest=false){
+  const cfg=getGhConfig();if(!cfg)return;
+  // SAFETY GUARD: never overwrite GitHub with empty data
+  if(!isTest && (!db.clients || db.clients.length===0)){
+    const existing=loadDB();
+    if(existing.clients && existing.clients.length>0){
+      console.warn('[CRx] Blocked sync: attempted to write empty DB over existing data');
+      return;
+    }
+  }
+  if(syncTimeout)clearTimeout(syncTimeout);syncTimeout=setTimeout(async function(){setSyncStatus('syncing','Syncing\u2026');try{const content=btoa(unescape(encodeURIComponent(JSON.stringify(db,null,2))));const url='https://api.github.com/repos/'+cfg.user+'/'+cfg.repo+'/contents/data.json';const headers={'Authorization':'token '+cfg.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};let sha=ghFileSha;try{const gr=await fetch(url,{headers});if(gr.ok){const ex=await gr.json();sha=ex.sha;ghFileSha=sha;}}catch(e2){}const body={message:'CRx Tracker sync \u2014 '+new Date().toLocaleString(),content};if(sha)body.sha=sha;const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});if(res.ok){const data=await res.json();ghFileSha=(data.content&&data.content.sha)?data.content.sha:sha;setSyncStatus('synced','Synced \u2713');if(isTest)showToast('GitHub sync working!','success');setTimeout(function(){setSyncStatus('synced','GitHub synced');},3000);}else{setSyncStatus('error','Sync failed');if(isTest)showToast('Error: check token/repo.','error');}}catch(e){setSyncStatus('error','Sync error');}},isTest?0:1500);}
 window.addEventListener('load',function(){console.log('[CRx] Page loaded, checking GitHub config...');const cfg=getGhConfig();if(cfg){setSyncStatus('synced','GitHub configured');loadFromGitHub();}else{console.warn('[CRx] No config at page load - showing empty dashboard');renderDashboard();}});
 
 // STATE
