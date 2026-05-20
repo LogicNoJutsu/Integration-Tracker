@@ -637,18 +637,61 @@ let syncTimeout=null,ghFileSha=null;
 function getGhConfig(){
   // Priority 1: hardcoded constants in the file (works in any environment)
   if(GITHUB_USER && GITHUB_REPO && GITHUB_TOKEN){
+    console.log('[CRx] Using hardcoded GitHub config, user:',GITHUB_USER);
     return {user:GITHUB_USER, repo:GITHUB_REPO, token:GITHUB_TOKEN};
   }
   // Priority 2: previously saved config in storage
-  try{const r=_storageGet(GH_KEY);return(r?JSON.parse(r):null)||null;}catch{return null;}
+  try{
+    const r=_storageGet(GH_KEY);
+    const cfg=(r?JSON.parse(r):null)||null;
+    console.log('[CRx] Config from storage:', cfg?'found (user:'+cfg.user+')':'NOT FOUND');
+    return cfg;
+  }catch(e){
+    console.error('[CRx] getGhConfig error:',e);
+    return null;
+  }
 }
 function openGithubSetup(){const cfg=getGhConfig();if(cfg){document.getElementById('fGhUser').value=cfg.user||'';document.getElementById('fGhRepo').value=cfg.repo||'';document.getElementById('fGhToken').value=cfg.token||'';}openModal('githubModal');}
 function saveGithubConfig(){const user=document.getElementById('fGhUser').value.trim(),repo=document.getElementById('fGhRepo').value.trim(),token=document.getElementById('fGhToken').value.trim();if(!user||!repo||!token){showToast('Please fill in all fields.','error');return;}_storageSet(GH_KEY,JSON.stringify({user,repo,token}));closeModal('githubModal');setSyncStatus('syncing','Testing\u2026');syncToGitHub(loadDB(),true);}
 function clearGithubConfig(){try{localStorage.removeItem(GH_KEY);}catch(e){} delete _memoryStore[GH_KEY];setSyncStatus('idle','Not synced');closeModal('githubModal');showToast('GitHub config cleared.','');}
 function setSyncStatus(state,label){const el=document.getElementById('syncStatus'),lbl=document.getElementById('syncLabel');if(!el)return;el.className='sync-status '+state;lbl.textContent=label;}
-async function loadFromGitHub(){const cfg=getGhConfig();if(!cfg)return;setSyncStatus('syncing','Loading data\u2026');try{const url='https://api.github.com/repos/'+cfg.user+'/'+cfg.repo+'/contents/data.json';const res=await fetch(url,{headers:{'Authorization':'token '+cfg.token,'Accept':'application/vnd.github.v3+json'}});if(!res.ok){setSyncStatus('error','Load failed');renderDashboard();return;}const meta=await res.json();ghFileSha=meta.sha;const bytes=atob(meta.content.replace(/\n/g,''));const decoded=new TextDecoder('utf-8').decode(new Uint8Array([...bytes].map(c=>c.charCodeAt(0))));const remoteDB=JSON.parse(decoded);_storageSet(DB_KEY,JSON.stringify(remoteDB));if(remoteDB._sso)_storageSet(SSO_KEY,JSON.stringify(remoteDB._sso));setSyncStatus('synced','Synced \u2713');setTimeout(function(){setSyncStatus('synced','GitHub synced');},2000);renderDashboard();}catch(e){setSyncStatus('error','Load error');renderDashboard();}}
+async function loadFromGitHub(){
+  const cfg=getGhConfig();
+  if(!cfg){console.warn('[CRx] No GitHub config found');renderDashboard();return;}
+  console.log('[CRx] Loading from GitHub repo:',cfg.user+'/'+cfg.repo);
+  setSyncStatus('syncing','Loading data…');
+  try{
+    const url='https://api.github.com/repos/'+cfg.user+'/'+cfg.repo+'/contents/data.json';
+    const res=await fetch(url,{headers:{'Authorization':'token '+cfg.token,'Accept':'application/vnd.github.v3+json'}});
+    console.log('[CRx] GitHub response status:',res.status);
+    if(!res.ok){
+      const errText=await res.text();
+      console.error('[CRx] GitHub fetch failed:',res.status, errText);
+      setSyncStatus('error','Load failed ('+res.status+')');
+      renderDashboard();
+      return;
+    }
+    const meta=await res.json();
+    console.log('[CRx] Got file metadata, sha:',meta.sha,'size:',meta.size);
+    ghFileSha=meta.sha;
+    const bytes=atob(meta.content.replace(/\n/g,''));
+    const decoded=new TextDecoder('utf-8').decode(new Uint8Array([...bytes].map(c=>c.charCodeAt(0))));
+    console.log('[CRx] Decoded JSON length:',decoded.length,'chars');
+    const remoteDB=JSON.parse(decoded);
+    console.log('[CRx] Parsed DB, clients:',remoteDB.clients?remoteDB.clients.length:'NO CLIENTS KEY');
+    _storageSet(DB_KEY,JSON.stringify(remoteDB));
+    if(remoteDB._sso)_storageSet(SSO_KEY,JSON.stringify(remoteDB._sso));
+    setSyncStatus('synced','Synced ✓');
+    setTimeout(function(){setSyncStatus('synced','GitHub synced');},2000);
+    renderDashboard();
+  }catch(e){
+    console.error('[CRx] loadFromGitHub error:',e.message,e.stack);
+    setSyncStatus('error','Load error: '+e.message);
+    renderDashboard();
+  }
+}
 async function syncToGitHub(db,isTest=false){const cfg=getGhConfig();if(!cfg)return;if(syncTimeout)clearTimeout(syncTimeout);syncTimeout=setTimeout(async function(){setSyncStatus('syncing','Syncing\u2026');try{const content=btoa(unescape(encodeURIComponent(JSON.stringify(db,null,2))));const url='https://api.github.com/repos/'+cfg.user+'/'+cfg.repo+'/contents/data.json';const headers={'Authorization':'token '+cfg.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};let sha=ghFileSha;try{const gr=await fetch(url,{headers});if(gr.ok){const ex=await gr.json();sha=ex.sha;ghFileSha=sha;}}catch(e2){}const body={message:'CRx Tracker sync \u2014 '+new Date().toLocaleString(),content};if(sha)body.sha=sha;const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});if(res.ok){const data=await res.json();ghFileSha=(data.content&&data.content.sha)?data.content.sha:sha;setSyncStatus('synced','Synced \u2713');if(isTest)showToast('GitHub sync working!','success');setTimeout(function(){setSyncStatus('synced','GitHub synced');},3000);}else{setSyncStatus('error','Sync failed');if(isTest)showToast('Error: check token/repo.','error');}}catch(e){setSyncStatus('error','Sync error');}},isTest?0:1500);}
-window.addEventListener('load',function(){const cfg=getGhConfig();if(cfg){setSyncStatus('synced','GitHub configured');loadFromGitHub();}});
+window.addEventListener('load',function(){console.log('[CRx] Page loaded, checking GitHub config...');const cfg=getGhConfig();if(cfg){setSyncStatus('synced','GitHub configured');loadFromGitHub();}else{console.warn('[CRx] No config at page load - showing empty dashboard');renderDashboard();}});
 
 // STATE
 let currentClientId=null,editingClientId=null,commentContext=null;
@@ -661,7 +704,7 @@ function showTaskView(){renderTaskView();showView('viewTasks');}
 
 // DASHBOARD
 function renderDashboard(){
-  const db=loadDB();const grid=document.getElementById('clientGrid');
+  const db=loadDB();console.log('[CRx] renderDashboard called, clients:',db.clients?db.clients.length:0);const grid=document.getElementById('clientGrid');
   if(!db.clients.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128268;</div><div class="empty-title">No integrations yet</div><div class="empty-desc">Create your first client integration to get started.</div><button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button></div>';return;}
   const activeClients=db.clients.filter(c=>c.overallStatus!=='Completed'&&c.overallStatus!=='Not Applicable');
   const doneClients=db.clients.filter(c=>c.overallStatus==='Completed'||c.overallStatus==='Not Applicable');
