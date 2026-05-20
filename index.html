@@ -626,8 +626,22 @@ function defaultSections(){
 
 // GITHUB
 const GH_KEY='crx_github_config';
+
+// ─── GITHUB CONFIG (fill these in to avoid re-entering every time) ───
+// Leave as empty strings '' if you prefer to enter via the GitHub button
+const GITHUB_USER  = '';   // e.g. 'venky123'
+const GITHUB_REPO  = '';   // e.g. 'crx-tracker'
+const GITHUB_TOKEN = '';   // e.g. 'ghp_xxxxxxxxxxxx'
+// ─────────────────────────────────────────────────────────────────────
 let syncTimeout=null,ghFileSha=null;
-function getGhConfig(){try{const r=_storageGet(GH_KEY);return(r?JSON.parse(r):null)||null;}catch{return null;}}
+function getGhConfig(){
+  // Priority 1: hardcoded constants in the file (works in any environment)
+  if(GITHUB_USER && GITHUB_REPO && GITHUB_TOKEN){
+    return {user:GITHUB_USER, repo:GITHUB_REPO, token:GITHUB_TOKEN};
+  }
+  // Priority 2: previously saved config in storage
+  try{const r=_storageGet(GH_KEY);return(r?JSON.parse(r):null)||null;}catch{return null;}
+}
 function openGithubSetup(){const cfg=getGhConfig();if(cfg){document.getElementById('fGhUser').value=cfg.user||'';document.getElementById('fGhRepo').value=cfg.repo||'';document.getElementById('fGhToken').value=cfg.token||'';}openModal('githubModal');}
 function saveGithubConfig(){const user=document.getElementById('fGhUser').value.trim(),repo=document.getElementById('fGhRepo').value.trim(),token=document.getElementById('fGhToken').value.trim();if(!user||!repo||!token){showToast('Please fill in all fields.','error');return;}_storageSet(GH_KEY,JSON.stringify({user,repo,token}));closeModal('githubModal');setSyncStatus('syncing','Testing\u2026');syncToGitHub(loadDB(),true);}
 function clearGithubConfig(){try{localStorage.removeItem(GH_KEY);}catch(e){} delete _memoryStore[GH_KEY];setSyncStatus('idle','Not synced');closeModal('githubModal');showToast('GitHub config cleared.','');}
@@ -952,22 +966,13 @@ function deleteSSO(id){saveSSO_data(loadSSO().filter(function(x){return x.id!==i
 
 // INIT
 applyFontSize(currentFontSize);
-// Check if localStorage is available; warn if blocked
-(function(){
-  try{
-    localStorage.setItem('_crx_test','1');
-    localStorage.removeItem('_crx_test');
-  }catch(e){
-    // Storage blocked - show banner
-    setTimeout(function(){
-      const banner=document.createElement('div');
-      banner.innerHTML='&#9888; <strong>Storage blocked by browser.</strong> Your data is saved in memory only this session. For permanent storage, <strong>open this file directly in your browser</strong> (File → Open, not via a web viewer). <a href="#" onclick="this.parentElement.parentElement.remove();return false;" style="color:#fff;margin-left:12px;opacity:0.7;">Dismiss</a>';
-      banner.style.cssText='position:fixed;top:56px;left:0;right:0;z-index:999;background:#c84b00;color:#fff;padding:10px 20px;font-size:12px;text-align:center;';
-      document.body.appendChild(banner);
-    },500);
-  }
-})();
-renderDashboard();
+// If GitHub config exists, show loading state immediately instead of empty dashboard
+if(getGhConfig()){
+  const grid=document.getElementById('clientGrid');
+  if(grid)grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:80px 32px;color:var(--text3);"><div style="font-size:32px;margin-bottom:16px;">&#8635;</div><div style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text2);margin-bottom:8px;">Loading your data…</div><div style="font-size:13px;">Fetching from GitHub</div></div>';
+}else{
+  renderDashboard();
+}
 
 // APPLY VIEWER MODE
 if(VIEWER_MODE){
