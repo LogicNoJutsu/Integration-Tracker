@@ -4,237 +4,212 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CRx Integration Tracker — View Only</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --font-body: 'Aptos', 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
-    --font-display: 'Aptos Display', 'Noto Sans Display', 'Segoe UI', system-ui, sans-serif;
-    --bg:#0d0f14; --surface:#151820; --surface2:#1c2030; --surface3:#222840;
-    --border:#2a3050; --accent:#4f7cff; --accent2:#00e5c0;
-    --text:#e8ecf8; --text2:#8892b0; --text3:#4a5580;
-    --ns:#2e3350; --ns-text:#8892b0;
-    --ip:#0f2d5e; --ip-text:#ffffff;
-    --done:#0a2e20; --done-text:#00d48a;
-    --pfc:#332500; --pfc-text:#ffb020;
-    --cbd:#2e1010; --cbd-text:#ff4f4f;
-    --nr:#16163a; --nr-text:#7070c8;
-    --page-font-size: 16px;
+    --font-body:'Aptos','Noto Sans','Segoe UI',system-ui,sans-serif;
+    --font-display:'Aptos Display','Noto Sans Display','Segoe UI',system-ui,sans-serif;
+    --bg:#0d0f14;--surface:#151820;--surface2:#1c2030;--surface3:#222840;
+    --border:#2a3050;--accent:#4f7cff;--accent2:#00e5c0;
+    --text:#e8ecf8;--text2:#8892b0;--text3:#4a5580;
+    --ns:#2e3350;--ns-text:#8892b0;--ip:#0f2d5e;--ip-text:#ffffff;
+    --done:#0a2e20;--done-text:#00d48a;--pfc:#332500;--pfc-text:#ffb020;
+    --cbd:#2e1010;--cbd-text:#ff4f4f;--nr:#16163a;--nr-text:#7070c8;
   }
-  .view, .dashboard, .detail-view { font-size: var(--page-font-size); }
-  .app-header, .app-header * { font-size: unset !important; }
-  .app-header .font-size-label { font-size: 11px !important; }
-  .app-header .font-toggle-btn { font-size: 13px !important; }
-  .app-header .switch-btn { font-size: 11px !important; }
-  .app-header .logo-crx-text { font-size: 17px !important; }
-  .app-header .logo-module-name { font-size: 14px !important; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; font-size: 16px; line-height: 1.5; }
-
-  /* HEADER */
-  .app-header { background:var(--surface); border-bottom:1px solid var(--border); padding:0 28px; display:flex; align-items:center; justify-content:space-between; height:56px; position:sticky; top:0; z-index:100; }
-  .header-left { display:flex; align-items:center; }
-  .app-logo-static { display:flex; align-items:center; flex-wrap:nowrap; white-space:nowrap; }
-  .logo-crx-text { color:var(--accent); font-size:17px; font-weight:800; font-family:var(--font-display); }
-  .logo-slash { color:var(--text3); font-size:15px; margin:0 3px; font-weight:400; }
-  .logo-module-name { color:var(--text2); font-size:14px; font-weight:500; font-family:var(--font-body); }
-  .switch-wrapper { position:relative; display:inline-block; margin-left:10px; }
-  .switch-btn { font-family:var(--font-body); font-size:11px; font-weight:500; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:5px; padding:3px 8px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
-  .switch-btn:hover { color:var(--accent); border-color:var(--accent); background:var(--surface3); }
-  .module-menu { position:absolute; top:calc(100% + 6px); left:0; background:var(--surface); border:1px solid var(--border); border-radius:10px; min-width:200px; z-index:500; box-shadow:0 8px 24px rgba(0,0,0,0.5); display:none; flex-direction:column; overflow:hidden; }
-  .module-menu.open { display:flex; }
-  .module-menu-item { padding:11px 16px; font-size:13px; font-weight:500; color:var(--text2); cursor:pointer; transition:all 0.15s; border-bottom:1px solid var(--border); font-family:var(--font-body); }
-  .module-menu-item:last-child { border-bottom:none; }
-  .module-menu-item:hover { background:var(--surface2); color:var(--text); }
-  .module-menu-item.active { color:var(--accent); background:rgba(79,124,255,0.08); }
-  .view-only-badge { font-size:11px; background:rgba(255,176,32,0.15); color:#ffb020; border:1px solid rgba(255,176,32,0.3); border-radius:20px; padding:3px 10px; font-weight:600; margin-left:10px; }
-  .header-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
-  .font-toggle { display:flex; align-items:center; gap:4px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:3px 6px; flex-shrink:0; }
-  .font-toggle-btn { background:none; border:none; color:var(--text2); cursor:pointer; font-size:13px; font-weight:700; padding:2px 6px; border-radius:4px; line-height:1; transition:all 0.15s; }
-  .font-toggle-btn:hover { background:var(--surface3); color:var(--text); }
-  .font-size-label { font-size:11px; color:var(--text3); min-width:24px; text-align:center; }
-  .refresh-badge { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text3); white-space:nowrap; }
-  .refresh-dot { width:6px; height:6px; border-radius:50%; background:var(--done-text); animation:pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-  .sync-badge { font-size:11px; padding:4px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text3); display:flex; align-items:center; gap:5px; white-space:nowrap; }
-  .sync-badge.syncing { color:var(--ip-text); border-color:var(--ip-text); }
-  .sync-badge.synced { color:var(--done-text); border-color:var(--done-text); }
-  .sync-badge.error { color:var(--cbd-text); border-color:var(--cbd-text); }
-  .sync-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
-  .configure-btn { font-family:var(--font-body); font-size:12px; padding:5px 12px; border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--text2); cursor:pointer; white-space:nowrap; transition:all 0.15s; }
-  .configure-btn:hover { background:var(--surface2); color:var(--text); }
-
-  /* STORAGE WARNING */
-  .storage-warning { background:rgba(255,152,0,0.12); border-bottom:1px solid rgba(255,152,0,0.4); padding:10px 28px; font-size:13px; color:#ffb020; display:none; align-items:center; gap:10px; }
-  .storage-warning.visible { display:flex; }
-  .storage-warning a { color:#ffd060; font-weight:600; cursor:pointer; }
-  .storage-warning-close { margin-left:auto; background:none; border:none; color:#ffb020; cursor:pointer; font-size:18px; }
-
-  /* SETUP */
-  .setup-screen { display:flex; align-items:center; justify-content:center; min-height:calc(100vh - 56px); padding:32px; }
-  .setup-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:40px; width:500px; text-align:center; }
-  .setup-icon { font-size:48px; margin-bottom:16px; }
-  .setup-title { font-family:var(--font-display); font-size:22px; font-weight:800; margin-bottom:8px; }
-  .setup-desc { color:var(--text2); font-size:13px; line-height:1.7; margin-bottom:24px; }
-  .setup-info { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-bottom:20px; font-size:12px; color:var(--text2); line-height:1.7; text-align:left; }
-  .setup-info strong { color:var(--text); }
-  .setup-info code { background:var(--surface3); padding:1px 6px; border-radius:3px; font-size:11px; color:var(--accent2); }
-  .setup-form { display:flex; flex-direction:column; gap:12px; text-align:left; }
-  .form-label { display:block; font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.07em; font-weight:600; margin-bottom:4px; }
-  .form-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-family:var(--font-body); font-size:13px; outline:none; transition:border-color 0.15s; }
-  .form-input:focus { border-color:var(--accent); }
-
-  /* BUTTONS */
-  .btn { font-family:var(--font-body); font-size:13px; padding:7px 14px; border-radius:7px; border:1px solid var(--border); cursor:pointer; transition:all 0.15s; font-weight:500; }
-  .btn-primary { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .btn-primary:hover { background:#3b6aee; }
-  .btn-ghost { background:transparent; color:var(--text2); }
-  .btn-ghost:hover { background:var(--surface2); color:var(--text); }
-  .btn-accent2 { background:transparent; color:var(--accent2); border-color:var(--accent2); }
-  .btn-accent2:hover { background:rgba(0,229,192,0.08); }
-  .btn-sm { padding:4px 11px; font-size:12px; }
-  .btn-xs { padding:3px 8px; font-size:11px; }
-
-  /* VIEWS */
-  .view { display:none; }
-  .view.active { display:block; }
-
-  /* DASHBOARD */
-  .dashboard { max-width:1440px; margin:0 auto; padding:36px 32px; }
-  .dash-top { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
-  .dash-title { font-family:var(--font-display); font-size:26px; font-weight:800; }
-  .dash-sub { color:var(--text2); font-size:13px; margin-top:3px; }
-  .dash-actions { display:flex; gap:10px; flex-wrap:wrap; }
-  .client-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; cursor:pointer; transition:all 0.18s; position:relative; overflow:hidden; }
-  .client-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2)); opacity:0; transition:opacity 0.18s; }
-  .client-card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.3); }
-  .client-card:hover::before { opacity:1; }
-  .card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
-  .card-name { font-family:var(--font-display); font-size:14px; font-weight:700; }
-  .card-cmms { font-size:11px; background:var(--surface3); color:#fff; padding:3px 9px; border-radius:20px; border:1px solid var(--border); white-space:nowrap; }
-  .card-meta { color:var(--text2); font-size:11px; margin-bottom:12px; line-height:1.9; }
-  .card-meta strong { color:var(--text); }
-  .card-last-updated { font-size:11px; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:5px; padding:3px 8px; display:inline-block; margin-bottom:12px; }
-  .progress-section { margin-bottom:10px; }
-  .progress-label { display:flex; justify-content:space-between; font-size:11px; color:var(--text3); margin-bottom:5px; }
-  .progress-bar { height:4px; background:var(--surface3); border-radius:2px; overflow:hidden; }
-  .progress-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,var(--accent),var(--accent2)); }
-  .status-pills { display:flex; flex-wrap:wrap; gap:4px; margin-top:10px; }
-  .pill { font-size:10px; padding:2px 8px; border-radius:20px; font-weight:500; }
-  .card-footer { display:flex; gap:8px; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); align-items:center; }
-
-  /* DETAIL */
-  .detail-view { max-width:1440px; margin:0 auto; padding:28px 32px; }
-  .breadcrumb { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text2); margin-bottom:20px; }
-  .breadcrumb a { color:var(--accent); cursor:pointer; text-decoration:none; }
-  .breadcrumb a:hover { text-decoration:underline; }
-  .breadcrumb span { color:var(--text3); }
-  .detail-header { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px 28px; margin-bottom:20px; }
-  .detail-header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
-  .detail-name { font-family:var(--font-display); font-size:24px; font-weight:800; }
-  .last-updated-badge { font-size:11px; color:var(--text3); background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:4px 10px; }
-  .meta-item label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:3px; display:block; }
-  .meta-item .val { font-size:14px; color:var(--text); font-weight:500; }
-
-  /* TABS */
-  .tabs { display:flex; gap:3px; margin-bottom:20px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4px; width:fit-content; }
-  .tab { font-family:var(--font-body); font-size:13px; padding:6px 18px; border-radius:7px; border:none; cursor:pointer; background:transparent; color:var(--text2); transition:all 0.15s; font-weight:500; }
-  .tab.active { background:var(--accent); color:#fff; }
-  .tab:hover:not(.active) { background:var(--surface2); color:var(--text); }
-  .tab-content { display:none; }
-  .tab-content.active { display:block; }
-
-  /* INTEGRATION TABLE */
-  .section-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:14px; overflow:hidden; }
-  .section-title { background:var(--surface2); padding:11px 18px; font-family:var(--font-display); font-size:12px; font-weight:700; color:var(--accent2); text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--border); }
-  table { width:100%; border-collapse:collapse; }
-  th { background:var(--surface3); padding:9px 14px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:var(--text3); font-weight:600; border-bottom:1px solid var(--border); }
-  td { padding:10px 14px; border-bottom:1px solid rgba(42,48,80,0.4); font-size:13px; vertical-align:middle; }
-  tr:last-child td { border-bottom:none; }
-  tr:hover td { background:rgba(79,124,255,0.03); }
-  .task-name { color:var(--text2); }
-  .status-badge { display:inline-block; font-size:11px; font-weight:600; padding:4px 12px; border-radius:20px; border:1px solid transparent; }
-  .s-not-started { background:var(--ns); color:var(--ns-text); border-color:rgba(136,146,176,0.2); }
-  .s-in-progress { background:var(--ip); color:var(--ip-text); border-color:rgba(79,159,255,0.3); }
-  .s-completed { background:var(--done); color:var(--done-text); border-color:rgba(0,212,138,0.3); }
-  .s-pending-client { background:var(--pfc); color:var(--pfc-text); border-color:rgba(255,176,32,0.3); }
-  .s-cannot-be-done { background:var(--cbd); color:var(--cbd-text); border-color:rgba(255,79,79,0.3); }
-  .s-not-required { background:var(--nr); color:var(--nr-text); border-color:rgba(112,112,200,0.3); }
-
-  /* COMMENT CELL */
-  .comment-cell { display:flex; flex-direction:column; gap:4px; }
-  .comment-preview-ro { font-size:11px; color:var(--text2); background:var(--surface2); border:1px solid var(--border); border-radius:5px; padding:4px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:300px; }
-  .view-cmts-btn { background:none; border:1px solid var(--border); border-radius:6px; padding:3px 9px; font-size:11px; color:var(--text2); cursor:pointer; font-family:var(--font-body); transition:all 0.15s; display:inline-flex; align-items:center; gap:4px; }
-  .view-cmts-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .cmt-count { display:inline-flex; align-items:center; justify-content:center; background:var(--accent); color:#fff; border-radius:20px; font-size:9px; padding:1px 6px; }
-
-  /* STATS */
-  .overview-stats { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:20px; }
-  .stat-box { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px; text-align:center; }
-  .stat-num { font-family:var(--font-display); font-size:22px; font-weight:800; margin-bottom:2px; }
-  .stat-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; }
-
-  /* DOCS / FEED */
-  .docs-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-  .doc-link { color:var(--accent); text-decoration:none; font-size:13px; }
-  .doc-link:hover { text-decoration:underline; }
-  .doc-type-badge { font-size:10px; padding:2px 8px; border-radius:20px; background:var(--surface3); color:var(--text2); border:1px solid var(--border); }
-  .doc-date { color:var(--text3); font-size:11px; }
-  .feed-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-  .feed-messages { padding:18px; max-height:440px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; min-height:160px; }
-  .comment-bubble { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; }
-  .comment-meta { display:flex; justify-content:space-between; font-size:10px; color:var(--text3); margin-bottom:5px; }
-  .comment-author { color:var(--accent); font-weight:600; }
-  .comment-text { font-size:13px; color:var(--text); line-height:1.6; }
-  .no-data { color:var(--text3); font-size:12px; text-align:center; padding:28px; }
-
-  /* TASK VIEW */
-  .overdue-badge { display:inline-block; font-size:9px; font-weight:700; background:#2e1010; color:#ff4f4f; border:1px solid rgba(255,79,79,0.4); border-radius:3px; padding:1px 5px; margin-left:4px; vertical-align:middle; }
-
-  /* MODALS */
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.72); backdrop-filter:blur(5px); z-index:200; display:none; align-items:center; justify-content:center; }
-  .modal-overlay.open { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; width:520px; max-height:90vh; overflow-y:auto; position:relative; }
-  .modal-title { font-family:var(--font-display); font-size:18px; font-weight:700; margin-bottom:18px; }
-  .modal-close { position:absolute; top:14px; right:16px; background:none; border:none; color:var(--text2); cursor:pointer; font-size:22px; line-height:1; }
-  .modal-close:hover { color:var(--text); }
-  .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
-  .client-checklist { display:flex; flex-direction:column; gap:7px; margin:12px 0; max-height:280px; overflow-y:auto; }
-  .client-check-item { display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:9px 13px; cursor:pointer; }
-  .client-check-item input[type=checkbox] { width:15px; height:15px; accent-color:var(--accent); cursor:pointer; }
-  .client-check-name { font-weight:600; font-size:13px; }
-  .client-check-meta { font-size:11px; color:var(--text2); margin-top:1px; }
-  .pdf-select-all { display:flex; gap:7px; margin-bottom:7px; }
-  .excel-section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text3); margin:16px 0 7px; }
-  .status-filter-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:4px; }
-  .status-filter-item { display:flex; align-items:center; gap:7px; border:1px solid var(--border); border-radius:7px; padding:6px 9px; font-size:12px; font-weight:500; }
-  .status-filter-item input[type=checkbox] { width:13px; height:13px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
-  .sfi-ns{background:var(--ns);color:var(--ns-text);} .sfi-ip{background:var(--ip);color:var(--ip-text);}
-  .sfi-done{background:var(--done);color:var(--done-text);} .sfi-pfc{background:var(--pfc);color:var(--pfc-text);}
-  .sfi-cbd{background:var(--cbd);color:var(--cbd-text);} .sfi-nr{background:var(--nr);color:var(--nr-text);}
-
-  /* EMPTY STATE */
-  .empty-state { text-align:center; padding:80px 32px; color:var(--text3); }
-  .empty-icon { font-size:48px; margin-bottom:16px; }
-  .empty-title { font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--text2); margin-bottom:8px; }
-  .empty-desc { font-size:13px; margin-bottom:24px; }
-
-  /* TOAST */
-  .toast { position:fixed; bottom:22px; right:22px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:11px 16px; font-size:13px; color:var(--text); z-index:999; transform:translateY(80px); opacity:0; transition:all 0.25s; pointer-events:none; display:flex; align-items:center; gap:8px; }
-  .toast.show { transform:translateY(0); opacity:1; }
-  .toast.success { border-color:var(--done-text); }
-  .toast.error { border-color:var(--cbd-text); }
-
-  ::-webkit-scrollbar{width:5px;height:5px;}
-  ::-webkit-scrollbar-track{background:transparent;}
-  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+  .view,.dashboard,.detail-view{font-size:var(--page-font-size,16px);}
+  .app-header,.app-header *{font-size:unset!important;}
+  .app-header .btn{font-size:12px!important;}.app-header .sync-status{font-size:11px!important;}
+  .app-header .font-size-label{font-size:11px!important;}.app-header .font-toggle-btn{font-size:13px!important;}
+  .app-header .switch-btn{font-size:11px!important;}.app-header .logo-crx-text{font-size:17px!important;}
+  .app-header .logo-module-name{font-size:14px!important;}.app-header .logo-slash{font-size:15px!important;}
+  .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+  .header-left{display:flex;align-items:center;}
+  .app-logo-static{display:flex;align-items:center;gap:0;font-family:var(--font-display);flex-wrap:nowrap;white-space:nowrap;}
+  .logo-crx-text{color:var(--accent);font-size:17px;font-weight:800;}
+  .logo-slash{color:var(--text3);font-size:15px;margin:0 3px;font-weight:400;}
+  .logo-module-name{color:var(--text2);font-size:14px;font-weight:500;font-family:var(--font-body);}
+  .switch-wrapper{position:relative;display:inline-block;margin-left:10px;}
+  .switch-btn{font-family:var(--font-body);font-size:11px;font-weight:500;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 8px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+  .switch-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--surface3);}
+  .module-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:200px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;flex-direction:column;overflow:hidden;}
+  .module-menu.open{display:flex;}
+  .module-menu-item{padding:11px 16px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border-bottom:1px solid var(--border);font-family:var(--font-body);}
+  .module-menu-item:last-child{border-bottom:none;}
+  .module-menu-item:hover{background:var(--surface2);color:var(--text);}
+  .module-menu-item.active{color:var(--accent);background:rgba(79,124,255,0.08);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:16px;line-height:1.5;}
+  .header-actions{display:flex;gap:10px;align-items:center;}
+  .sync-status{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text3);display:flex;align-items:center;gap:5px;cursor:default;}
+  .sync-status.syncing{color:var(--ip-text);border-color:var(--ip-text);}
+  .sync-status.synced{color:var(--done-text);border-color:var(--done-text);}
+  .sync-status.error{color:var(--cbd-text);border-color:var(--cbd-text);}
+  .sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .btn{font-family:var(--font-body);font-size:13px;padding:7px 16px;border-radius:7px;border:1px solid var(--border);cursor:pointer;transition:all 0.15s;font-weight:500;}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}.btn-primary:hover{background:#3b6aee;}
+  .btn-ghost{background:transparent;color:var(--text2);}.btn-ghost:hover{background:var(--surface2);color:var(--text);}
+  .btn-accent2{background:transparent;color:var(--accent2);border-color:var(--accent2);}.btn-accent2:hover{background:rgba(0,229,192,0.08);}
+  .btn-danger{background:transparent;color:#ff4f4f;border-color:#ff4f4f;}.btn-danger:hover{background:rgba(255,79,79,0.1);}
+  .btn-sm{padding:4px 11px;font-size:12px;}.btn-xs{padding:3px 8px;font-size:11px;}
+  .view{display:none;}.view.active{display:block;}
+  .dashboard{max-width:1440px;margin:0 auto;padding:36px 32px;}
+  .dash-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px;}
+  .dash-title{font-family:var(--font-display);font-size:26px;font-weight:800;}
+  .dash-sub{color:var(--text2);font-size:13px;margin-top:3px;}
+  .dash-actions{display:flex;gap:10px;}
+  .client-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;}
+  .client-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity 0.18s;}
+  .client-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+  .client-card:hover::before{opacity:1;}
+  .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+  .card-name{font-family:var(--font-display);font-size:14px;font-weight:700;}
+  .card-cmms{font-size:11px;background:var(--surface3);color:#ffffff;padding:3px 9px;border-radius:20px;border:1px solid var(--border);white-space:nowrap;}
+  .card-meta{color:var(--text2);font-size:11px;margin-bottom:12px;line-height:1.9;}
+  .card-meta strong{color:var(--text);}
+  .card-last-updated{font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 8px;display:inline-block;margin-bottom:12px;}
+  .progress-section{margin-bottom:10px;}
+  .progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:5px;}
+  .progress-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.5s ease;}
+  .status-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;}
+  .pill{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;}
+  .card-actions{display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);align-items:center;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(5px);z-index:200;display:none;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;width:580px;max-height:90vh;overflow-y:auto;position:relative;}
+  .modal-title{font-family:var(--font-display);font-size:19px;font-weight:700;margin-bottom:22px;}
+  .modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;}
+  .modal-close:hover{color:var(--text);}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .form-group{margin-bottom:14px;}.form-group.full{grid-column:1/-1;}
+  label{display:block;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;font-weight:600;}
+  input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;transition:border-color 0.15s;}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+  select option{background:var(--surface2);}
+  textarea{resize:vertical;min-height:80px;}
+  .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;}
+  .github-info{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:18px;font-size:12px;color:var(--text2);line-height:1.7;}
+  .github-info a{color:var(--accent);}.github-info code{background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--accent2);}
+  .detail-view{max-width:1440px;margin:0 auto;padding:28px 32px;}
+  .breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:20px;}
+  .breadcrumb a{color:var(--accent);cursor:pointer;text-decoration:none;}.breadcrumb a:hover{text-decoration:underline;}
+  .breadcrumb span{color:var(--text3);}
+  .detail-header{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 28px;margin-bottom:20px;}
+  .detail-header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;}
+  .detail-name{font-family:var(--font-display);font-size:24px;font-weight:800;}
+  .meta-item label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;}
+  .meta-item .val{font-size:14px;color:var(--text);font-weight:500;}
+  .tabs{display:flex;gap:3px;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;flex-wrap:wrap;}
+  .tab{font-family:var(--font-body);font-size:13px;padding:6px 18px;border-radius:7px;border:none;cursor:pointer;background:transparent;color:var(--text2);transition:all 0.15s;font-weight:500;}
+  .tab.active{background:var(--accent);color:#fff;}
+  .tab:hover:not(.active){background:var(--surface2);color:var(--text);}
+  .tab-content{display:none;}.tab-content.active{display:block;}
+  .section-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;}
+  .section-title{background:var(--surface2);padding:11px 18px;font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;}
+  th{background:var(--surface3);padding:9px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border);}
+  td{padding:10px 14px;border-bottom:1px solid rgba(42,48,80,0.4);font-size:13px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(79,124,255,0.03);}
+  .task-name{color:var(--text2);font-weight:400;}
+  .status-select{font-family:var(--font-body);font-size:11px;font-weight:600;padding:4px 24px 4px 10px;border-radius:20px;border:1px solid transparent;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892b0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+  .s-not-started{background:var(--ns);color:var(--ns-text);border-color:rgba(136,146,176,0.2);}
+  .s-in-progress{background:var(--ip);color:var(--ip-text);border-color:rgba(79,159,255,0.3);}
+  .s-completed{background:var(--done);color:var(--done-text);border-color:rgba(0,212,138,0.3);}
+  .s-pending-client{background:var(--pfc);color:var(--pfc-text);border-color:rgba(255,176,32,0.3);}
+  .s-cannot-be-done{background:var(--cbd);color:var(--cbd-text);border-color:rgba(255,79,79,0.3);}
+  .s-not-required{background:var(--nr);color:var(--nr-text);border-color:rgba(112,112,200,0.3);}
+  .comment-cell{display:flex;flex-direction:column;gap:5px;min-width:240px;}
+  .comment-preview{font-size:11px;color:var(--text2);line-height:1.4;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px;display:none;}
+  .comment-preview.visible{display:block;}
+  .comment-preview-author{color:var(--accent);font-weight:600;margin-right:4px;}
+  .comment-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;width:fit-content;}
+  .comment-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .comment-count{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:20px;font-size:9px;padding:1px 6px;}
+  .comment-modal .modal{width:640px;}
+  .comment-thread{max-height:340px;overflow-y:auto;margin-bottom:16px;display:flex;flex-direction:column;gap:10px;}
+  .comment-bubble{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;}
+  .comment-meta{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:5px;}
+  .comment-author{color:var(--accent);font-weight:600;}
+  .comment-text{font-size:13px;color:var(--text);line-height:1.6;}
+  .comment-input-row{display:flex;gap:8px;align-items:flex-start;}
+  .comment-input-row .name-in{width:180px;flex-shrink:0;}
+  .comment-input-row textarea{flex:1;min-height:60px;}
+  .no-comments{color:var(--text3);font-size:12px;text-align:center;padding:28px;}
+  .docs-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .docs-toolbar{padding:14px 18px;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);}
+  .doc-link{color:var(--accent);text-decoration:none;font-size:13px;}.doc-link:hover{text-decoration:underline;}
+  .doc-type-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--surface3);color:var(--text2);border:1px solid var(--border);}
+  .doc-date{color:var(--text3);font-size:11px;}
+  .global-chat{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .chat-messages{padding:18px;max-height:440px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:200px;}
+  .chat-input-area{border-top:1px solid var(--border);padding:14px 18px;background:var(--surface2);display:flex;flex-direction:column;gap:8px;}
+  .chat-row{display:flex;gap:10px;}.chat-row input{flex:0 0 200px;}.chat-row textarea{flex:1;min-height:48px;}
+  .overview-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
+  .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center;}
+  .stat-num{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:2px;}
+  .stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;}
+  .pdf-modal .modal{width:520px;}
+  .client-checklist{display:flex;flex-direction:column;gap:8px;margin:16px 0;max-height:340px;overflow-y:auto;}
+  .client-check-item{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:border-color 0.15s;}
+  .client-check-item:hover{border-color:var(--accent);}
+  .client-check-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
+  .client-check-name{font-weight:600;font-size:13px;}
+  .client-check-meta{font-size:11px;color:var(--text2);margin-top:1px;}
+  .pdf-select-all{display:flex;gap:8px;margin-bottom:8px;}
+  .excel-modal .modal{width:580px;}
+  .excel-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin:18px 0 8px;}
+  .status-filter-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:4px;}
+  .status-filter-item{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;transition:border-color 0.15s;font-size:12px;font-weight:500;}
+  .status-filter-item:hover{border-color:var(--accent);}
+  .status-filter-item input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+  .sfi-ns{background:var(--ns);color:var(--ns-text);border-color:rgba(136,146,176,0.25);}
+  .sfi-ip{background:var(--ip);color:var(--ip-text);border-color:rgba(90,174,255,0.3);}
+  .sfi-done{background:var(--done);color:var(--done-text);border-color:rgba(0,212,138,0.3);}
+  .sfi-pfc{background:var(--pfc);color:var(--pfc-text);border-color:rgba(255,176,32,0.3);}
+  .sfi-cbd{background:var(--cbd);color:var(--cbd-text);border-color:rgba(255,79,79,0.3);}
+  .sfi-nr{background:var(--nr);color:var(--nr-text);border-color:rgba(112,112,200,0.3);}
+  ::-webkit-scrollbar{width:5px;height:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+  .empty-state{text-align:center;padding:80px 32px;color:var(--text3);}
+  .empty-icon{font-size:48px;margin-bottom:16px;}
+  .empty-title{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text2);margin-bottom:8px;}
+  .empty-desc{font-size:13px;margin-bottom:24px;}
+  .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(5px);z-index:300;display:none;align-items:center;justify-content:center;}
+  .confirm-overlay.open{display:flex;}
+  .confirm-box{background:var(--surface);border:1px solid #ff4f4f;border-radius:12px;padding:28px;width:400px;text-align:center;}
+  .confirm-title{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:10px;}
+  .confirm-desc{color:var(--text2);font-size:13px;margin-bottom:22px;}
+  .confirm-actions{display:flex;gap:10px;justify-content:center;}
+  .last-updated-badge{font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--text);z-index:999;transform:translateY(80px);opacity:0;transition:all 0.25s;pointer-events:none;display:flex;align-items:center;gap:8px;}
+  .toast.show{transform:translateY(0);opacity:1;}.toast.success{border-color:var(--done-text);}.toast.error{border-color:var(--cbd-text);}
+  .font-toggle{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;}
+  .font-toggle-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;padding:1px 3px;line-height:1;}.font-toggle-btn:hover{color:var(--text);}
+  .font-size-label{font-size:11px;color:var(--text3);min-width:22px;text-align:center;}
+  /* CHECKLIST */
+  .checklist-stage{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:18px;overflow:hidden;}
+  .checklist-stage-header{background:linear-gradient(90deg,rgba(79,124,255,0.15),rgba(0,229,192,0.08));padding:13px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+  .checklist-stage-title{font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;}
+  .checklist-stage-pct{font-size:11px;color:var(--accent2);font-weight:700;background:rgba(0,229,192,0.1);border:1px solid rgba(0,229,192,0.25);padding:3px 10px;border-radius:20px;}
+  .checklist-phase{border-bottom:1px solid var(--border);}.checklist-phase:last-child{border-bottom:none;}
+  .checklist-phase-header{padding:9px 20px;background:var(--surface2);font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border);}
+  .checklist-step-header{padding:7px 20px 4px 28px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid rgba(42,48,80,0.3);background:rgba(255,255,255,0.01);}
+  .checklist-table{width:100%;border-collapse:collapse;}
+  .checklist-table th{background:var(--surface3);padding:7px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);font-weight:600;text-align:left;border-bottom:1px solid var(--border);}
+  .checklist-table td{padding:8px 12px;border-bottom:1px solid rgba(42,48,80,0.35);font-size:12px;vertical-align:middle;}
+  .checklist-table tr:last-child td{border-bottom:none;}.checklist-table tr:hover td{background:rgba(79,124,255,0.03);}
+  .action-by-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;}
+  .ab-client{background:rgba(255,176,32,0.15);color:#ffb020;border:1px solid rgba(255,176,32,0.3);}
+  .ab-crx{background:rgba(79,124,255,0.15);color:#4f7cff;border:1px solid rgba(79,124,255,0.3);}
+  .checklist-comment-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 9px;color:var(--text);font-family:var(--font-body);font-size:11px;outline:none;transition:border-color 0.15s;resize:none;}
+  .checklist-comment-input:focus{border-color:var(--accent);}
+  @media print{.app-header,.breadcrumb,.tabs,.header-actions,.card-actions,.btn{display:none!important;}body{background:#fff;color:#000;}.detail-view{padding:0;}}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="app-header">
   <div class="header-left">
     <div class="app-logo-static">
@@ -248,901 +223,737 @@
           <div class="module-menu-item" onclick="switchModule('sso')">&#128272; SSO Tracker</div>
         </div>
       </div>
-      <span class="view-only-badge">VIEW ONLY</span>
     </div>
   </div>
-  <div class="header-right">
-    <div class="font-toggle">
-      <button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button>
-      <span class="font-size-label" id="fontSizeLabel">16</span>
-      <button class="font-toggle-btn" onclick="adjustFont(1)">A+</button>
-    </div>
-    <span class="refresh-badge"><span class="refresh-dot"></span><span id="refreshLabel">Live</span></span>
-    <span class="sync-badge" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting&#8230;</span></span>
-    <button class="configure-btn" onclick="openCfgModal()">&#9881; Configure</button>
+  <div class="header-actions" id="headerActions">
+    <div class="font-toggle"><button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button><span class="font-size-label" id="fontSizeLabel">16</span><button class="font-toggle-btn" onclick="adjustFont(1)">A+</button></div>
+    <span class="sync-status" id="syncStatus" onclick="openGithubSetup()"><span class="sync-dot"></span><span id="syncLabel">Not synced</span></span>
+    <button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">&#9881; GitHub</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddClientModal()">+ New Client</button>
   </div>
 </header>
 
-<!-- EDGE STORAGE WARNING -->
-<div class="storage-warning" id="storageWarning">
-  <span>&#9888;</span>
-  <span><strong>Storage blocked:</strong> Your browser may block data saving.
-    <a onclick="showEdgeFix()">How to fix in Edge &#8594;</a></span>
-  <button class="storage-warning-close" onclick="this.parentElement.style.display='none'">&#215;</button>
-</div>
-
-<!-- SETUP SCREEN (shown when not configured) -->
-<div id="setupScreen" style="display:none;">
-  <div class="setup-screen">
-    <div class="setup-card">
-      <div class="setup-icon">&#128268;</div>
-      <div class="setup-title">Connect to Data Source</div>
-      <div class="setup-desc">This is a read-only viewer. Enter the GitHub repository details below to load the latest integration data. You only need to do this once.</div>
-      <div class="setup-info">
-        <strong>Ask your admin for:</strong><br>
-        &middot; Their GitHub username<br>
-        &middot; The repository name<br>
-        &middot; A Personal Access Token (with <code>repo</code> scope)
-      </div>
-      <div class="setup-form">
-        <div><label class="form-label">GitHub Username</label><input class="form-input" type="text" id="setupUser" placeholder="github-username"></div>
-        <div><label class="form-label">Repository Name</label><input class="form-input" type="text" id="setupRepo" placeholder="crx-integration-tracker"></div>
-        <div><label class="form-label">Personal Access Token</label><input class="form-input" type="password" id="setupToken" placeholder="ghp_xxxxxxxxxxxx"></div>
-        <button class="btn btn-primary" style="margin-top:8px;" onclick="saveAndLoad()">Connect &amp; Load Data</button>
+<div id="viewDashboard" class="view active">
+  <div class="dashboard">
+    <div class="dash-top">
+      <div><div class="dash-title">Integration Dashboard</div><div class="dash-sub">All active client integrations &middot; Click a card to manage</div></div>
+      <div class="dash-actions" id="dashActions">
+        <button class="btn btn-sm" style="background:transparent;color:#ff9800;border-color:#ff9800;" onclick="showTaskView()">&#128203; View Tasks</button>
+        <button class="btn btn-accent2" onclick="openPdfModal(null)" id="btnExportPdf">&#8595; Export All PDF</button>
+        <button class="btn btn-ghost" onclick="openExcelModal(null)" style="color:#00c853;border-color:#00c853;" id="btnExportXl">&#8595; Export Excel</button>
+        <button class="btn btn-primary" onclick="openAddClientModal()" id="btnNewClient">+ New Client</button>
       </div>
     </div>
+    <div id="clientGrid"></div>
   </div>
 </div>
 
-<!-- MAIN APP (shown after connected) -->
-<div id="mainApp" style="display:none;">
-
-  <!-- DASHBOARD -->
-  <div id="viewDashboard" class="view active">
-    <div class="dashboard">
-      <div class="dash-top">
-        <div>
-          <div class="dash-title">Integration Dashboard</div>
-          <div class="dash-sub">Read-only view &middot; Data synced from GitHub</div>
-        </div>
-        <div class="dash-actions">
-          <button class="btn btn-ghost btn-sm" onclick="showTaskView()">&#128203; Task View</button>
-          <button class="btn btn-accent2 btn-sm" onclick="openPdfModal(null)">&#8595; PDF</button>
-          <button class="btn btn-sm" style="color:#00c853;border-color:#00c853;background:transparent;" onclick="openExcelModal(null)">&#8595; Excel</button>
-          <button class="btn btn-ghost btn-sm" onclick="loadData(false)">&#8635; Refresh</button>
-        </div>
+<div id="viewTasks" class="view">
+  <div class="dashboard">
+    <div class="dash-top">
+      <div><div class="dash-title">&#128203; Task View</div><div class="dash-sub">All comments flagged as tasks across all clients</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="showDashboard()">&#8592; Dashboard</button>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;">
+        <select id="tvFilterClient" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;"><option value="">All Clients</option></select>
+        <select id="tvFilterStatus" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;"><option value="">All Statuses</option><option value="not-started">Not Started</option><option value="in-progress">In Progress</option><option value="completed">Completed</option><option value="pending-client">Pending From Client</option><option value="cannot-be-done">Cannot Be Done</option></select>
+        <select id="tvFilterOverdue" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;"><option value="">All Tasks</option><option value="overdue">Overdue Only</option><option value="incomplete">Incomplete Only</option><option value="no-date">No Due Date</option></select>
+        <span id="tvCount" style="font-size:11px;color:var(--text3);"></span>
       </div>
-      <div id="clientGrid"></div>
+      <table><thead><tr><th style="width:13%">Client</th><th style="width:16%">Task/Source</th><th style="width:16%">Task Status</th><th style="width:13%">Due Date</th><th style="width:12%">Flagged On</th><th>Comment</th></tr></thead><tbody id="taskViewBody"></tbody></table>
+      <div id="taskViewEmpty" class="no-comments" style="display:none;">No tasks flagged yet.</div>
     </div>
   </div>
+</div>
 
-  <!-- TASK VIEW -->
-  <div id="viewTasks" class="view">
-    <div class="dashboard">
-      <div class="dash-top">
-        <div><div class="dash-title">&#128203; Task View</div><div class="dash-sub">All flagged tasks &mdash; read only</div></div>
-        <button class="btn btn-ghost btn-sm" onclick="showDashboard()">&#8592; Dashboard</button>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-        <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;">
-          <select id="tvFilterClient" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;"><option value="">All Clients</option></select>
-          <select id="tvFilterStatus" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;">
-            <option value="">All Statuses</option>
-            <option value="not-started">Not Started</option>
-            <option value="in-progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="pending-client">Pending From Client</option>
-            <option value="shared-dev">Shared With Dev Team</option>
-            <option value="cannot-be-done">Cannot Be Done</option>
-          </select>
-          <select id="tvFilterOverdue" onchange="renderTaskView()" style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-family:var(--font-body);font-size:12px;outline:none;height:30px;">
-            <option value="">All Tasks</option>
-            <option value="overdue">Overdue Only</option>
-            <option value="incomplete">Incomplete Only</option>
-            <option value="no-date">No Due Date</option>
-          </select>
-          <span id="tvCount" style="font-size:11px;color:var(--text3);"></span>
-        </div>
-        <table>
-          <thead><tr>
-            <th style="width:13%">Client</th><th style="width:18%">Task / Source</th>
-            <th style="width:14%">Status</th><th style="width:12%">Due Date</th>
-            <th style="width:14%">Flagged On</th><th>Comment</th>
-          </tr></thead>
-          <tbody id="taskViewBody"></tbody>
-        </table>
-        <div id="taskViewEmpty" class="no-data" style="display:none;">No flagged tasks found.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CLIENT DETAIL -->
-  <div id="viewDetail" class="view">
-    <div class="detail-view">
-      <div class="breadcrumb">
-        <a onclick="showDashboard()">Dashboard</a><span>/</span><span id="breadcrumbName">Client</span>
-      </div>
-      <div class="detail-header">
-        <div class="detail-header-top">
-          <div class="detail-name" id="detailName">&#8212;</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <span class="last-updated-badge" id="detailUpdated">&#8212;</span>
-            <button class="btn btn-accent2 btn-sm" onclick="openPdfModal('current')">&#8595; PDF</button>
-            <button class="btn btn-sm" style="color:#00c853;border-color:#00c853;background:transparent;" onclick="openExcelModal('current')">&#8595; Excel</button>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:16px;">
-          <div class="meta-item"><label>CMMS Type</label><div class="val" id="detailCmms">&#8212;</div></div>
-          <div class="meta-item"><label>CRx Consultant</label><div class="val" id="detailCrx">&#8212;</div></div>
-          <div class="meta-item"><label>Client POC</label><div class="val" id="detailPoc">&#8212;</div></div>
-          <div class="meta-item"><label>POC Email</label><div class="val" id="detailPocEmail" style="font-size:12px;">&#8212;</div></div>
-          <div class="meta-item"><label>Overall Status</label><div class="val" id="detailStatus">&#8212;</div></div>
-          <div class="meta-item"><label>Expected Completion</label><div class="val" id="detailExpected">&#8212;</div></div>
-        </div>
-      </div>
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('tabIntegration',this)">Integration Status</button>
-        <button class="tab" onclick="switchTab('tabClientInfo',this)">Client Information</button>
-        <button class="tab" onclick="switchTab('tabNotifications',this)">Client Notifications</button>
-        <button class="tab" onclick="switchTab('tabComments',this)">Client Notes</button>
-      </div>
-      <div id="tabIntegration" class="tab-content active">
-        <div class="overview-stats" id="overviewStats"></div>
-        <div id="integrationSections"></div>
-      </div>
-      <div id="tabClientInfo" class="tab-content">
-        <div class="docs-panel">
-          <table><thead><tr><th>Information Type</th><th>Name / Link</th><th>Date Added</th><th>Notes</th></tr></thead>
-          <tbody id="docsTableBody"></tbody></table>
-          <div id="docsEmpty" class="no-data" style="display:none;">No entries added yet.</div>
-        </div>
-      </div>
-      <div id="tabNotifications" class="tab-content">
-        <div class="feed-panel">
-          <div class="feed-messages" id="notifMessages"><div class="no-data">No notifications.</div></div>
-        </div>
-      </div>
-      <div id="tabComments" class="tab-content">
-        <div class="feed-panel">
-          <div class="feed-messages" id="globalChatMessages"><div class="no-data">No notes yet.</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SSO TRACKER -->
-  <div id="viewSSO" class="view">
-    <div class="dashboard">
-      <div class="dash-top">
-        <div><div class="dash-title">&#128272; SSO Tracker</div><div class="dash-sub">Single Sign On configuration &mdash; read only</div></div>
+<div id="viewDetail" class="view">
+  <div class="detail-view">
+    <div class="breadcrumb"><a onclick="showDashboard()">Dashboard</a><span>/</span><span id="breadcrumbName">Client</span></div>
+    <div class="detail-header">
+      <div class="detail-header-top">
+        <div class="detail-name" id="detailName">&#8212;</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-            <span style="font-size:12px;color:var(--text2);font-weight:600;">Filter:</span>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:400;text-transform:none;letter-spacing:0;"><input type="checkbox" id="ssoFilterNS" checked onchange="renderSSOView()" style="width:13px;height:13px;accent-color:var(--ns-text);"> Not Started</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:400;text-transform:none;letter-spacing:0;"><input type="checkbox" id="ssoFilterIP" checked onchange="renderSSOView()" style="width:13px;height:13px;accent-color:var(--accent);"> In Progress</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:400;text-transform:none;letter-spacing:0;"><input type="checkbox" id="ssoFilterDone" checked onchange="renderSSOView()" style="width:13px;height:13px;accent-color:var(--done-text);"> Completed</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:400;text-transform:none;letter-spacing:0;"><input type="checkbox" id="ssoFilterNR" checked onchange="renderSSOView()" style="width:13px;height:13px;accent-color:var(--nr-text);"> Not Required</label>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="ssoSortToggle()" id="ssoSortBtn">&#8597; Client A&#8211;Z</button>
+          <span class="last-updated-badge" id="detailUpdated">&#8212;</span>
+          <span id="detailEditBtns">
+          <button class="btn btn-ghost btn-sm" onclick="openEditClientModal()">Edit Info</button>
+          <button class="btn btn-accent2 btn-sm" onclick="openPdfModal('current')">&#8595; PDF</button>
+          <button class="btn btn-sm" style="color:#00c853;border-color:#00c853;background:transparent;" onclick="openExcelModal('current')">&#8595; Excel</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmDeleteClient()">Delete</button>
+          </span>
         </div>
       </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-        <table><thead><tr>
-          <th style="width:22%;cursor:pointer;" onclick="ssoSortToggle()">Client Name &#8597;</th>
-          <th style="width:20%">Login Type</th><th style="width:16%">Date of SSO Setup</th>
-          <th style="width:14%">Status</th><th>Comments</th>
-        </tr></thead>
-        <tbody id="ssoTableBody"></tbody></table>
-        <div id="ssoEmpty" class="no-data" style="display:none;">No SSO entries yet.</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:18px;">
+        <div class="meta-item"><label>CMMS Type</label><div class="val" id="detailCmms">&#8212;</div></div>
+        <div class="meta-item"><label>CRx Consultant</label><div class="val" id="detailCrx">&#8212;</div></div>
+        <div class="meta-item"><label>Client POC</label><div class="val" id="detailPoc">&#8212;</div></div>
+        <div class="meta-item"><label>POC Email</label><div class="val" id="detailPocEmail" style="font-size:12px;">&#8212;</div></div>
+        <div class="meta-item"><label>Overall Status</label><div class="val" id="detailStatus">&#8212;</div></div>
+        <div class="meta-item"><label>Expected Completion</label><div class="val" id="detailExpected">&#8212;</div></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('tabIntegration',this)">Integration Status</button>
+      <button class="tab" onclick="switchTab('tabClientInfo',this)">Client Information</button>
+      <button class="tab" onclick="switchTab('tabChecklist',this)">&#10003; Check List</button>
+      <button class="tab" onclick="switchTab('tabNotifications',this)">Client Notifications</button>
+      <button class="tab" onclick="switchTab('tabComments',this)">Client Notes</button>
+    </div>
+    <div id="tabIntegration" class="tab-content active">
+      <div class="overview-stats" id="overviewStats"></div>
+      <div id="integrationSections"></div>
+    </div>
+    <div id="tabClientInfo" class="tab-content">
+      <div class="docs-panel">
+        <div class="docs-toolbar" id="docsToolbar"><button class="btn btn-primary btn-sm" onclick="openAddDocModal()">+ Add Entry</button></div>
+        <table><thead><tr><th>Information Type</th><th>Name / Link</th><th>Date Added</th><th>Notes</th><th></th></tr></thead><tbody id="docsTableBody"></tbody></table>
+        <div id="docsEmpty" class="no-comments" style="display:none;">No entries added yet.</div>
+      </div>
+    </div>
+    <div id="tabChecklist" class="tab-content">
+      <div id="checklistContainer"></div>
+    </div>
+    <div id="tabNotifications" class="tab-content">
+      <div class="global-chat" style="border-color:rgba(255,176,32,0.3);">
+        <div class="chat-messages" id="notifMessages" style="background:rgba(51,37,0,0.15);"><div class="no-comments">No notifications yet.</div></div>
+        <div class="chat-input-area" id="notifInputArea">
+          <div class="chat-row"><input type="text" id="notifAuthor" placeholder="Your name"><textarea id="notifText" placeholder="Add a client notification..."></textarea></div>
+          <div style="display:flex;justify-content:flex-end;"><button class="btn btn-sm" style="background:#ff9800;color:#fff;border-color:#ff9800;" onclick="addNotification()">Post Notification</button></div>
+        </div>
+      </div>
+    </div>
+    <div id="tabComments" class="tab-content">
+      <div class="global-chat">
+        <div class="chat-messages" id="globalChatMessages"><div class="no-comments">No notes yet.</div></div>
+        <div class="chat-input-area" id="globalInputArea">
+          <div class="chat-row"><input type="text" id="globalAuthor" placeholder="Your name" style="flex:0 0 200px;"><textarea id="globalComment" placeholder="Add a note..." style="flex:1;min-height:48px;"></textarea></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400;cursor:pointer;"><input type="checkbox" id="globalIsTask" style="width:14px;height:14px;accent-color:#ff9800;cursor:pointer;"> Mark as Task</label>
+            <button class="btn btn-primary btn-sm" onclick="addGlobalComment()">Post Note</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+</div>
 
-</div><!-- /mainApp -->
-
-<!-- COMMENT VIEW MODAL (read only) -->
-<div class="modal-overlay" id="commentViewModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('commentViewModal')">&#215;</button>
-    <div class="modal-title" id="commentViewTitle">Comments</div>
-    <div id="commentViewThread" style="max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;"></div>
-    <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeModal('commentViewModal')">Close</button></div>
+<div id="viewSSO" class="view">
+  <div class="dashboard">
+    <div class="dash-top">
+      <div><div class="dash-title">&#128272; SSO Tracker</div><div class="dash-sub">Single Sign On configuration across all clients</div></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">Filter:</span>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterNS" checked onchange="renderSSO()" style="width:13px;height:13px;"> Not Started</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterIP" checked onchange="renderSSO()" style="width:13px;height:13px;"> In Progress</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterDone" checked onchange="renderSSO()" style="width:13px;height:13px;"> Completed</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterNR" checked onchange="renderSSO()" style="width:13px;height:13px;"> Not Required</label>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="ssoSortToggle()" id="ssoSortBtn">&#8597; Client A&#8211;Z</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddSSOModal()" id="ssoAddBtn">+ Add Client</button>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <table><thead><tr><th style="width:22%">Client Name</th><th style="width:20%">Login Type</th><th style="width:16%">Date of SSO Setup</th><th style="width:14%">Status</th><th>Comments</th><th style="width:9%"></th></tr></thead><tbody id="ssoTableBody"></tbody></table>
+      <div id="ssoEmpty" class="no-comments" style="display:none;">No SSO entries yet.</div>
+    </div>
   </div>
 </div>
 
-<!-- PDF MODAL -->
-<div class="modal-overlay" id="pdfModal">
+<!-- MODALS -->
+<div class="modal-overlay" id="clientModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('clientModal')">&#215;</button>
+    <div class="modal-title" id="clientModalTitle">New Client Integration</div>
+    <div class="form-row">
+      <div class="form-group"><label>Client Name *</label><input type="text" id="fClientName" placeholder="e.g. Geisinger Health"></div>
+      <div class="form-group"><label>CMMS Type *</label><input type="text" id="fCmmsType" placeholder="e.g. Maximo, Infor EAM"></div>
+      <div class="form-group"><label>CRx Consultant(s)</label><input type="text" id="fCrxConsultant" placeholder="Consultant name(s)"></div>
+      <div class="form-group"><label>Client POC</label><input type="text" id="fClientPoc" placeholder="Client contact name"></div>
+      <div class="form-group full"><label>Client POC Email</label><input type="email" id="fClientPocEmail" placeholder="poc@clientcompany.com"></div>
+      <div class="form-group"><label>Overall Status</label><select id="fOverallStatus"><option>Not Started</option><option>Active</option><option>Upcoming</option><option>On Hold</option><option>Completed</option><option>Not Applicable</option></select></div>
+      <div class="form-group"><label>Start Date</label><input type="date" id="fStartDate"></div>
+      <div class="form-group full"><label>Expected Completion Date</label><input type="date" id="fExpectedDate"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('clientModal')">Cancel</button><button class="btn btn-primary" id="clientModalSaveBtn" onclick="saveClient()">Create Client</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay comment-modal" id="commentModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('commentModal')">&#215;</button>
+    <div class="modal-title" id="commentModalTitle">Comments</div>
+    <div class="comment-thread" id="commentThread"></div>
+    <div class="comment-input-row"><input type="text" class="name-in" id="commentAuthor" placeholder="Your name"><textarea id="commentText" placeholder="Add a comment..."></textarea></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('commentModal')">Close</button><button class="btn btn-primary" onclick="saveComment()">Post Comment</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="docModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('docModal')">&#215;</button>
+    <div class="modal-title">Add Client Information</div>
+    <div class="form-group"><label>Information Type</label><select id="fDocType"><option>Document</option><option>Login Credentials</option><option>API Documentation</option><option>Notes</option><option>Additional Documents</option></select></div>
+    <div class="form-group"><label>Document Name</label><input type="text" id="fDocName" placeholder="Document title"></div>
+    <div class="form-group"><label>Document Link (URL)</label><input type="url" id="fDocLink" placeholder="https://..."></div>
+    <div class="form-group"><label>Notes</label><textarea id="fDocNotes" placeholder="Any notes..."></textarea></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('docModal')">Cancel</button><button class="btn btn-primary" onclick="saveDoc()">Save Entry</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay pdf-modal" id="pdfModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('pdfModal')">&#215;</button>
     <div class="modal-title">Export to PDF</div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:10px;">Select clients to include.</p>
-    <div class="pdf-select-all">
-      <button class="btn btn-ghost btn-xs" onclick="pdfSelAll(true)">Select All</button>
-      <button class="btn btn-ghost btn-xs" onclick="pdfSelAll(false)">Deselect All</button>
-    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Select clients to include.</p>
+    <div class="pdf-select-all"><button class="btn btn-ghost btn-xs" onclick="pdfSelectAll(true)">Select All</button><button class="btn btn-ghost btn-xs" onclick="pdfSelectAll(false)">Deselect All</button></div>
     <div class="client-checklist" id="pdfClientList"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('pdfModal')">Cancel</button>
-      <button class="btn btn-accent2 btn-sm" onclick="generatePDF()">&#8595; Generate PDF</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('pdfModal')">Cancel</button><button class="btn btn-accent2" onclick="generateSelectedPDF()">&#8595; Generate PDF</button></div>
   </div>
 </div>
 
-<!-- EXCEL MODAL -->
-<div class="modal-overlay" id="excelModal">
-  <div class="modal" style="width:560px;">
+<div class="modal-overlay excel-modal" id="excelModal">
+  <div class="modal">
     <button class="modal-close" onclick="closeModal('excelModal')">&#215;</button>
     <div class="modal-title">&#8595; Export to Excel</div>
-    <p style="font-size:13px;color:var(--text2);">Each selected client gets its own worksheet.</p>
+    <p style="font-size:13px;color:var(--text2);">Each client gets its own worksheet. Checklist data is included.</p>
     <div class="excel-section-label">Select Clients</div>
-    <div class="pdf-select-all">
-      <button class="btn btn-ghost btn-xs" onclick="xlSelAll('client',true)">Select All</button>
-      <button class="btn btn-ghost btn-xs" onclick="xlSelAll('client',false)">Deselect All</button>
-    </div>
-    <div class="client-checklist" id="xlClientList"></div>
+    <div class="pdf-select-all"><button class="btn btn-ghost btn-xs" onclick="excelSelectAll('client',true)">Select All</button><button class="btn btn-ghost btn-xs" onclick="excelSelectAll('client',false)">Deselect All</button></div>
+    <div class="client-checklist" id="excelClientList"></div>
     <div class="excel-section-label">Filter by Status</div>
-    <div class="pdf-select-all">
-      <button class="btn btn-ghost btn-xs" onclick="xlSelAll('status',true)">Select All</button>
-      <button class="btn btn-ghost btn-xs" onclick="xlSelAll('status',false)">Deselect All</button>
-    </div>
+    <div class="pdf-select-all"><button class="btn btn-ghost btn-xs" onclick="excelSelectAll('status',true)">Select All</button><button class="btn btn-ghost btn-xs" onclick="excelSelectAll('status',false)">Deselect All</button></div>
     <div class="status-filter-grid">
-      <label class="status-filter-item sfi-ns"><input type="checkbox" name="xlStat" value="not-started" checked> Not Started</label>
-      <label class="status-filter-item sfi-ip"><input type="checkbox" name="xlStat" value="in-progress" checked> In Progress</label>
-      <label class="status-filter-item sfi-done"><input type="checkbox" name="xlStat" value="completed" checked> Completed</label>
-      <label class="status-filter-item sfi-pfc"><input type="checkbox" name="xlStat" value="pending-client" checked> Pending From Client</label>
-      <label class="status-filter-item sfi-cbd"><input type="checkbox" name="xlStat" value="cannot-be-done" checked> Cannot Be Done</label>
-      <label class="status-filter-item sfi-nr"><input type="checkbox" name="xlStat" value="not-required" checked> Not Required</label>
+      <label class="status-filter-item sfi-ns"><input type="checkbox" name="excelStatus" value="not-started" checked> Not Started</label>
+      <label class="status-filter-item sfi-ip"><input type="checkbox" name="excelStatus" value="in-progress" checked> In Progress</label>
+      <label class="status-filter-item sfi-done"><input type="checkbox" name="excelStatus" value="completed" checked> Completed</label>
+      <label class="status-filter-item sfi-pfc"><input type="checkbox" name="excelStatus" value="pending-client" checked> Pending From Client</label>
+      <label class="status-filter-item sfi-cbd"><input type="checkbox" name="excelStatus" value="cannot-be-done" checked> Cannot Be Done</label>
+      <label class="status-filter-item sfi-nr"><input type="checkbox" name="excelStatus" value="not-required" checked> Not Required</label>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('excelModal')">Cancel</button>
-      <button class="btn btn-sm" style="background:#00c853;color:#fff;border-color:#00c853;" onclick="generateExcel()">&#8595; Generate Excel</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('excelModal')">Cancel</button><button class="btn btn-sm" style="background:#00c853;color:#fff;border-color:#00c853;" onclick="generateExcel()">&#8595; Generate Excel</button></div>
   </div>
 </div>
 
-<!-- CONFIGURE MODAL -->
-<div class="modal-overlay" id="cfgModal">
-  <div class="modal" style="width:460px;">
-    <button class="modal-close" onclick="closeModal('cfgModal')">&#215;</button>
-    <div class="modal-title">&#9881; Configure Data Source</div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Connect to the GitHub repo where <code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--accent2);">data.json</code> is stored.</p>
-    <div style="margin-bottom:12px;"><label class="form-label">GitHub Username</label><input class="form-input" type="text" id="cfgUser" placeholder="github-username"></div>
-    <div style="margin-bottom:12px;"><label class="form-label">Repository Name</label><input class="form-input" type="text" id="cfgRepo" placeholder="crx-integration-tracker"></div>
-    <div style="margin-bottom:12px;"><label class="form-label">Personal Access Token</label><input class="form-input" type="password" id="cfgToken" placeholder="ghp_xxxxxxxxxxxx"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('cfgModal')">Cancel</button>
-      <button class="btn btn-ghost btn-sm" onclick="clearConfig()">Clear</button>
-      <button class="btn btn-primary btn-sm" onclick="saveAndLoad()">Save &amp; Load</button>
-    </div>
+<div class="modal-overlay" id="githubModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('githubModal')">&#215;</button>
+    <div class="modal-title">&#9881; GitHub Sync Setup</div>
+    <div class="github-info">Data saved as <code>data.json</code> in your repo on every change.<br><br><strong>Token setup:</strong> Go to <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a>, check <code>repo</code> scope, generate and paste below.</div>
+    <div class="form-group"><label>GitHub Username</label><input type="text" id="fGhUser" placeholder="your-github-username"></div>
+    <div class="form-group"><label>Repository Name</label><input type="text" id="fGhRepo" placeholder="crx-integration-tracker"></div>
+    <div class="form-group"><label>Personal Access Token</label><input type="password" id="fGhToken" placeholder="ghp_xxxxxxxxxxxx"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('githubModal')">Cancel</button><button class="btn btn-ghost" onclick="clearGithubConfig()">Clear Config</button><button class="btn btn-primary" onclick="saveGithubConfig()">Save &amp; Test</button></div>
   </div>
 </div>
 
+<div class="modal-overlay" id="ssoModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('ssoModal')">&#215;</button>
+    <div class="modal-title" id="ssoModalTitle">Add SSO Entry</div>
+    <div class="form-group"><label>Client Name *</label><input type="text" id="fSsoClient" placeholder="Client name"></div>
+    <div class="form-group"><label>Login Type</label><select id="fSsoLoginType"><option>Password</option><option>Single Sign On - Microsoft</option><option>Single Sign On - Others</option><option>ADFS</option><option>SAML</option><option>OAuth 2.0</option></select></div>
+    <div class="form-group"><label>Status</label><select id="fSsoStatus"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Not Required</option></select></div>
+    <div class="form-group"><label>Date of SSO Setup</label><input type="date" id="fSsoSetupDate"></div>
+    <div class="form-group"><label>Comments</label><textarea id="fSsoComments" placeholder="Any additional notes..."></textarea></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('ssoModal')">Cancel</button><button class="btn btn-primary" id="ssoModalSaveBtn" onclick="saveSSO()">Save Entry</button></div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-title">Delete Client?</div>
+    <div class="confirm-desc" id="confirmDesc">This will permanently remove the client and all data.</div>
+    <div class="confirm-actions"><button class="btn btn-ghost" onclick="closeModal('confirmOverlay')">Cancel</button><button class="btn btn-danger" onclick="deleteCurrentClient()">Yes, Delete</button></div>
+  </div>
+</div>
 <div class="toast" id="toast"><span id="toastIcon">&#10003;</span><span id="toastMsg"></span></div>
+
 <script>
-// ============================================================
-// CRx Integration Tracker - Viewer (Read Only)
-// Loads data from GitHub, no write access
-// ============================================================
+const VIEWER_MODE = true;
 
-var CFG_KEY = 'crx_viewer_config';
-var FONT_KEY = 'crx_font_size';
-var viewerDB = { clients: [], _sso: [] };
-var currentClientId = null;
-var ssoSortAsc = true;
-var refreshInterval = null;
+const DB_KEY='crx_tracker_v2';
+function loadDB(){try{return JSON.parse(localStorage.getItem(DB_KEY))||{clients:[]};}catch{return{clients:[]};}}
+function saveDB(db){localStorage.setItem(DB_KEY,JSON.stringify(db));syncToGitHub(db);}
 
-// ── CONFIG ──
-function getCfg() {
-  try { return JSON.parse(localStorage.getItem(CFG_KEY)) || null; } catch(e) { return null; }
-}
-function saveCfg(cfg) { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
-function clearConfig() {
-  localStorage.removeItem(CFG_KEY);
-  closeModal('cfgModal');
-  showSetupScreen();
+function defaultChecklist(){
+  return[
+    {id:'stage1',label:'STAGE 1 \u2014 TEST INSTANCE INTEGRATION',phases:[
+      {id:'s1p1',label:'PHASE 1 \u2014 CORE SETUP',steps:[
+        {id:'s1p1s1',label:'Step 1 \u2014 Initial Requirement (2 Days)',items:[
+          {id:'c1',action:'Share Test URL of the CMMS system',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c2',action:'Share User ID and Password for CMMS frontend',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c3',action:'Share User credentials / Token / API Key for CMMS login',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c4',action:'Share API Documentation URL (if available)',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c5',action:'Share Segments information (if applicable)',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c6',action:'CRx gains access to CMMS and verifies APIs being received',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c7',action:'Client provides two copies of Open Work Orders in PDF format',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c8',action:'Client provides two copies of Closed Work Orders in PDF format',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c9',action:'Client provides full list of status codes used in their CMMS',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c10',action:'Client provides list of all fields used in their CMMS',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c11',action:'Client provides Frequency Field for Assets',actionBy:'Client',status:'not-started',comment:''}
+        ]},
+        {id:'s1p1s2',label:'Step 2 \u2014 Organizational Setup (7 Days)',items:[
+          {id:'c12',action:'CRx creates duplicate of client CRx system on test server',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c13',action:'Sync Sites data from client CMMS into duplicate CRx instance',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c14',action:'Sync Buildings data from client CMMS',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c15',action:'Sync Floors data from client CMMS',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c16',action:'Sync Rooms data from client CMMS',actionBy:'CRx',status:'not-started',comment:''}
+        ]},
+        {id:'s1p1s3',label:'Step 3 \u2014 Asset Setup (5\u20137 Days)',items:[
+          {id:'c17',action:'CRx retrieves Asset Types from client CMMS',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c18',action:'CRx retrieves Asset Sub Types from client CMMS',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c19',action:'CRx maps client asset subcategories to CRx categories and shares mapping with client',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c20',action:'Client reviews and approves the asset category mapping',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c21',action:'CRx imports all assets (incl. location, category, subcategory) into CRx',actionBy:'CRx',status:'not-started',comment:''}
+        ]},
+        {id:'s1p1s4',label:'Step 4 \u2014 Work Order Setup (7\u201310 Days)',items:[
+          {id:'c22',action:'Client adds CRx or Compliance as a Type Code for Work Orders requested from CRx',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c23',action:'Client provides the status code CRx will use when requesting Work Orders',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c24',action:'CRx sets up Work Order request creation from CRx into client CMMS',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c25',action:'CRx syncs Work Order Number generated in CMMS back to CRx',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c26',action:'CRx syncs Work Order status and comments in real-time',actionBy:'CRx',status:'not-started',comment:''}
+        ]}
+      ]},
+      {id:'s1p2',label:'PHASE 2 \u2014 ADVANCED SETUP',steps:[
+        {id:'s1p2s5',label:'Step 5 \u2014 PM Work Order Setup (5\u20137 Days)',items:[
+          {id:'c27',action:'CRx retrieves PM Work Orders from client CMMS',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c28',action:'CRx verifies frequency data for assets is received correctly',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c29',action:'CRx confirms all relevant assets are available in CRx',actionBy:'CRx',status:'not-started',comment:''}
+        ]},
+        {id:'s1p2s6',label:'Step 6 \u2014 Automated Asset Reports (7\u201310 Days)',items:[
+          {id:'c30',action:'CRx begins receiving PM Work Orders (prerequisite check)',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c31',action:'Ensure all assets are inspected on EPs (prerequisite for this feature)',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c32',action:'CRx auto-generates asset inspection reports',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c33',action:'CRx uploads reports to relevant Asset-related EPs',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c34',action:'CRx marks EPs as compliant',actionBy:'CRx',status:'not-started',comment:''}
+        ]}
+      ]}
+    ]},
+    {id:'stage2',label:'STAGE 2 \u2014 LIVE INSTANCE INTEGRATION',phases:[
+      {id:'s2p1',label:'PHASE 1 \u2014 CORE SETUP',steps:[
+        {id:'s2p1s1',label:'Step 1 \u2014 Initial Requirement (1\u20132 Days)',items:[
+          {id:'c35',action:'Share Live URL of the CMMS system',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c36',action:'Share User ID and Password for live CMMS frontend',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c37',action:'Share User credentials / Token / API Key for live CMMS login',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c38',action:'Share API Documentation URL for live instance (if available)',actionBy:'Client',status:'not-started',comment:''}
+        ]},
+        {id:'s2p1s2',label:'Step 2 \u2014 Organizational Setup (2\u20133 Days)',items:[
+          {id:'c39',action:'Sync live Sites data from CMMS into CRx',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c40',action:'Sync live Buildings data',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c41',action:'Sync live Floors data',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c42',action:'Sync live Rooms data',actionBy:'CRx',status:'not-started',comment:''}
+        ]},
+        {id:'s2p1s3',label:'Step 3 \u2014 Asset Setup (5 Days)',items:[
+          {id:'c43',action:'CRx retrieves live Asset Types and Sub Types from CMMS',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c44',action:'Client confirms asset mapping for live instance',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c45',action:'CRx imports all live assets with full location and category details',actionBy:'CRx',status:'not-started',comment:''}
+        ]},
+        {id:'s2p1s4',label:'Step 4 \u2014 Work Order Setup (5\u20137 Days)',items:[
+          {id:'c46',action:'Client provides two copies of live Open Work Orders in PDF format',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c47',action:'Client provides two copies of live Closed Work Orders in PDF format',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c48',action:'Client provides updated status codes list for live instance',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c49',action:'Client provides updated fields list for live instance',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c50',action:'Client provides Frequency Field for live Assets',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c51',action:'Client provides status code CRx will use to request live Work Orders',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c52',action:'CRx sets up live Work Order creation, sync, and real-time status updates',actionBy:'CRx',status:'not-started',comment:''}
+        ]}
+      ]},
+      {id:'s2p2',label:'PHASE 2 \u2014 ADVANCED SETUP',steps:[
+        {id:'s2p2s5',label:'Step 5 \u2014 PM Work Order Setup (5\u20137 Days)',items:[
+          {id:'c53',action:'CRx retrieves and syncs live PM Work Orders from CMMS',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c54',action:'CRx verifies frequency and asset availability in live instance',actionBy:'CRx',status:'not-started',comment:''}
+        ]},
+        {id:'s2p2s6',label:'Step 6 \u2014 Automated Asset Reports (5\u20137 Days)',items:[
+          {id:'c55',action:'Ensure all live assets are inspected on EPs',actionBy:'Client',status:'not-started',comment:''},
+          {id:'c56',action:'CRx auto-generates live asset inspection reports and uploads to EPs',actionBy:'CRx',status:'not-started',comment:''},
+          {id:'c57',action:'CRx marks live EPs as compliant',actionBy:'CRx',status:'not-started',comment:''}
+        ]}
+      ]}
+    ]}
+  ];
 }
 
-// ── FONT SIZE ──
-var currentFontSize = parseInt(localStorage.getItem(FONT_KEY) || '16');
-function applyFontSize(size) {
-  currentFontSize = Math.min(22, Math.max(12, size));
-  document.documentElement.style.setProperty('--page-font-size', currentFontSize + 'px');
-  localStorage.setItem(FONT_KEY, String(currentFontSize));
-  var lbl = document.getElementById('fontSizeLabel');
-  if (lbl) lbl.textContent = currentFontSize;
-}
-function adjustFont(delta) { applyFontSize(currentFontSize + delta); }
-
-// ── STORAGE CHECK ──
-function checkStorage() {
-  try { localStorage.setItem('_crx_t', '1'); localStorage.removeItem('_crx_t'); }
-  catch(e) { var b = document.getElementById('storageWarning'); if (b) b.classList.add('visible'); }
-}
-function showEdgeFix() {
-  alert('To fix in Microsoft Edge:\nGo to Settings > Privacy, search, and services > Tracking prevention > select Basic.\nOr: add this site as an exception under Tracking prevention > Exceptions.');
-}
-
-// ── SYNC STATUS ──
-function setSyncStatus(state, label) {
-  var el = document.getElementById('syncStatus');
-  var lbl = document.getElementById('syncLabel');
-  if (!el) return;
-  el.className = 'sync-badge' + (state ? ' ' + state : '');
-  lbl.textContent = label;
-}
-
-// ── SCREENS ──
-function showSetupScreen() {
-  document.getElementById('setupScreen').style.display = 'block';
-  document.getElementById('mainApp').style.display = 'none';
-  setSyncStatus('', 'Not configured');
-}
-function showMainApp() {
-  document.getElementById('setupScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'block';
+function defaultSections(){
+  return[
+    {id:'test_instance',label:'CMMS Test Instance Integration',phases:[
+      {id:'test_p1',label:'Phase 1:',tasks:[
+        {id:'t1',name:'Initial Requirement',status:'not-started',comments:[]},
+        {id:'t2',name:'Organizational Setup',status:'not-started',comments:[]},
+        {id:'t3',name:'Asset Setup',status:'not-started',comments:[]},
+        {id:'t4',name:'Work Order Setup',status:'not-started',comments:[]}
+      ]},
+      {id:'test_p2',label:'Phase 2: Advanced Setup',tasks:[
+        {id:'t5',name:'PM Work Order Setup',status:'not-started',comments:[]},
+        {id:'t6',name:'Automated Asset Reports',status:'not-started',comments:[]}
+      ]}
+    ]},
+    {id:'live_instance',label:'CMMS Live Instance Integration',phases:[
+      {id:'live_p1',label:'Phase 1:',tasks:[
+        {id:'l1',name:'Initial Requirement',status:'not-started',comments:[]},
+        {id:'l2',name:'Organizational Setup',status:'not-started',comments:[]},
+        {id:'l3',name:'Asset Setup',status:'not-started',comments:[]},
+        {id:'l4',name:'Work Order Setup',status:'not-started',comments:[]}
+      ]},
+      {id:'live_p2',label:'Phase 2: Advanced Setup',tasks:[
+        {id:'l5',name:'PM Work Order Setup',status:'not-started',comments:[]},
+        {id:'l6',name:'Automated Asset Reports',status:'not-started',comments:[]}
+      ]}
+    ]}
+  ];
 }
 
-// ── GITHUB LOAD ──
-async function loadData(silent) {
-  var cfg = getCfg();
-  if (!cfg) { showSetupScreen(); return; }
-  if (!silent) setSyncStatus('syncing', 'Loading…');
-  try {
-    var url = 'https://api.github.com/repos/' + cfg.user + '/' + cfg.repo + '/contents/data.json?t=' + Date.now();
-    var res = await fetch(url, {
-      headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (!res.ok) {
-      setSyncStatus('error', 'Load failed');
-      if (!silent) { showToast('Could not load data. Check your config.', 'error'); showSetupScreen(); }
-      return;
-    }
-    var meta = await res.json();
-    var decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
-    viewerDB = JSON.parse(decoded);
-    if (!viewerDB._sso) viewerDB._sso = [];
-    setSyncStatus('synced', 'Live ✓');
-    var rl = document.getElementById('refreshLabel');
-    if (rl) rl.textContent = 'Refreshed ' + new Date().toLocaleTimeString();
-    showMainApp();
-    renderDashboard();
-  } catch(e) {
-    setSyncStatus('error', 'Error');
-    if (!silent) showToast('Failed to load data.', 'error');
-    console.error('Viewer load error:', e);
+// GITHUB
+const GH_KEY='crx_github_config';
+let syncTimeout=null,ghFileSha=null;
+function getGhConfig(){try{return JSON.parse(localStorage.getItem(GH_KEY))||null;}catch{return null;}}
+function openGithubSetup(){const cfg=getGhConfig();if(cfg){document.getElementById('fGhUser').value=cfg.user||'';document.getElementById('fGhRepo').value=cfg.repo||'';document.getElementById('fGhToken').value=cfg.token||'';}openModal('githubModal');}
+function saveGithubConfig(){const user=document.getElementById('fGhUser').value.trim(),repo=document.getElementById('fGhRepo').value.trim(),token=document.getElementById('fGhToken').value.trim();if(!user||!repo||!token){showToast('Please fill in all fields.','error');return;}localStorage.setItem(GH_KEY,JSON.stringify({user,repo,token}));closeModal('githubModal');setSyncStatus('syncing','Testing\u2026');syncToGitHub(loadDB(),true);}
+function clearGithubConfig(){localStorage.removeItem(GH_KEY);setSyncStatus('idle','Not synced');closeModal('githubModal');showToast('GitHub config cleared.','');}
+function setSyncStatus(state,label){const el=document.getElementById('syncStatus'),lbl=document.getElementById('syncLabel');if(!el)return;el.className='sync-status '+state;lbl.textContent=label;}
+async function loadFromGitHub(){const cfg=getGhConfig();if(!cfg)return;setSyncStatus('syncing','Loading data\u2026');try{const url='https://api.github.com/repos/'+cfg.user+'/'+cfg.repo+'/contents/data.json';const res=await fetch(url,{headers:{'Authorization':'token '+cfg.token,'Accept':'application/vnd.github.v3+json'}});if(!res.ok){setSyncStatus('error','Load failed');return;}const meta=await res.json();ghFileSha=meta.sha;const decoded=decodeURIComponent(escape(atob(meta.content.replace(/\n/g,''))));const remoteDB=JSON.parse(decoded);localStorage.setItem(DB_KEY,JSON.stringify(remoteDB));if(remoteDB._sso)localStorage.setItem(SSO_KEY,JSON.stringify(remoteDB._sso));setSyncStatus('synced','Synced \u2713');setTimeout(function(){setSyncStatus('synced','GitHub synced');},2000);renderDashboard();}catch(e){setSyncStatus('error','Load error');}}
+async function syncToGitHub(db,isTest=false){const cfg=getGhConfig();if(!cfg)return;if(syncTimeout)clearTimeout(syncTimeout);syncTimeout=setTimeout(async function(){setSyncStatus('syncing','Syncing\u2026');try{const content=btoa(unescape(encodeURIComponent(JSON.stringify(db,null,2))));const url='https://api.github.com/repos/'+cfg.user+'/'+cfg.repo+'/contents/data.json';const headers={'Authorization':'token '+cfg.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};let sha=ghFileSha;try{const gr=await fetch(url,{headers});if(gr.ok){const ex=await gr.json();sha=ex.sha;ghFileSha=sha;}}catch(e2){}const body={message:'CRx Tracker sync \u2014 '+new Date().toLocaleString(),content};if(sha)body.sha=sha;const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});if(res.ok){const data=await res.json();ghFileSha=(data.content&&data.content.sha)?data.content.sha:sha;setSyncStatus('synced','Synced \u2713');if(isTest)showToast('GitHub sync working!','success');setTimeout(function(){setSyncStatus('synced','GitHub synced');},3000);}else{setSyncStatus('error','Sync failed');if(isTest)showToast('Error: check token/repo.','error');}}catch(e){setSyncStatus('error','Sync error');}},isTest?0:1500);}
+window.addEventListener('load',function(){const cfg=getGhConfig();if(cfg){setSyncStatus('synced','GitHub configured');loadFromGitHub();}});
+
+// STATE
+let currentClientId=null,editingClientId=null,commentContext=null;
+
+// VIEWS
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function showDashboard(){currentClientId=null;renderDashboard();showView('viewDashboard');rebuildHeaderActions();const cfg=getGhConfig();if(cfg)setSyncStatus('synced','GitHub configured');}
+function showDetail(clientId){currentClientId=clientId;renderDetail();showView('viewDetail');}
+function showTaskView(){renderTaskView();showView('viewTasks');}
+
+// DASHBOARD
+function renderDashboard(){
+  const db=loadDB();const grid=document.getElementById('clientGrid');
+  if(!db.clients.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128268;</div><div class="empty-title">No integrations yet</div><div class="empty-desc">Create your first client integration to get started.</div><button class="btn btn-primary" onclick="openAddClientModal()">+ New Client</button></div>';return;}
+  const activeClients=db.clients.filter(c=>c.overallStatus!=='Completed'&&c.overallStatus!=='Not Applicable');
+  const doneClients=db.clients.filter(c=>c.overallStatus==='Completed'||c.overallStatus==='Not Applicable');
+  const statusColors={'Not Started':'var(--ns-text)','Active':'var(--done-text)','Upcoming':'var(--ip-text)','On Hold':'var(--pfc-text)','Completed':'var(--text3)','Not Applicable':'var(--text3)'};
+  function buildCard(c){
+    const stats=computeStats(c);const pct=stats.total?Math.round(stats.completed/stats.total*100):0;
+    const pills=Object.entries(stats.byStatus).filter(([,n])=>n>0).map(([s,n])=>'<span class="pill '+statusClass(s)+'">'+statusLabel(s)+': '+n+'</span>').join('');
+    const upd=(c.updatedAt||c.createdAt)?'Updated '+timeAgo(new Date(c.updatedAt||c.createdAt)):'\u2014';
+    const sc=statusColors[c.overallStatus]||'var(--text2)';
+    const clStats=computeChecklistStats(c);
+    const clBadge=clStats.total>0?'<span style="font-size:10px;color:var(--accent2);background:rgba(0,229,192,0.1);border:1px solid rgba(0,229,192,0.2);border-radius:4px;padding:2px 7px;">\u2705 Checklist '+clStats.completed+'/'+clStats.total+'</span>':'';
+    return '<div class="client-card" onclick="showDetail(\''+c.id+'\')">'
+      +'<div class="card-header"><div class="card-name">'+esc(c.name)+'</div><span class="card-cmms">'+esc(c.cmmsType||'\u2014')+'</span></div>'
+      +'<div class="card-meta"><strong>CRx Consultant:</strong> '+esc(c.crxConsultant||'\u2014')+'<br><strong>Client POC:</strong> '+esc(c.clientPoc||'\u2014')+(c.expectedDate?'<br><strong>Expected:</strong> '+esc(c.expectedDate):'')+'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">'
+      +'<div class="card-last-updated">&#128336; '+esc(upd)+'</div>'
+      +'<span style="font-size:10px;font-weight:600;color:'+sc+';background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">'+esc(c.overallStatus||'Active')+'</span>'
+      +clBadge+'</div>'
+      +'<div class="progress-section"><div class="progress-label"><span>Completion</span><span>'+pct+'%</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div></div>'
+      +'<div class="status-pills">'+pills+'</div>'
+      +'<div class="card-actions" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="showDetail(\''+c.id+'\')">Open \u2192</button>'+(stats.inProgress>0?'<span style="font-size:10px;color:#fff;padding:2px 7px;background:var(--ip);border-radius:4px;">'+stats.inProgress+' In Progress</span>':'')+'</div></div>';
   }
+  let html='';
+  if(activeClients.length)html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">'+activeClients.map(buildCard).join('')+'</div>';
+  if(doneClients.length){html+='<div style="display:flex;align-items:center;gap:12px;margin:28px 0 16px;"><div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;">Completed &amp; Not Applicable</span><div style="flex:1;height:1px;background:var(--border);"></div></div>';html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;opacity:0.75;">'+doneClients.map(buildCard).join('')+'</div>';}
+  grid.innerHTML=html;
 }
 
-function startAutoRefresh() {
-  if (refreshInterval) clearInterval(refreshInterval);
-  refreshInterval = setInterval(function() { loadData(true); }, 3 * 60 * 1000);
+function computeChecklistStats(client){const cl=client.checklist||[];let total=0,completed=0;cl.forEach(function(st){st.phases.forEach(function(ph){ph.steps.forEach(function(step){step.items.forEach(function(it){total++;if(it.status==='completed')completed++;});});});});return{total,completed};}
+function timeAgo(date){const secs=Math.floor((new Date()-date)/1000);if(secs<60)return'just now';if(secs<3600)return Math.floor(secs/60)+'m ago';if(secs<86400)return Math.floor(secs/3600)+'h ago';if(secs<604800)return Math.floor(secs/86400)+'d ago';return date.toLocaleDateString();}
+function computeStats(client){const counts={'not-started':0,'in-progress':0,'completed':0,'pending-client':0,'cannot-be-done':0,'not-required':0};client.sections.forEach(s=>s.phases.forEach(p=>p.tasks.forEach(t=>{if(counts[t.status]!==undefined)counts[t.status]++;})));return{total:Object.values(counts).reduce((a,b)=>a+b,0),completed:counts['completed'],inProgress:counts['in-progress'],byStatus:counts};}
+
+// DETAIL VIEW
+function renderDetail(){
+  const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);if(!c){showDashboard();return;}
+  document.getElementById('breadcrumbName').textContent=c.name;
+  document.getElementById('detailName').textContent=c.name;
+  document.getElementById('detailCmms').textContent=c.cmmsType||'\u2014';
+  document.getElementById('detailCrx').textContent=c.crxConsultant||'\u2014';
+  document.getElementById('detailPoc').textContent=c.clientPoc||'\u2014';
+  document.getElementById('detailPocEmail').textContent=c.clientPocEmail||'\u2014';
+  document.getElementById('detailStatus').textContent=c.overallStatus||'Active';
+  document.getElementById('detailExpected').textContent=c.expectedDate||'\u2014';
+  document.getElementById('detailUpdated').textContent='Updated: '+new Date(c.updatedAt||c.createdAt).toLocaleDateString();
+  renderStats(c);renderSections(c);renderDocs(c);renderNotifications(c);renderGlobalComments(c);renderChecklist(c);
 }
 
-// ── CONFIGURE ──
-function openCfgModal() {
-  var cfg = getCfg();
-  if (cfg) {
-    document.getElementById('cfgUser').value = cfg.user || '';
-    document.getElementById('cfgRepo').value = cfg.repo || '';
-    document.getElementById('cfgToken').value = cfg.token || '';
-  }
-  openModal('cfgModal');
+function renderStats(c){
+  const stats=computeStats(c);
+  const labels={'not-started':['Not Started','var(--ns-text)'],'in-progress':['In Progress','var(--ip-text)'],'completed':['Completed','var(--done-text)'],'pending-client':['Pending Client','var(--pfc-text)'],'cannot-be-done':['Cannot Do','var(--cbd-text)'],'not-required':['Not Required','var(--nr-text)']};
+  document.getElementById('overviewStats').innerHTML=Object.entries(stats.byStatus).map(([s,n])=>{const[label,color]=labels[s];return'<div class="stat-box"><div class="stat-num" style="color:'+color+'">'+n+'</div><div class="stat-label">'+label+'</div></div>';}).join('');
 }
 
-function saveAndLoad() {
-  // Read from whichever inputs are visible (setup screen or configure modal)
-  var userEl = document.getElementById('cfgUser').value.trim() || (document.getElementById('setupUser') ? document.getElementById('setupUser').value.trim() : '');
-  var repoEl = document.getElementById('cfgRepo').value.trim() || (document.getElementById('setupRepo') ? document.getElementById('setupRepo').value.trim() : '');
-  var tokenEl = document.getElementById('cfgToken').value.trim() || (document.getElementById('setupToken') ? document.getElementById('setupToken').value.trim() : '');
-
-  // Also check if modal is open vs setup screen
-  var cfgModalOpen = document.getElementById('cfgModal').classList.contains('open');
-  if (cfgModalOpen) {
-    userEl = document.getElementById('cfgUser').value.trim();
-    repoEl = document.getElementById('cfgRepo').value.trim();
-    tokenEl = document.getElementById('cfgToken').value.trim();
-  } else {
-    userEl = document.getElementById('setupUser') ? document.getElementById('setupUser').value.trim() : '';
-    repoEl = document.getElementById('setupRepo') ? document.getElementById('setupRepo').value.trim() : '';
-    tokenEl = document.getElementById('setupToken') ? document.getElementById('setupToken').value.trim() : '';
-  }
-
-  if (!userEl || !repoEl || !tokenEl) { showToast('Please fill in all fields.', 'error'); return; }
-  saveCfg({ user: userEl, repo: repoEl, token: tokenEl });
-  closeModal('cfgModal');
-  loadData(false);
-  startAutoRefresh();
+function renderSections(c){
+  const cont=document.getElementById('integrationSections');
+  cont.innerHTML=c.sections.map(sec=>'<div class="section-card"><div class="section-title">'+esc(sec.label)+'</div>'+sec.phases.map(ph=>'<div><div style="padding:8px 14px 3px;font-size:11px;color:var(--accent2);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">'+esc(ph.label)+'</div><table><thead><tr><th style="width:26%">Task</th><th style="width:22%">Status</th><th>Comments</th></tr></thead><tbody>'+ph.tasks.map(t=>{const comments=t.comments||[];const cc=comments.length;const latest=cc>0?comments[comments.length-1]:null;const previewHtml=latest?'<div class="comment-preview visible"><span class="comment-preview-author">'+esc(latest.author||'Anon')+':</span>'+esc(latest.text)+'</div>':'';return'<tr><td class="task-name">'+esc(t.name)+'</td><td><select class="status-select '+statusClass(t.status)+'" onchange="updateTaskStatus(\''+sec.id+'\',\''+ph.id+'\',\''+t.id+'\',this.value);updateSelectStyle(this)">'+statusOptions(t.status)+'</select></td><td><div class="comment-cell"><button class="comment-btn" onclick="openCommentModal(\''+sec.id+'\',\''+ph.id+'\',\''+t.id+'\')">&#128172; '+(cc>0?'<span class="comment-count">'+cc+'</span>':'Add comment')+'</button>'+previewHtml+'</div></td></tr>';}).join('')+'</tbody></table></div>').join('')+'</div>').join('');
 }
 
-// ── VIEWS ──
-function showView(id) {
-  document.querySelectorAll('#mainApp .view').forEach(function(v) { v.classList.remove('active'); });
-  var el = document.getElementById(id);
-  if (el) el.classList.add('active');
-}
-function showDashboard() { currentClientId = null; renderDashboard(); showView('viewDashboard'); }
-function showDetail(cid) { currentClientId = cid; renderDetail(); showView('viewDetail'); }
-function showTaskView() { renderTaskView(); showView('viewTasks'); }
-function showSSO() { renderSSOView(); showView('viewSSO'); }
-
-// ── MODULE SWITCH ──
-function toggleModuleMenu() {
-  var m = document.getElementById('moduleMenu');
-  if (m) m.classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-  var dd = document.getElementById('moduleDropdown');
-  if (dd && !dd.contains(e.target)) { var m = document.getElementById('moduleMenu'); if (m) m.classList.remove('open'); }
-});
-function switchModule(mod) {
-  var m = document.getElementById('moduleMenu');
-  if (m) m.classList.remove('open');
-  var items = document.querySelectorAll('.module-menu-item');
-  items.forEach(function(item, i) {
-    item.classList.toggle('active', (mod === 'integration' && i === 0) || (mod === 'sso' && i === 1));
-  });
-  var lbl = document.getElementById('moduleLabel');
-  if (mod === 'integration') { if (lbl) lbl.textContent = 'Integration Tracker'; showDashboard(); }
-  else if (mod === 'sso') { if (lbl) lbl.textContent = 'SSO Tracker'; showSSO(); }
-}
-
-// ── HELPERS ──
-var STATUS_MAP = {
-  'not-started': 'Not Started', 'in-progress': 'In Progress', 'completed': 'Completed',
-  'pending-client': 'Pending From Client', 'cannot-be-done': 'Cannot Be Done', 'not-required': 'Not Required'
-};
-function statusLabel(s) { return STATUS_MAP[s] || s; }
-function statusClass(s) {
-  var m = {'not-started':'s-not-started','in-progress':'s-in-progress','completed':'s-completed',
-    'pending-client':'s-pending-client','cannot-be-done':'s-cannot-be-done','not-required':'s-not-required'};
-  return m[s] || '';
-}
-function esc(str) {
-  if (str == null) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function timeAgo(date) {
-  var s = Math.floor((new Date() - date) / 1000);
-  if (s < 60) return 'just now';
-  if (s < 3600) return Math.floor(s/60) + 'm ago';
-  if (s < 86400) return Math.floor(s/3600) + 'h ago';
-  if (s < 604800) return Math.floor(s/86400) + 'd ago';
-  return date.toLocaleDateString();
-}
-function computeStats(client) {
-  var counts = {'not-started':0,'in-progress':0,'completed':0,'pending-client':0,'cannot-be-done':0,'not-required':0};
-  client.sections.forEach(function(s) { s.phases.forEach(function(p) { p.tasks.forEach(function(t) { if (counts[t.status] !== undefined) counts[t.status]++; }); }); });
-  var total = Object.values(counts).reduce(function(a,b){return a+b;}, 0);
-  return { total: total, completed: counts['completed'], inProgress: counts['in-progress'], byStatus: counts };
-}
-function switchTab(tabId, btn) {
-  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
-  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
-  document.getElementById(tabId).classList.add('active');
-  btn.classList.add('active');
-}
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.addEventListener('click', function(e) {
-  if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
-});
-function showToast(msg, type) {
-  var t = document.getElementById('toast');
-  document.getElementById('toastIcon').textContent = type === 'success' ? '\u2713' : type === 'error' ? '\u2715' : '\u2139';
-  document.getElementById('toastMsg').textContent = msg;
-  t.className = 'toast show' + (type ? ' ' + type : '');
-  setTimeout(function() { t.className = 'toast'; }, 3000);
-}
-
-// ── DASHBOARD ──
-function renderDashboard() {
-  var grid = document.getElementById('clientGrid');
-  var clients = viewerDB.clients || [];
-  if (!clients.length) {
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128268;</div><div class="empty-title">No integrations found</div><div class="empty-desc">Data may still be loading.</div><button class="btn btn-ghost btn-sm" onclick="loadData(false)">&#8635; Refresh</button></div>';
-    return;
-  }
-  var activeClients = clients.filter(function(c) { return c.overallStatus !== 'Completed' && c.overallStatus !== 'Not Applicable'; });
-  var doneClients = clients.filter(function(c) { return c.overallStatus === 'Completed' || c.overallStatus === 'Not Applicable'; });
-  var scMap = {'Not Started':'var(--ns-text)','Active':'var(--done-text)','Upcoming':'var(--ip-text)','On Hold':'var(--pfc-text)','Completed':'var(--text3)','Not Applicable':'var(--text3)'};
-
-  function buildCard(c) {
-    var stats = computeStats(c);
-    var pct = stats.total ? Math.round(stats.completed / stats.total * 100) : 0;
-    var pills = Object.entries(stats.byStatus).filter(function(e){return e[1]>0;}).map(function(e){
-      return '<span class="pill ' + statusClass(e[0]) + '">' + statusLabel(e[0]) + ': ' + e[1] + '</span>';
-    }).join('');
-    var upd = (c.updatedAt || c.createdAt) ? 'Updated ' + timeAgo(new Date(c.updatedAt || c.createdAt)) : '\u2014';
-    var sc = scMap[c.overallStatus] || 'var(--text2)';
-    var cid = c.id;
-    return '<div class="client-card" onclick="showDetail(\'' + cid + '\')">' +
-      '<div class="card-header"><div class="card-name">' + esc(c.name) + '</div><span class="card-cmms">' + esc(c.cmmsType || '\u2014') + '</span></div>' +
-      '<div class="card-meta"><strong>CRx Consultant:</strong> ' + esc(c.crxConsultant || '\u2014') + '<br><strong>Client POC:</strong> ' + esc(c.clientPoc || '\u2014') + (c.expectedDate ? '<br><strong>Expected:</strong> ' + esc(c.expectedDate) : '') + '</div>' +
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div class="card-last-updated">&#128336; ' + esc(upd) + '</div>' +
-      '<span style="font-size:10px;font-weight:600;color:' + sc + ';background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">' + esc(c.overallStatus || 'Active') + '</span></div>' +
-      '<div class="progress-section"><div class="progress-label"><span>Completion</span><span>' + pct + '%</span></div><div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>' +
-      '<div class="status-pills">' + pills + '</div>' +
-      '<div class="card-footer" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="showDetail(\'' + cid + '\')">Open &#8594;</button>' +
-      (stats.inProgress > 0 ? '<span style="font-size:10px;color:#fff;padding:2px 7px;background:var(--ip);border-radius:4px;">' + stats.inProgress + ' In Progress</span>' : '') +
-      '</div></div>';
-  }
-
-  var html = '';
-  if (activeClients.length) html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">' + activeClients.map(buildCard).join('') + '</div>';
-  if (doneClients.length) {
-    html += '<div style="display:flex;align-items:center;gap:12px;margin:28px 0 16px;">' +
-      '<div style="flex:1;height:1px;background:var(--border);"></div>' +
-      '<span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;">Completed &amp; Not Applicable</span>' +
-      '<div style="flex:1;height:1px;background:var(--border);"></div></div>';
-    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;opacity:0.75;">' + doneClients.map(buildCard).join('') + '</div>';
-  }
-  grid.innerHTML = html;
-}
-
-// ── DETAIL ──
-function renderDetail() {
-  var c = (viewerDB.clients || []).find(function(x) { return x.id === currentClientId; });
-  if (!c) { showDashboard(); return; }
-  document.getElementById('breadcrumbName').textContent = c.name;
-  document.getElementById('detailName').textContent = c.name;
-  document.getElementById('detailCmms').textContent = c.cmmsType || '\u2014';
-  document.getElementById('detailCrx').textContent = c.crxConsultant || '\u2014';
-  document.getElementById('detailPoc').textContent = c.clientPoc || '\u2014';
-  document.getElementById('detailPocEmail').textContent = c.clientPocEmail || '\u2014';
-  document.getElementById('detailStatus').textContent = c.overallStatus || 'Active';
-  document.getElementById('detailExpected').textContent = c.expectedDate || '\u2014';
-  document.getElementById('detailUpdated').textContent = 'Updated: ' + new Date(c.updatedAt || c.createdAt).toLocaleDateString();
-  renderStats(c); renderSections(c); renderDocs(c); renderNotifications(c); renderNotes(c);
-}
-
-function renderStats(c) {
-  var labels = {'not-started':['Not Started','var(--ns-text)'],'in-progress':['In Progress','var(--ip-text)'],'completed':['Completed','var(--done-text)'],'pending-client':['Pending Client','var(--pfc-text)'],'cannot-be-done':['Cannot Do','var(--cbd-text)'],'not-required':['Not Required','var(--nr-text)']};
-  var stats = computeStats(c);
-  document.getElementById('overviewStats').innerHTML = Object.entries(stats.byStatus).map(function(e) {
-    var info = labels[e[0]];
-    return '<div class="stat-box"><div class="stat-num" style="color:' + info[1] + '">' + e[1] + '</div><div class="stat-label">' + info[0] + '</div></div>';
-  }).join('');
-}
-
-function renderSections(c) {
-  var cont = document.getElementById('integrationSections');
-  cont.innerHTML = c.sections.map(function(sec) {
-    return '<div class="section-card"><div class="section-title">' + esc(sec.label) + '</div>' +
-      sec.phases.map(function(ph) {
-        return '<div><div style="padding:7px 14px 3px;font-size:10px;color:var(--accent2);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">' + esc(ph.label) + '</div>' +
-          '<table><thead><tr><th style="width:28%">Task</th><th style="width:22%">Status</th><th>Latest Comment</th></tr></thead><tbody>' +
-          ph.tasks.map(function(t) {
-            var comments = t.comments || [];
-            var cc = comments.length;
-            var latest = cc > 0 ? comments[comments.length - 1] : null;
-            var latestHtml = latest ? '<div class="comment-preview-ro"><span style="color:var(--accent);font-weight:600;">' + esc(latest.author || 'Anon') + ':</span> ' + esc(latest.text) + '</div>' : '';
-            var secId = esc(sec.id), phId = esc(ph.id), tId = esc(t.id);
-            return '<tr>' +
-              '<td class="task-name">' + esc(t.name) + '</td>' +
-              '<td><span class="status-badge ' + statusClass(t.status) + '">' + statusLabel(t.status) + '</span></td>' +
-              '<td><div class="comment-cell">' +
-              (cc > 0 ? '<button class="view-cmts-btn" onclick="openCommentView(\'' + secId + '\',\'' + phId + '\',\'' + tId + '\')">&#128172; <span class="cmt-count">' + cc + '</span></button>' : '<span style="font-size:11px;color:var(--text3);">No comments</span>') +
-              latestHtml + '</div></td></tr>';
-          }).join('') + '</tbody></table></div>';
-      }).join('') + '</div>';
-  }).join('');
-}
-
-function openCommentView(secId, phId, taskId) {
-  var c = (viewerDB.clients || []).find(function(x) { return x.id === currentClientId; });
-  if (!c) return;
-  var sec = c.sections.find(function(s) { return s.id === secId; });
-  if (!sec) return;
-  var ph = sec.phases.find(function(p) { return p.id === phId; });
-  if (!ph) return;
-  var task = ph.tasks.find(function(t) { return t.id === taskId; });
-  if (!task) return;
-  document.getElementById('commentViewTitle').textContent = '\uD83D\uDCAC ' + task.name;
-  var thread = document.getElementById('commentViewThread');
-  var comments = task.comments || [];
-  if (!comments.length) {
-    thread.innerHTML = '<div class="no-data">No comments on this task.</div>';
-  } else {
-    thread.innerHTML = comments.map(function(cm) {
-      var taskStyle = cm.isTask ? ' style="border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);"' : '';
-      return '<div class="comment-bubble"' + taskStyle + '>' +
-        '<div class="comment-meta"><span class="comment-author">' + esc(cm.author || 'Anonymous') + '</span><span>' + esc(cm.timestamp || '') + '</span></div>' +
-        '<div class="comment-text">' + esc(cm.text) + '</div></div>';
-    }).join('');
-  }
-  openModal('commentViewModal');
-}
-
-function renderDocs(c) {
-  var docs = c.docs || [];
-  var tbody = document.getElementById('docsTableBody');
-  var empty = document.getElementById('docsEmpty');
-  if (!docs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  tbody.innerHTML = docs.map(function(d) {
-    return '<tr>' +
-      '<td><span class="doc-type-badge">' + esc(d.type || '\u2014') + '</span></td>' +
-      '<td>' + (d.link ? '<a class="doc-link" href="' + esc(d.link) + '" target="_blank">' + esc(d.name || d.link) + '</a>' : esc(d.name || '\u2014')) + '</td>' +
-      '<td class="doc-date">' + esc(d.date || '\u2014') + '</td>' +
-      '<td style="font-size:12px;color:var(--text2);">' + esc(d.notes || '') + '</td></tr>';
-  }).join('');
-}
-
-function renderNotifications(c) {
-  var msgs = document.getElementById('notifMessages');
-  var notifs = c.notifications || [];
-  var extras = [];
-  (c.globalComments || []).filter(function(cm){return cm.isTask;}).forEach(function(cm){extras.push(Object.assign({},cm,{_source:'Client Notes'}));});
-  c.sections.forEach(function(s){s.phases.forEach(function(p){p.tasks.forEach(function(t){(t.comments||[]).filter(function(cm){return cm.isTask;}).forEach(function(cm){extras.push(Object.assign({},cm,{_source:t.name}));});});});});
-  var all = notifs.concat(extras).sort(function(a,b){return(b._ts||0)-(a._ts||0);});
-  if (!all.length) { msgs.innerHTML = '<div class="no-data">No notifications.</div>'; return; }
-  msgs.innerHTML = all.map(function(n) {
-    return '<div class="comment-bubble" style="border-color:rgba(255,176,32,0.3);background:rgba(51,37,0,0.2);">' +
-      '<div class="comment-meta"><span style="color:var(--pfc-text);font-weight:600;">' + esc(n.author||'Anonymous') + (n._source ? ' <span style="color:var(--text3);font-weight:400;">\u00b7 ' + esc(n._source) + '</span>' : '') + '</span><span>' + esc(n.timestamp||'') + '</span></div>' +
-      '<div class="comment-text">' + esc(n.text) + '</div></div>';
-  }).join('');
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function renderNotes(c) {
-  var msgs = document.getElementById('globalChatMessages');
-  var comments = c.globalComments || [];
-  if (!comments.length) { msgs.innerHTML = '<div class="no-data">No notes yet.</div>'; return; }
-  msgs.innerHTML = comments.map(function(cm) {
-    var taskStyle = cm.isTask ? ' style="border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);"' : '';
-    return '<div class="comment-bubble"' + taskStyle + '>' +
-      '<div class="comment-meta"><span class="comment-author">' + esc(cm.author||'Anonymous') + '</span><span>' + esc(cm.timestamp||'') + '</span></div>' +
-      '<div class="comment-text">' + esc(cm.text) + '</div></div>';
-  }).join('');
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-// ── TASK VIEW ──
-function renderTaskView() {
-  var cf = document.getElementById('tvFilterClient');
-  if (!cf) return;
-  var prevVal = cf.value;
-  cf.innerHTML = '<option value="">All Clients</option>' +
-    (viewerDB.clients||[]).map(function(cc){return '<option value="'+cc.id+'">'+esc(cc.name)+'</option>';}).join('');
-  cf.value = prevVal;
-  var filterClient = cf.value;
-  var filterStatus = document.getElementById('tvFilterStatus').value;
-  var filterOverdue = document.getElementById('tvFilterOverdue').value;
-  var today = new Date(); today.setHours(0,0,0,0);
-  var rows = [];
-  (viewerDB.clients||[]).forEach(function(cc) {
-    if (filterClient && cc.id !== filterClient) return;
-    cc.sections.forEach(function(sec){sec.phases.forEach(function(ph){ph.tasks.forEach(function(t){
-      (t.comments||[]).filter(function(cm){return cm.isTask;}).forEach(function(cm){
-        rows.push({clientName:cc.name,clientId:cc.id,task:t.name,source:'Integration',date:cm.timestamp,comment:cm.text,author:cm.author,cmStatus:cm.taskStatus||'not-started',dueDate:cm.dueDate||''});
+// CHECKLIST
+function renderChecklist(c){
+  const cont=document.getElementById('checklistContainer');
+  if(!cont)return;
+  const cl=c.checklist||defaultChecklist();
+  if(!c.checklist){const db=loadDB();const cc=db.clients.find(x=>x.id===currentClientId);if(cc){cc.checklist=cl;saveDB(db);}}
+  let totalAll=0,doneAll=0,ipAll=0,pendAll=0;
+  cl.forEach(function(st){st.phases.forEach(function(ph){ph.steps.forEach(function(step){step.items.forEach(function(it){totalAll++;if(it.status==='completed')doneAll++;else if(it.status==='in-progress')ipAll++;else if(it.status==='pending-client')pendAll++;});});});});
+  const pctAll=totalAll?Math.round(doneAll/totalAll*100):0;
+  let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">'
+    +'<div style="font-family:var(--font-display);font-size:16px;font-weight:800;">\u2705 Integration Checklist</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+    +'<span style="font-size:11px;background:var(--done);color:var(--done-text);border:1px solid rgba(0,212,138,0.3);border-radius:20px;padding:3px 12px;font-weight:700;">'+doneAll+' Done</span>'
+    +'<span style="font-size:11px;background:var(--ip);color:var(--ip-text);border:1px solid rgba(79,159,255,0.3);border-radius:20px;padding:3px 12px;font-weight:700;">'+ipAll+' In Progress</span>'
+    +'<span style="font-size:11px;background:var(--pfc);color:var(--pfc-text);border:1px solid rgba(255,176,32,0.3);border-radius:20px;padding:3px 12px;font-weight:700;">'+pendAll+' Pending Client</span>'
+    +'<span style="font-size:12px;color:var(--accent2);font-weight:800;background:rgba(0,229,192,0.1);border:1px solid rgba(0,229,192,0.25);border-radius:20px;padding:4px 14px;">'+pctAll+'% Complete</span>'
+    +'</div></div>';
+  cl.forEach(function(stage){
+    let stageDone=0,stageTotal=0;
+    stage.phases.forEach(function(ph){ph.steps.forEach(function(step){step.items.forEach(function(it){stageTotal++;if(it.status==='completed')stageDone++;});});});
+    const stagePct=stageTotal?Math.round(stageDone/stageTotal*100):0;
+    html+='<div class="checklist-stage"><div class="checklist-stage-header"><div class="checklist-stage-title">'+esc(stage.label)+'</div><span class="checklist-stage-pct">'+stagePct+'% \u2014 '+stageDone+'/'+stageTotal+' done</span></div>';
+    stage.phases.forEach(function(ph){
+      html+='<div class="checklist-phase"><div class="checklist-phase-header">'+esc(ph.label)+'</div>';
+      ph.steps.forEach(function(step){
+        html+='<div class="checklist-step-header">'+esc(step.label)+'</div>'
+          +'<table class="checklist-table"><thead><tr>'
+          +'<th style="width:45%">Action Item</th>'
+          +'<th style="width:12%">Action By</th>'
+          +'<th style="width:18%">Status</th>'
+          +'<th>Comment</th>'
+          +'</tr></thead><tbody>';
+        step.items.forEach(function(item){
+          const abClass=item.actionBy==='Client'?'ab-client':'ab-crx';
+          const sClass=checklistStatusClass(item.status);
+          html+='<tr>'
+            +'<td style="color:var(--text2);font-size:12px;">'+esc(item.action)+'</td>'
+            +'<td><span class="action-by-badge '+abClass+'">'+esc(item.actionBy)+'</span></td>'
+            +'<td><select class="status-select '+sClass+'" onchange="updateChecklistStatus(\''+stage.id+'\',\''+ph.id+'\',\''+step.id+'\',\''+item.id+'\',this.value,this)">'+checklistStatusOptions(item.status)+'</select></td>'
+            +'<td><input type="text" class="checklist-comment-input" value="'+esc(item.comment||'')+'" placeholder="Add note\u2026" onblur="updateChecklistComment(\''+stage.id+'\',\''+ph.id+'\',\''+step.id+'\',\''+item.id+'\',this.value)"></td>'
+            +'</tr>';
+        });
+        html+='</tbody></table>';
       });
-    });});});
-    (cc.globalComments||[]).filter(function(cm){return cm.isTask;}).forEach(function(cm){
-      rows.push({clientName:cc.name,clientId:cc.id,task:'Client Note',source:'Client Notes',date:cm.timestamp,comment:cm.text,author:cm.author,cmStatus:cm.taskStatus||'not-started',dueDate:cm.dueDate||''});
+      html+='</div>';
     });
+    html+='</div>';
   });
-  var tsLabel = {'not-started':'Not Started','in-progress':'In Progress','completed':'Completed','pending-client':'Pending From Client','shared-dev':'Shared With Dev Team','cannot-be-done':'Cannot Be Done'};
-  var tsColor = {'not-started':'background:var(--ns);color:var(--ns-text);','in-progress':'background:var(--ip);color:var(--ip-text);','completed':'background:var(--done);color:var(--done-text);','pending-client':'background:var(--pfc);color:var(--pfc-text);','shared-dev':'background:#1a1a4a;color:#a0a0ff;','cannot-be-done':'background:var(--cbd);color:var(--cbd-text);'};
-  var filtered = rows.filter(function(r) {
-    if (filterStatus && r.cmStatus !== filterStatus) return false;
-    var dd = r.dueDate ? new Date(r.dueDate) : null; if (dd) dd.setHours(0,0,0,0);
-    var isOverdue = dd && dd < today && r.cmStatus !== 'completed';
-    if (filterOverdue === 'overdue' && !isOverdue) return false;
-    if (filterOverdue === 'incomplete' && r.cmStatus === 'completed') return false;
-    if (filterOverdue === 'no-date' && r.dueDate) return false;
-    return true;
-  });
-  var tbody = document.getElementById('taskViewBody');
-  var empty = document.getElementById('taskViewEmpty');
-  var countEl = document.getElementById('tvCount');
-  if (countEl) countEl.textContent = filtered.length + ' task' + (filtered.length !== 1 ? 's' : '');
-  if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  tbody.innerHTML = filtered.map(function(r) {
-    var dd = r.dueDate ? new Date(r.dueDate) : null; if (dd) dd.setHours(0,0,0,0);
-    var isOverdue = dd && dd < today && r.cmStatus !== 'completed';
-    var dueTxt = r.dueDate
-      ? '<span style="font-size:11px;color:' + (isOverdue?'var(--cbd-text)':'var(--text2)') + ';">' + r.dueDate + '</span>' + (isOverdue ? '<span class="overdue-badge">OVERDUE</span>' : '')
-      : '<span style="font-size:11px;color:var(--text3);">\u2014</span>';
-    var sc = tsColor[r.cmStatus] || tsColor['not-started'];
-    var sl = tsLabel[r.cmStatus] || r.cmStatus;
-    return '<tr>' +
-      '<td><a style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="showDetail(\'' + r.clientId + '\')">' + esc(r.clientName) + '</a></td>' +
-      '<td class="task-name">' + esc(r.task) + '<div style="font-size:10px;color:var(--text3);">' + esc(r.source) + '</div></td>' +
-      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;' + sc + '">' + sl + '</span></td>' +
-      '<td>' + dueTxt + '</td>' +
-      '<td style="font-size:11px;color:var(--text3);">' + esc(r.date) + '</td>' +
-      '<td style="font-size:12px;"><span style="color:var(--accent);font-weight:600;">' + esc(r.author||'Anon') + ':</span> ' + esc(r.comment) + '</td>' +
-      '</tr>';
-  }).join('');
+  cont.innerHTML=html;
 }
 
-// ── SSO VIEW ──
-function ssoSortToggle() {
-  ssoSortAsc = !ssoSortAsc;
-  var btn = document.getElementById('ssoSortBtn');
-  if (btn) btn.textContent = ssoSortAsc ? '\u21C5 Client A\u2013Z' : '\u21C5 Client Z\u2013A';
-  renderSSOView();
-}
-function renderSSOView() {
-  var tb = document.getElementById('ssoTableBody');
-  var em = document.getElementById('ssoEmpty');
-  if (!tb) return;
-  var sso = viewerDB._sso || [];
-  if (!sso.length) { tb.innerHTML = ''; em.style.display = 'block'; return; }
-  em.style.display = 'none';
-  var nsEl = document.getElementById('ssoFilterNS');
-  var ipEl = document.getElementById('ssoFilterIP');
-  var doneEl = document.getElementById('ssoFilterDone');
-  var nrEl = document.getElementById('ssoFilterNR');
-  var allChecked = !nsEl || (nsEl.checked && ipEl.checked && doneEl.checked && nrEl.checked);
-  var filters = allChecked ? null : [];
-  if (!allChecked) {
-    if (nsEl && nsEl.checked) filters.push('Not Started');
-    if (ipEl && ipEl.checked) filters.push('In Progress');
-    if (doneEl && doneEl.checked) filters.push('Completed');
-    if (nrEl && nrEl.checked) filters.push('Not Required');
-  }
-  var entries = sso.slice().sort(function(a,b){return ssoSortAsc ? a.clientName.localeCompare(b.clientName) : b.clientName.localeCompare(a.clientName);});
-  if (filters) entries = entries.filter(function(e){return filters.indexOf(e.ssoStatus||'Not Started')>-1;});
-  var ss = {'Not Started':'background:var(--ns);color:var(--ns-text);','In Progress':'background:var(--ip);color:var(--ip-text);','Completed':'background:var(--done);color:var(--done-text);','Not Required':'background:var(--nr);color:var(--nr-text);'};
-  tb.innerHTML = entries.map(function(e) {
-    var s = ss[e.ssoStatus||'Not Started'] || ss['Not Started'];
-    return '<tr>' +
-      '<td style="font-weight:600;">' + esc(e.clientName) + '</td>' +
-      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--surface3);color:var(--text);">' + esc(e.loginType||'\u2014') + '</span></td>' +
-      '<td style="font-size:12px;color:var(--text3);">' + esc(e.setupDate||'\u2014') + '</td>' +
-      '<td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;' + s + '">' + esc(e.ssoStatus||'Not Started') + '</span></td>' +
-      '<td style="font-size:12px;color:var(--text2);">' + esc(e.comments||'\u2014') + '</td></tr>';
-  }).join('');
+function checklistStatusClass(s){return{'not-started':'s-not-started','in-progress':'s-in-progress','completed':'s-completed','pending-client':'s-pending-client','cannot-be-done':'s-cannot-be-done','not-required':'s-not-required'}[s]||'s-not-started';}
+function checklistStatusOptions(cur){const opts=[['not-started','Not Started'],['in-progress','In Progress'],['completed','Completed'],['pending-client','Pending From Client'],['cannot-be-done','Cannot Be Done'],['not-required','Not Required']];return opts.map(function(o){return'<option value="'+o[0]+'"'+(cur===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('');}
+
+function updateChecklistStatus(stageId,phaseId,stepId,itemId,newStatus,selEl){
+  selEl.className='status-select '+checklistStatusClass(newStatus);
+  const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);if(!c||!c.checklist)return;
+  const stage=c.checklist.find(s=>s.id===stageId);if(!stage)return;
+  const ph=stage.phases.find(p=>p.id===phaseId);if(!ph)return;
+  const step=ph.steps.find(s=>s.id===stepId);if(!step)return;
+  const item=step.items.find(i=>i.id===itemId);if(!item)return;
+  item.status=newStatus;c.updatedAt=new Date().toISOString();saveDB(db);
+  document.getElementById('detailUpdated').textContent='Updated: '+new Date(c.updatedAt).toLocaleDateString();
 }
 
-// ── PDF ──
-function openPdfModal(mode) {
-  var currentOnly = mode === 'current';
-  document.getElementById('pdfClientList').innerHTML = (viewerDB.clients||[]).map(function(c) {
-    return '<label class="client-check-item"><input type="checkbox" name="pdfClient" value="'+c.id+'" '+((!currentOnly||c.id===currentClientId)?'checked':'')+'>'+
-      '<div><div class="client-check-name">'+esc(c.name)+'</div><div class="client-check-meta">'+esc(c.cmmsType||'\u2014')+' \u00b7 '+esc(c.overallStatus||'Active')+'</div></div></label>';
-  }).join('');
-  openModal('pdfModal');
+function updateChecklistComment(stageId,phaseId,stepId,itemId,value){
+  const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);if(!c||!c.checklist)return;
+  const stage=c.checklist.find(s=>s.id===stageId);if(!stage)return;
+  const ph=stage.phases.find(p=>p.id===phaseId);if(!ph)return;
+  const step=ph.steps.find(s=>s.id===stepId);if(!step)return;
+  const item=step.items.find(i=>i.id===itemId);if(!item)return;
+  if(item.comment===value)return;
+  item.comment=value;c.updatedAt=new Date().toISOString();saveDB(db);
 }
-function pdfSelAll(val) { document.querySelectorAll('#pdfClientList input[type=checkbox]').forEach(function(cb){cb.checked=val;}); }
-function generatePDF() {
-  var selected = Array.from(document.querySelectorAll('#pdfClientList input[type=checkbox]:checked')).map(function(cb){return cb.value;});
-  if (!selected.length) { showToast('Select at least one client.','error'); return; }
-  closeModal('pdfModal');
-  buildPDF((viewerDB.clients||[]).filter(function(c){return selected.indexOf(c.id)>-1;}));
+
+// STATUS HELPERS
+const STATUS_MAP={'not-started':'Not Started','in-progress':'In Progress','completed':'Completed','pending-client':'Pending From Client','cannot-be-done':'Cannot Be Done','not-required':'Not Required'};
+function statusLabel(s){return STATUS_MAP[s]||s;}
+function statusClass(s){return{'not-started':'s-not-started','in-progress':'s-in-progress','completed':'s-completed','pending-client':'s-pending-client','cannot-be-done':'s-cannot-be-done','not-required':'s-not-required'}[s]||'';}
+function statusOptions(cur){return Object.entries(STATUS_MAP).map(([v,l])=>'<option value="'+v+'" '+(cur===v?'selected':'')+'>'+l+'</option>').join('');}
+function updateSelectStyle(sel){sel.className='status-select '+statusClass(sel.value);}
+
+// CLIENT ACTIONS
+function updateTaskStatus(secId,phId,taskId,newStatus){const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);c.sections.find(s=>s.id===secId).phases.find(p=>p.id===phId).tasks.find(t=>t.id===taskId).status=newStatus;c.updatedAt=new Date().toISOString();saveDB(db);renderStats(c);document.getElementById('detailUpdated').textContent='Updated: '+new Date(c.updatedAt).toLocaleDateString();}
+function openAddClientModal(){editingClientId=null;document.getElementById('clientModalTitle').textContent='New Client Integration';document.getElementById('clientModalSaveBtn').textContent='Create Client';['fClientName','fCmmsType','fCrxConsultant','fClientPoc','fClientPocEmail','fStartDate','fExpectedDate'].forEach(id=>document.getElementById(id).value='');document.getElementById('fOverallStatus').value='Not Started';openModal('clientModal');}
+function openEditClientModal(){const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);editingClientId=currentClientId;document.getElementById('clientModalTitle').textContent='Edit Client';document.getElementById('clientModalSaveBtn').textContent='Save Changes';document.getElementById('fClientName').value=c.name;document.getElementById('fCmmsType').value=c.cmmsType||'';document.getElementById('fCrxConsultant').value=c.crxConsultant||'';document.getElementById('fClientPoc').value=c.clientPoc||'';document.getElementById('fOverallStatus').value=c.overallStatus||'Active';document.getElementById('fStartDate').value=c.startDate||'';document.getElementById('fExpectedDate').value=c.expectedDate||'';document.getElementById('fClientPocEmail').value=c.clientPocEmail||'';openModal('clientModal');}
+function saveClient(){
+  const name=document.getElementById('fClientName').value.trim();
+  if(!name){showToast('Client name is required.','error');return;}
+  const db=loadDB();
+  const fields={name,cmmsType:document.getElementById('fCmmsType').value.trim(),crxConsultant:document.getElementById('fCrxConsultant').value.trim(),clientPoc:document.getElementById('fClientPoc').value.trim(),clientPocEmail:document.getElementById('fClientPocEmail').value.trim(),overallStatus:document.getElementById('fOverallStatus').value||'Not Started',startDate:document.getElementById('fStartDate').value,expectedDate:document.getElementById('fExpectedDate').value};
+  if(editingClientId){const c=db.clients.find(x=>x.id===editingClientId);Object.assign(c,fields,{updatedAt:new Date().toISOString()});}
+  else{db.clients.push({id:'c_'+Date.now(),...fields,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),sections:defaultSections(),checklist:defaultChecklist(),docs:[],globalComments:[],notifications:[]});}
+  saveDB(db);closeModal('clientModal');if(editingClientId&&currentClientId===editingClientId)renderDetail();renderDashboard();showToast(editingClientId?'Client updated.':'Client created!','success');
 }
-function buildPDF(clients) {
-  var jsPDF_ = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
-  if (!jsPDF_) { showToast('PDF library not loaded.','error'); return; }
-  var doc = new jsPDF_({orientation:'landscape',unit:'mm',format:'a4'});
-  var pageW=297,pageH=210,margin=18;
-  clients.forEach(function(c,ci) {
-    if (ci>0) doc.addPage();
-    var y=margin;
-    doc.setFillColor(15,24,32); doc.rect(0,0,pageW,14,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(79,124,255);
-    doc.text('CRx Integration Tracker',margin,9);
-    doc.setTextColor(136,146,176); doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    doc.text('Generated: '+new Date().toLocaleString(),pageW-margin,9,{align:'right'});
-    y=22; doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(30,30,30);
-    doc.text(c.name,margin,y); y+=7;
-    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
-    doc.text(['CMMS: '+(c.cmmsType||'\u2014'),'CRx: '+(c.crxConsultant||'\u2014'),'POC: '+(c.clientPoc||'\u2014'),'Status: '+(c.overallStatus||'Active')].join('   |   '),margin,y);
-    y+=4; doc.setDrawColor(200); doc.line(margin,y,pageW-margin,y); y+=6;
-    c.sections.forEach(function(sec) {
-      if (y>pageH-20){doc.addPage();y=22;}
-      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(0,180,150);
-      doc.text(sec.label,margin,y); y+=6;
-      sec.phases.forEach(function(ph) {
-        if (y>pageH-16){doc.addPage();y=22;}
-        doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(80,100,180);
-        doc.text(ph.label,margin+4,y); y+=5;
-        ph.tasks.forEach(function(t) {
-          if (y>pageH-10){doc.addPage();y=22;}
-          var sColors={'not-started':[58,63,92],'in-progress':[15,45,94],'completed':[10,46,32],'pending-client':[51,37,0],'cannot-be-done':[46,16,16],'not-required':[22,22,58]};
-          var rgb=sColors[t.status]||[240,240,240];
-          doc.setFillColor(rgb[0],rgb[1],rgb[2]); doc.rect(margin+8,y-3.5,pageW-margin*2-8,6,'F');
-          doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(220);
-          doc.text('\u2022 '+t.name,margin+10,y);
-          doc.setFont('helvetica','bold'); doc.text(statusLabel(t.status),175,y);
-          var latest=t.comments&&t.comments.length?t.comments[t.comments.length-1]:null;
-          if (latest){doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(160);doc.text((latest.author||'')+': '+latest.text.substring(0,55)+(latest.text.length>55?'\u2026':''),215,y);}
-          y+=6.5;
-        }); y+=2;
-      }); y+=3;
-    });
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(160);
-    doc.text('Page '+(ci+1)+' of '+clients.length,pageW/2,pageH-5,{align:'center'});
+
+// COMMENTS
+function openCommentModal(secId,phId,taskId){commentContext={secId,phId,taskId};const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);let taskName='Comments';if(c){const sec=c.sections.find(s=>s.id===secId);if(sec){const ph=sec.phases.find(p=>p.id===phId);if(ph){const t=ph.tasks.find(t=>t.id===taskId);if(t)taskName='\ud83d\udcac '+t.name;}}}document.getElementById('commentModalTitle').textContent=taskName;document.getElementById('commentText').value='';renderCommentThread();openModal('commentModal');}
+function renderCommentThread(){const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);const{secId,phId,taskId}=commentContext;const task=c.sections.find(s=>s.id===secId).phases.find(p=>p.id===phId).tasks.find(t=>t.id===taskId);const thread=document.getElementById('commentThread');if(!task.comments||!task.comments.length){thread.innerHTML='<div class="no-comments">No comments yet.</div>';return;}thread.innerHTML=task.comments.map(cm=>'<div class="comment-bubble"><div class="comment-meta"><span class="comment-author">'+esc(cm.author||'Anonymous')+'</span><span>'+esc(cm.timestamp)+'</span></div><div class="comment-text">'+esc(cm.text)+'</div></div>').join('');thread.scrollTop=thread.scrollHeight;}
+function saveComment(){const text=document.getElementById('commentText').value.trim();if(!text)return;const author=document.getElementById('commentAuthor').value.trim()||'Anonymous';const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);const{secId,phId,taskId}=commentContext;const task=c.sections.find(s=>s.id===secId).phases.find(p=>p.id===phId).tasks.find(t=>t.id===taskId);if(!task.comments)task.comments=[];task.comments.push({author,text,timestamp:fmtTime(),isTask:false});c.updatedAt=new Date().toISOString();saveDB(db);document.getElementById('commentText').value='';renderCommentThread();renderSections(c);}
+
+// GLOBAL NOTES
+function addGlobalComment(){const text=document.getElementById('globalComment').value.trim();if(!text)return;const author=document.getElementById('globalAuthor').value.trim()||'Anonymous';const isTask=document.getElementById('globalIsTask')?document.getElementById('globalIsTask').checked:false;const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);if(!c.globalComments)c.globalComments=[];c.globalComments.push({author,text,timestamp:fmtTime(),isTask,_ts:Date.now()});c.updatedAt=new Date().toISOString();saveDB(db);document.getElementById('globalComment').value='';if(document.getElementById('globalIsTask'))document.getElementById('globalIsTask').checked=false;renderGlobalComments(c);}
+function renderGlobalComments(c){const msgs=document.getElementById('globalChatMessages');const comments=c.globalComments||[];if(!comments.length){msgs.innerHTML='<div class="no-comments">No notes yet.</div>';return;}msgs.innerHTML=comments.map(cm=>'<div class="comment-bubble" style="'+(cm.isTask?'border-color:rgba(255,176,32,0.4);background:rgba(51,37,0,0.25);':'')+'"><div class="comment-meta"><span class="comment-author">'+esc(cm.author||'Anonymous')+'</span><span>'+esc(cm.timestamp)+(cm.isTask?' <span style="font-size:9px;background:#ff9800;color:#fff;padding:1px 5px;border-radius:3px;margin-left:4px;">TASK</span>':'')+'</span></div><div class="comment-text">'+esc(cm.text)+'</div></div>').join('');msgs.scrollTop=msgs.scrollHeight;}
+
+// NOTIFICATIONS
+function addNotification(){const text=document.getElementById('notifText').value.trim();if(!text)return;const author=document.getElementById('notifAuthor').value.trim()||'Anonymous';const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);if(!c.notifications)c.notifications=[];c.notifications.push({author,text,timestamp:fmtTime(),_ts:Date.now()});c.updatedAt=new Date().toISOString();saveDB(db);document.getElementById('notifText').value='';renderNotifications(c);}
+function renderNotifications(c){const msgs=document.getElementById('notifMessages');if(!msgs)return;const notifs=c.notifications||[];const extras=[];(c.globalComments||[]).filter(cm=>cm.isTask).forEach(cm=>extras.push({...cm,_source:'Client Notes'}));c.sections.forEach(s=>s.phases.forEach(p=>p.tasks.forEach(t=>(t.comments||[]).filter(cm=>cm.isTask).forEach(cm=>extras.push({...cm,_source:t.name})))));const all=[...notifs,...extras].sort((a,b)=>(b._ts||0)-(a._ts||0));if(!all.length){msgs.innerHTML='<div class="no-comments">No notifications yet.</div>';return;}msgs.innerHTML=all.map(n=>'<div class="comment-bubble" style="border-color:rgba(255,176,32,0.3);background:rgba(51,37,0,0.2);"><div class="comment-meta"><span style="color:var(--pfc-text);font-weight:600;">'+esc(n.author||'Anonymous')+(n._source?' <span style="color:var(--text3);font-weight:400;">\u00b7 '+esc(n._source)+'</span>':'')+'</span><span>'+esc(n.timestamp||'')+'</span></div><div class="comment-text">'+esc(n.text)+'</div></div>').join('');msgs.scrollTop=msgs.scrollHeight;}
+
+// DOCS
+function openAddDocModal(){openModal('docModal');['fDocType','fDocName','fDocLink','fDocNotes'].forEach(id=>document.getElementById(id).value='');}
+function saveDoc(){const name=document.getElementById('fDocName').value.trim();if(!name){showToast('Document name is required.','error');return;}const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);if(!c.docs)c.docs=[];c.docs.push({type:document.getElementById('fDocType').value.trim(),name,link:document.getElementById('fDocLink').value.trim(),notes:document.getElementById('fDocNotes').value.trim(),date:new Date().toLocaleDateString()});c.updatedAt=new Date().toISOString();saveDB(db);closeModal('docModal');renderDocs(c);}
+function deleteDoc(idx){const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);c.docs.splice(idx,1);c.updatedAt=new Date().toISOString();saveDB(db);renderDocs(c);}
+function renderDocs(c){const docs=c.docs||[];const tbody=document.getElementById('docsTableBody');const empty=document.getElementById('docsEmpty');if(!docs.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';tbody.innerHTML=docs.map((d,i)=>'<tr><td><span class="doc-type-badge">'+esc(d.type||'\u2014')+'</span></td><td>'+(d.link?'<a class="doc-link" href="'+esc(d.link)+'" target="_blank">'+esc(d.name||d.link)+'</a>':esc(d.name||'\u2014'))+'</td><td class="doc-date">'+esc(d.date||'\u2014')+'</td><td style="font-size:12px;color:var(--text2)">'+esc(d.notes||'')+'</td><td><button class="btn btn-danger btn-xs" onclick="deleteDoc('+i+')">\u2715</button></td></tr>').join('');}
+
+// DELETE CLIENT
+function confirmDeleteClient(){openModal('confirmOverlay');document.getElementById('confirmDesc').textContent='Delete "'+loadDB().clients.find(x=>x.id===currentClientId)?.name+'"? This cannot be undone.';}
+function deleteCurrentClient(){const db=loadDB();db.clients=db.clients.filter(x=>x.id!==currentClientId);saveDB(db);closeModal('confirmOverlay');showDashboard();}
+
+// TASK VIEW
+function renderTaskView(){
+  const db=loadDB();const cf=document.getElementById('tvFilterClient');if(!cf)return;
+  const prevVal=cf.value;cf.innerHTML='<option value="">All Clients</option>'+db.clients.map(function(cc){return'<option value="'+cc.id+'">'+esc(cc.name)+'</option>';}).join('');cf.value=prevVal;
+  const filterClient=cf.value,filterStatus=document.getElementById('tvFilterStatus').value,filterOverdue=document.getElementById('tvFilterOverdue').value;
+  const today=new Date();today.setHours(0,0,0,0);const rows=[];
+  db.clients.forEach(function(cc){
+    if(filterClient&&cc.id!==filterClient)return;
+    cc.sections.forEach(function(sec){sec.phases.forEach(function(ph){ph.tasks.forEach(function(t){(t.comments||[]).filter(function(cm){return cm.isTask;}).forEach(function(cm){rows.push({clientName:cc.name,clientId:cc.id,task:t.name,source:'Integration',date:cm.timestamp,comment:cm.text,author:cm.author,taskId:cc.id+'|'+sec.id+'|'+ph.id+'|'+t.id+'|'+cm.timestamp,cmStatus:cm.taskStatus||'not-started',dueDate:cm.dueDate||''});});});});});
+    (cc.globalComments||[]).filter(function(cm){return cm.isTask;}).forEach(function(cm){rows.push({clientName:cc.name,clientId:cc.id,task:'Client Note',source:'Client Notes',date:cm.timestamp,comment:cm.text,author:cm.author,taskId:cc.id+'|global|'+cm.timestamp,cmStatus:cm.taskStatus||'not-started',dueDate:cm.dueDate||''});});
   });
-  doc.save(clients.length===1?clients[0].name.replace(/\s+/g,'_')+'_integration.pdf':'CRx_Integration_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.pdf');
-  showToast('PDF exported ('+clients.length+' client'+(clients.length>1?'s':'')+').','success');
-}
-
-// ── EXCEL ──
-function openExcelModal(mode) {
-  var currentOnly = mode === 'current';
-  document.getElementById('xlClientList').innerHTML = (viewerDB.clients||[]).map(function(c) {
-    return '<label class="client-check-item"><input type="checkbox" name="xlClient" value="'+c.id+'" '+((!currentOnly||c.id===currentClientId)?'checked':'')+'>'+
-      '<div><div class="client-check-name">'+esc(c.name)+'</div><div class="client-check-meta">'+esc(c.cmmsType||'\u2014')+' \u00b7 '+esc(c.overallStatus||'Active')+'</div></div></label>';
+  const filtered=rows.filter(function(r){if(filterStatus&&r.cmStatus!==filterStatus)return false;const dueDate=r.dueDate?new Date(r.dueDate):null;if(dueDate)dueDate.setHours(0,0,0,0);const isOverdue=dueDate&&dueDate<today&&r.cmStatus!=='completed';if(filterOverdue==='overdue'&&!isOverdue)return false;if(filterOverdue==='incomplete'&&r.cmStatus==='completed')return false;if(filterOverdue==='no-date'&&r.dueDate)return false;return true;});
+  const tbody=document.getElementById('taskViewBody'),empty=document.getElementById('taskViewEmpty'),countEl=document.getElementById('tvCount');
+  if(countEl)countEl.textContent=filtered.length+' task'+(filtered.length!==1?'s':'');
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';
+  const taskStatusOptions=[['not-started','Not Started'],['in-progress','In Progress'],['completed','Completed'],['pending-client','Pending From Client'],['cannot-be-done','Cannot Be Done']];
+  tbody.innerHTML=filtered.map(function(r){
+    const dueDate=r.dueDate?new Date(r.dueDate):null;if(dueDate)dueDate.setHours(0,0,0,0);
+    const isOverdue=dueDate&&dueDate<today&&r.cmStatus!=='completed';
+    const overdueBadge=isOverdue?'<span style="font-size:9px;background:var(--cbd);color:var(--cbd-text);padding:1px 5px;border-radius:3px;margin-left:4px;">OVERDUE</span>':'';
+    const tsClass={'not-started':'s-not-started','in-progress':'s-in-progress','completed':'s-completed','pending-client':'s-pending-client','cannot-be-done':'s-cannot-be-done'}[r.cmStatus]||'s-not-started';
+    const statusOpts=taskStatusOptions.map(function(o){return'<option value="'+o[0]+'"'+(r.cmStatus===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('');
+    const safeId=r.taskId.replace(/'/g,'_');
+    return'<tr><td><a style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="showDetail(\''+r.clientId+'\')">'+esc(r.clientName)+'</a></td><td class="task-name">'+esc(r.task)+'<div style="font-size:10px;color:var(--text3);">'+esc(r.source)+'</div></td><td><select class="status-select '+tsClass+'" onchange="updateCmTaskStatus(\''+safeId+'\',this.value,this)">'+statusOpts+'</select></td><td><input type="date" value="'+esc(r.dueDate)+'" onchange="updateCmDueDate(\''+safeId+'\',this.value)" style="font-size:11px;padding:4px 6px;'+(isOverdue?'border-color:var(--cbd-text);color:var(--cbd-text);':'')+'">'+overdueBadge+'</td><td style="font-size:11px;color:var(--text3);">'+esc(r.date)+'</td><td style="font-size:12px;"><span style="color:var(--accent);font-weight:600;">'+esc(r.author||'Anon')+':</span> '+esc(r.comment)+'</td></tr>';
   }).join('');
-  document.querySelectorAll('#excelModal input[name=xlStat]').forEach(function(cb){cb.checked=true;});
-  openModal('excelModal');
 }
-function xlSelAll(type,val) { document.querySelectorAll('#excelModal input[name='+(type==='client'?'xlClient':'xlStat')+']').forEach(function(cb){cb.checked=val;}); }
-function generateExcel() {
-  var selected = Array.from(document.querySelectorAll('#excelModal input[name=xlClient]:checked')).map(function(cb){return cb.value;});
-  var statuses = Array.from(document.querySelectorAll('#excelModal input[name=xlStat]:checked')).map(function(cb){return cb.value;});
-  if (!selected.length){showToast('Select at least one client.','error');return;}
-  if (!statuses.length){showToast('Select at least one status.','error');return;}
-  var clients = (viewerDB.clients||[]).filter(function(c){return selected.indexOf(c.id)>-1;});
+function updateCmTaskStatus(taskId,newStatus,selEl){selEl.className='status-select '+({'not-started':'s-not-started','in-progress':'s-in-progress','completed':'s-completed','pending-client':'s-pending-client','cannot-be-done':'s-cannot-be-done'}[newStatus]||'s-not-started');saveCmField(taskId,'taskStatus',newStatus);}
+function updateCmDueDate(taskId,newDate){saveCmField(taskId,'dueDate',newDate);}
+function saveCmField(taskId,field,value){const db=loadDB();const parts=taskId.split('|');const clientId=parts[0];const cc=db.clients.find(function(x){return x.id===clientId;});if(!cc)return;if(parts[1]==='global'){const ts=parts[2];const cm=(cc.globalComments||[]).find(function(x){return x.timestamp===ts||(x.timestamp||'').replace(/'/g,'_')===ts;});if(cm)cm[field]=value;}else{const secId=parts[1],phId=parts[2],tId=parts[3],ts=parts[4];const sec=(cc.sections||[]).find(function(s){return s.id===secId;});if(!sec)return;const ph=(sec.phases||[]).find(function(p){return p.id===phId;});if(!ph)return;const t=(ph.tasks||[]).find(function(t){return t.id===tId;});if(!t)return;const cm=(t.comments||[]).find(function(x){return x.timestamp===ts||(x.timestamp||'').replace(/'/g,'_')===ts;});if(cm)cm[field]=value;}cc.updatedAt=new Date().toISOString();saveDB(db);}
+
+// PDF EXPORT
+function openPdfModal(mode){const db=loadDB();const currentOnly=mode==='current';const list=document.getElementById('pdfClientList');list.innerHTML=db.clients.map(c=>'<label class="client-check-item"><input type="checkbox" name="pdfClient" value="'+c.id+'" '+(!currentOnly||c.id===currentClientId?'checked':'')+'>  <div><div class="client-check-name">'+esc(c.name)+'</div><div class="client-check-meta">'+esc(c.cmmsType||'\u2014')+' \u00b7 '+esc(c.overallStatus||'Active')+'</div></div></label>').join('');openModal('pdfModal');}
+function pdfSelectAll(val){document.querySelectorAll('#pdfClientList input[type=checkbox]').forEach(cb=>cb.checked=val);}
+function generateSelectedPDF(){const db=loadDB();const selected=[...document.querySelectorAll('#pdfClientList input[type=checkbox]:checked')].map(cb=>cb.value);if(!selected.length){showToast('Select at least one client.','error');return;}const clients=db.clients.filter(c=>selected.includes(c.id));closeModal('pdfModal');buildPDF(clients);}
+function buildPDF(clients){const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});const pageW=297,pageH=210,margin=18;clients.forEach((c,ci)=>{if(ci>0)doc.addPage();let y=margin;doc.setFillColor(15,24,32);doc.rect(0,0,pageW,14,'F');doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(79,124,255);doc.text('CRx Integration Tracker',margin,9);doc.setTextColor(136,146,176);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text('Generated: '+new Date().toLocaleString(),pageW-margin,9,{align:'right'});y=22;doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(30,30,30);doc.text(c.name,margin,y);y+=7;doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(100);const metaParts=['CMMS: '+(c.cmmsType||'\u2014'),'CRx: '+(c.crxConsultant||'\u2014'),'Client POC: '+(c.clientPoc||'\u2014'),'Status: '+(c.overallStatus||'Active'),c.expectedDate?'Expected: '+c.expectedDate:''].filter(Boolean);doc.text(metaParts.join('   |   '),margin,y);y+=4;doc.setDrawColor(200);doc.line(margin,y,pageW-margin,y);y+=6;c.sections.forEach(sec=>{if(y>pageH-20){doc.addPage();y=22;}doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(0,180,150);doc.text(sec.label,margin,y);y+=6;sec.phases.forEach(ph=>{if(y>pageH-16){doc.addPage();y=22;}doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(80,100,180);doc.text(ph.label,margin+4,y);y+=5;ph.tasks.forEach(t=>{if(y>pageH-10){doc.addPage();y=22;}const statusColors={'not-started':[58,63,92],'in-progress':[15,45,94],'completed':[10,46,32],'pending-client':[51,37,0],'cannot-be-done':[46,16,16],'not-required':[22,22,58]};const[r,g,b]=statusColors[t.status]||[240,240,240];doc.setFillColor(r,g,b);doc.rect(margin+8,y-3.5,pageW-margin*2-8,6,'F');doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(220);doc.text('\u2022 '+t.name,margin+10,y);doc.setFont('helvetica','bold');doc.text(statusLabel(t.status),175,y);const latest=t.comments&&t.comments.length?t.comments[t.comments.length-1]:null;if(latest){doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(160);const preview=latest.author+': '+latest.text.substring(0,60)+(latest.text.length>60?'\u2026':'');doc.text(preview,215,y);}y+=6.5;});y+=2;});y+=3;});doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(160);doc.text('Page '+(ci+1)+' of '+clients.length,pageW/2,pageH-5,{align:'center'});});const filename=clients.length===1?clients[0].name.replace(/\s+/g,'_')+'_integration.pdf':'CRx_Integration_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.pdf';doc.save(filename);showToast('PDF exported ('+clients.length+' client'+(clients.length>1?'s':'')+').','success');}
+
+// EXCEL EXPORT
+function openExcelModal(mode){const db=loadDB();const currentOnly=mode==='current';const list=document.getElementById('excelClientList');list.innerHTML=db.clients.map(c=>'<label class="client-check-item"><input type="checkbox" name="excelClient" value="'+c.id+'" '+(!currentOnly||c.id===currentClientId?'checked':'')+'>  <div><div class="client-check-name">'+esc(c.name)+'</div><div class="client-check-meta">'+esc(c.cmmsType||'\u2014')+' \u00b7 '+esc(c.overallStatus||'Active')+'</div></div></label>').join('');document.querySelectorAll('#excelModal input[name=excelStatus]').forEach(cb=>cb.checked=true);openModal('excelModal');}
+function excelSelectAll(type,val){const name=type==='client'?'excelClient':'excelStatus';document.querySelectorAll('#excelModal input[name='+name+']').forEach(cb=>cb.checked=val);}
+function generateExcel(){
+  const db=loadDB();
+  const selectedClients=[...document.querySelectorAll('#excelModal input[name=excelClient]:checked')].map(cb=>cb.value);
+  const selectedStatuses=[...document.querySelectorAll('#excelModal input[name=excelStatus]:checked')].map(cb=>cb.value);
+  if(!selectedClients.length){showToast('Select at least one client.','error');return;}
+  if(!selectedStatuses.length){showToast('Select at least one status.','error');return;}
+  const clients=db.clients.filter(c=>selectedClients.includes(c.id));
   closeModal('excelModal');
-  if (!window.XLSX) { showToast('Excel library not loaded.','error'); return; }
-  var wb = XLSX.utils.book_new();
-  function mkCell(v,opts){
-    opts=opts||{}; var c={v:v,t:typeof v==='number'?'n':'s'};
-    if(opts.bold||opts.headerBg||opts.infoBg){c.s={font:{bold:!!opts.bold,color:{rgb:opts.fontColor||(opts.headerBg?'FFFFFF':'C0C8E0')}},fill:{fgColor:{rgb:opts.headerBg||opts.infoBg||'151820'}},alignment:{vertical:'center',wrapText:!!opts.wrap},border:{top:{style:'thin',color:{rgb:'3A4060'}},bottom:{style:'thin',color:{rgb:'3A4060'}},left:{style:'thin',color:{rgb:'3A4060'}},right:{style:'thin',color:{rgb:'3A4060'}}}};}
-    return c;
-  }
-  var ovRows=[];
-  ovRows.push([mkCell('CRx Integration Tracker \u2014 Overview',{bold:true,headerBg:'0F1828',fontColor:'4F7CFF'})].concat(Array(8).fill(mkCell(''))));
-  ovRows.push([mkCell('Generated: '+new Date().toLocaleString(),{infoBg:'1C2030'})].concat(Array(8).fill(mkCell(''))));
-  ovRows.push(Array(9).fill(mkCell('')));
-  ovRows.push(['Client Name','CMMS Type','CRx Consultant','Client POC','Overall Status','In Progress','Completed %','Last Updated','Expected'].map(function(h){return mkCell(h,{bold:true,headerBg:'222840',fontColor:'00E5C0'});}));
-  clients.forEach(function(c){
-    var stats=computeStats(c); var pct=stats.total?Math.round(stats.completed/stats.total*100):0;
-    ovRows.push([mkCell(c.name,{bold:true,infoBg:'151820'}),mkCell(c.cmmsType||'\u2014',{infoBg:'151820'}),mkCell(c.crxConsultant||'\u2014',{infoBg:'151820'}),mkCell(c.clientPoc||'\u2014',{infoBg:'151820'}),mkCell(c.overallStatus||'Active',{infoBg:'151820'}),mkCell(stats.inProgress,{infoBg:'151820'}),mkCell(pct+'%',{infoBg:'151820'}),mkCell(c.updatedAt?new Date(c.updatedAt).toLocaleDateString():'\u2014',{infoBg:'151820'}),mkCell(c.expectedDate||'\u2014',{infoBg:'151820'})]);
-  });
-  var ovWS=XLSX.utils.aoa_to_sheet(ovRows);
-  ovWS['!cols']=[24,16,20,20,14,13,13,16,18].map(function(w){return{wch:w};});
-  ovWS['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}},{s:{r:2,c:0},e:{r:2,c:8}}];
+  const wb=XLSX.utils.book_new();
+  const STATUS_FILL={'not-started':{fgColor:{rgb:'2E3350'}},'in-progress':{fgColor:{rgb:'0F2D5E'}},'completed':{fgColor:{rgb:'0A2E20'}},'pending-client':{fgColor:{rgb:'332500'}},'cannot-be-done':{fgColor:{rgb:'2E1010'}},'not-required':{fgColor:{rgb:'16163A'}}};
+  const STATUS_FONT_COLOR={'not-started':'8892B0','in-progress':'5AAEFF','completed':'00D48A','pending-client':'FFB020','cannot-be-done':'FF4F4F','not-required':'7070C8'};
+  function cell(v,opts={}){const c={v,t:typeof v==='number'?'n':'s'};const style={};if(opts.bold||opts.headerBg||opts.statusKey||opts.infoBg){style.font={bold:!!opts.bold,color:{rgb:opts.fontColor||(opts.statusKey?STATUS_FONT_COLOR[opts.statusKey]:opts.headerBg?'FFFFFF':opts.infoBg?'C0C8E0':'000000')}};style.fill=opts.headerBg?{fgColor:{rgb:opts.headerBg}}:opts.statusKey?STATUS_FILL[opts.statusKey]:opts.infoBg?{fgColor:{rgb:opts.infoBg}}:{fgColor:{rgb:'FFFFFF'}};style.alignment={vertical:'center',wrapText:!!opts.wrap};style.border={top:{style:'thin',color:{rgb:'3A4060'}},bottom:{style:'thin',color:{rgb:'3A4060'}},left:{style:'thin',color:{rgb:'3A4060'}},right:{style:'thin',color:{rgb:'3A4060'}}};c.s=style;}return c;}
+  const ovRows=[];
+  ovRows.push([cell('CRx Integration Tracker \u2014 Overview',{bold:true,headerBg:'0F1828',fontColor:'4F7CFF'}),cell(''),cell(''),cell(''),cell(''),cell(''),cell(''),cell(''),cell('')]);
+  ovRows.push([cell('Generated: '+new Date().toLocaleString(),{infoBg:'1C2030'}),cell(''),cell(''),cell(''),cell(''),cell(''),cell(''),cell(''),cell('')]);
+  ovRows.push(Array(9).fill(cell('')));
+  ovRows.push(['Client Name','CMMS Type','CRx Consultant','Client POC','Overall Status','In Progress','Completed %','Last Updated','Expected Completion'].map(h=>cell(h,{bold:true,headerBg:'222840',fontColor:'00E5C0'})));
+  clients.forEach(c=>{const stats=computeStats(c);const pct=stats.total?Math.round(stats.completed/stats.total*100):0;ovRows.push([cell(c.name,{bold:true,infoBg:'151820'}),cell(c.cmmsType||'\u2014',{infoBg:'151820'}),cell(c.crxConsultant||'\u2014',{infoBg:'151820'}),cell(c.clientPoc||'\u2014',{infoBg:'151820'}),cell(c.overallStatus||'Active',{infoBg:'151820'}),cell(stats.inProgress,{infoBg:'151820'}),cell(pct+'%',{infoBg:'151820'}),cell(c.updatedAt?new Date(c.updatedAt).toLocaleDateString():'\u2014',{infoBg:'151820'}),cell(c.expectedDate||'\u2014',{infoBg:'151820'})]);});
+  const ovWS=XLSX.utils.aoa_to_sheet(ovRows);ovWS['!cols']=[28,18,22,22,16,14,14,18,20].map(w=>({wch:w}));ovWS['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}},{s:{r:2,c:0},e:{r:2,c:8}}];
   XLSX.utils.book_append_sheet(wb,ovWS,'Overview');
-  clients.forEach(function(c){
-    var rows=[];
-    [['Client Name',c.name],['CMMS Type',c.cmmsType||'\u2014'],['CRx Consultant',c.crxConsultant||'\u2014'],['Client POC',c.clientPoc||'\u2014'],['Overall Status',c.overallStatus||'Active'],['Expected',c.expectedDate||'\u2014'],['Last Updated',c.updatedAt?new Date(c.updatedAt).toLocaleDateString():'\u2014']].forEach(function(pair){rows.push([mkCell(pair[0],{bold:true,headerBg:'222840',fontColor:'00E5C0'}),mkCell(pair[1],{infoBg:'151820'})].concat(Array(5).fill(mkCell(''))));});
-    rows.push(Array(7).fill(mkCell('')));
-    rows.push(['Section','Phase','Task','Status','Latest Comment','Comment By','Date'].map(function(h){return mkCell(h,{bold:true,headerBg:'1C2030',fontColor:'4F7CFF'});}));
-    var allCmts=[];
-    c.sections.forEach(function(sec){sec.phases.forEach(function(ph){ph.tasks.forEach(function(t){
-      if(statuses.indexOf(t.status)<0) return;
-      var comments=t.comments||[]; var latest=comments.length?comments[comments.length-1]:null;
-      rows.push([mkCell(sec.label,{infoBg:'1A1E2E'}),mkCell(ph.label,{infoBg:'1A1E2E'}),mkCell(t.name,{infoBg:'1A1E2E'}),mkCell(statusLabel(t.status),{infoBg:'1A1E2E'}),mkCell(latest?latest.text:'',{infoBg:'1A1E2E',wrap:true}),mkCell(latest?latest.author||'':'',{infoBg:'1A1E2E'}),mkCell(latest?latest.timestamp:'',{infoBg:'1A1E2E'})]);
-      comments.forEach(function(cm){allCmts.push(Object.assign({section:sec.label,phase:ph.label,task:t.name},cm));});
-    });});});
-    if(allCmts.length){
-      rows.push(Array(7).fill(mkCell('')));
-      rows.push([mkCell('FULL COMMENT HISTORY',{bold:true,headerBg:'0A2030',fontColor:'00E5C0'})].concat(Array(6).fill(mkCell(''))));
-      rows.push(['Section','Phase','Task','Author','Comment','Date/Time','Task?'].map(function(h){return mkCell(h,{bold:true,headerBg:'1C2030',fontColor:'8892B0'});}));
-      allCmts.forEach(function(cm){rows.push([mkCell(cm.section,{infoBg:'111828'}),mkCell(cm.phase,{infoBg:'111828'}),mkCell(cm.task,{infoBg:'111828'}),mkCell(cm.author||'Anon',{bold:true,infoBg:'111828',fontColor:'4F7CFF'}),mkCell(cm.text,{infoBg:'111828',wrap:true}),mkCell(cm.timestamp||'',{infoBg:'111828'}),mkCell(cm.isTask?'\u2713':'',{infoBg:'111828'})]);});
-    }
-    var ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[26,18,26,20,38,16,20].map(function(w){return{wch:w};});
-    ws['!merges']=[]; for(var i=0;i<7;i++) ws['!merges'].push({s:{r:i,c:1},e:{r:i,c:6}});
-    XLSX.utils.book_append_sheet(wb,ws,c.name.replace(/[:\\\\/\?\*\[\]]/g,'').substring(0,31));
+  clients.forEach(c=>{
+    const rows=[];
+    rows.push([cell('Client Name',{bold:true,headerBg:'222840',fontColor:'00E5C0'}),cell(c.name,{bold:true,infoBg:'151820'}),cell(''),cell(''),cell(''),cell(''),cell('')]);
+    rows.push([cell('CMMS Type',{bold:true,headerBg:'222840',fontColor:'00E5C0'}),cell(c.cmmsType||'\u2014',{infoBg:'151820'}),cell(''),cell(''),cell(''),cell(''),cell('')]);
+    rows.push([cell('CRx Consultant',{bold:true,headerBg:'222840',fontColor:'00E5C0'}),cell(c.crxConsultant||'\u2014',{infoBg:'151820'}),cell(''),cell(''),cell(''),cell(''),cell('')]);
+    rows.push([cell('Client POC',{bold:true,headerBg:'222840',fontColor:'00E5C0'}),cell(c.clientPoc||'\u2014',{infoBg:'151820'}),cell(''),cell(''),cell(''),cell(''),cell('')]);
+    rows.push([cell('Overall Status',{bold:true,headerBg:'222840',fontColor:'00E5C0'}),cell(c.overallStatus||'Active',{infoBg:'151820'}),cell(''),cell(''),cell(''),cell(''),cell('')]);
+    rows.push([cell('Expected Completion',{bold:true,headerBg:'222840',fontColor:'00E5C0'}),cell(c.expectedDate||'\u2014',{infoBg:'151820'}),cell(''),cell(''),cell(''),cell(''),cell('')]);
+    rows.push([cell('Last Updated',{bold:true,headerBg:'222840',fontColor:'00E5C0'}),cell(c.updatedAt?new Date(c.updatedAt).toLocaleDateString():'\u2014',{infoBg:'151820'}),cell(''),cell(''),cell(''),cell(''),cell('')]);
+    rows.push(Array(7).fill(cell('')));
+    rows.push(['Section','Phase','Task','Status','Latest Comment','Comment By','Comment Date'].map(h=>cell(h,{bold:true,headerBg:'1C2030',fontColor:'4F7CFF'})));
+    const allCommentHistory=[];
+    c.sections.forEach(sec=>{sec.phases.forEach(ph=>{ph.tasks.forEach(t=>{if(!selectedStatuses.includes(t.status))return;const comments=t.comments||[];const latest=comments.length?comments[comments.length-1]:null;rows.push([cell(sec.label,{infoBg:'1A1E2E'}),cell(ph.label,{infoBg:'1A1E2E'}),cell(t.name,{infoBg:'1A1E2E'}),cell(statusLabel(t.status),{statusKey:t.status}),cell(latest?latest.text:'',{infoBg:'1A1E2E',wrap:true}),cell(latest?(latest.author||''):'',{infoBg:'1A1E2E'}),cell(latest?latest.timestamp:'',{infoBg:'1A1E2E'})]);comments.forEach(cm=>{allCommentHistory.push({section:sec.label,phase:ph.label,task:t.name,...cm});});});});});
+    // CHECKLIST SECTION
+    const cl=c.checklist||defaultChecklist();
+    rows.push(Array(7).fill(cell('')));
+    rows.push([cell('CHECKLIST',{bold:true,headerBg:'0A2030',fontColor:'00E5C0'}),cell(''),cell(''),cell(''),cell(''),cell(''),cell('')]);
+    rows.push(['Stage','Phase','Step','Action Item','Action By','Status','Comment'].map(h=>cell(h,{bold:true,headerBg:'1C2030',fontColor:'4F7CFF'})));
+    cl.forEach(function(stage){stage.phases.forEach(function(ph){ph.steps.forEach(function(step){step.items.forEach(function(item){rows.push([cell(stage.label,{infoBg:'111828'}),cell(ph.label,{infoBg:'111828'}),cell(step.label,{infoBg:'111828'}),cell(item.action,{infoBg:'111828'}),cell(item.actionBy,{infoBg:'111828'}),cell(statusLabel(item.status),{statusKey:item.status}),cell(item.comment||'',{infoBg:'111828',wrap:true})]);});});});});
+    if(allCommentHistory.length){rows.push(Array(7).fill(cell('')));rows.push([cell('FULL COMMENT HISTORY',{bold:true,headerBg:'0A2030',fontColor:'00E5C0'}),cell(''),cell(''),cell(''),cell(''),cell(''),cell('')]);rows.push(['Section','Phase','Task','Author','Comment','Date/Time',''].map(h=>cell(h,{bold:true,headerBg:'1C2030',fontColor:'8892B0'})));allCommentHistory.forEach(cm=>{rows.push([cell(cm.section,{infoBg:'111828'}),cell(cm.phase,{infoBg:'111828'}),cell(cm.task,{infoBg:'111828'}),cell(cm.author||'Anonymous',{bold:true,infoBg:'111828',fontColor:'4F7CFF'}),cell(cm.text,{infoBg:'111828',wrap:true}),cell(cm.timestamp||'',{infoBg:'111828'}),cell('',{infoBg:'111828'})]);});}
+    const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[28,20,28,32,14,22,36].map(w=>({wch:w}));ws['!merges']=[];for(let i=0;i<7;i++)ws['!merges'].push({s:{r:i,c:1},e:{r:i,c:6}});
+    const sheetName=c.name.replace(/[:\\\/\?\*\[\]]/g,'').substring(0,31);
+    XLSX.utils.book_append_sheet(wb,ws,sheetName);
   });
-  XLSX.writeFile(wb,clients.length===1?clients[0].name.replace(/\s+/g,'_')+'_integration.xlsx':'CRx_Integration_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.xlsx');
+  const filename=clients.length===1?clients[0].name.replace(/\s+/g,'_')+'_integration.xlsx':'CRx_Integration_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.xlsx';
+  XLSX.writeFile(wb,filename);
   showToast('Excel exported ('+clients.length+' client'+(clients.length>1?'s':'')+').','success');
 }
 
-// ============================================================
-// INIT — runs immediately using IIFE, no event listener needed
-// This guarantees it works even if load event already fired
-// ============================================================
-(function init() {
-  applyFontSize(currentFontSize);
-  checkStorage();
-  var cfg = getCfg();
-  if (cfg) {
-    // Config exists — show app immediately then load data
-    showMainApp();
-    loadData(false);
-    startAutoRefresh();
-  } else {
-    // No config — show setup screen
-    showSetupScreen();
-  }
-})();
+// TABS / MODALS
+function switchTab(tabId,btn){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById(tabId).classList.add('active');btn.classList.add('active');}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+function showToast(msg,type){const t=document.getElementById('toast'),icon=document.getElementById('toastIcon'),m=document.getElementById('toastMsg');icon.textContent=type==='success'?'\u2713':type==='error'?'\u2715':'\u2139';m.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.className='toast',3000);}
+function esc(str){if(str==null)return'';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtTime(){return new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true});}
+
+// FONT SIZE
+const FONT_KEY='crx_font_size';
+let currentFontSize=parseInt(localStorage.getItem(FONT_KEY)||'16');
+function applyFontSize(size){currentFontSize=Math.min(22,Math.max(12,size));document.documentElement.style.setProperty('--page-font-size',currentFontSize+'px');localStorage.setItem(FONT_KEY,currentFontSize);const lbl=document.getElementById('fontSizeLabel');if(lbl)lbl.textContent=currentFontSize;}
+function adjustFont(delta){applyFontSize(currentFontSize+delta);}
+function rebuildHeaderActions(){const el=document.getElementById('headerActions');if(!el)return;el.innerHTML='<div class="font-toggle"><button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button><span class="font-size-label" id="fontSizeLabel">'+currentFontSize+'</span><button class="font-toggle-btn" onclick="adjustFont(1)">A+</button></div><span class="sync-status" id="syncStatus" onclick="openGithubSetup()"><span class="sync-dot"></span><span id="syncLabel">Not synced</span></span><button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">&#9881; GitHub</button><button class="btn btn-primary btn-sm" onclick="openAddClientModal()">+ New Client</button>';const cfg=getGhConfig();if(cfg)setSyncStatus('synced','GitHub configured');}
+
+// MODULE SWITCHING
+let currentModule='integration';
+function toggleModuleMenu(){const menu=document.getElementById('moduleMenu');if(menu)menu.classList.toggle('open');}
+document.addEventListener('click',function(e){const dd=document.getElementById('moduleDropdown');if(dd&&!dd.contains(e.target)){const menu=document.getElementById('moduleMenu');if(menu)menu.classList.remove('open');}});
+function switchModule(module){currentModule=module;const menu=document.getElementById('moduleMenu');if(menu)menu.classList.remove('open');document.querySelectorAll('.module-menu-item').forEach(function(item,i){item.classList.toggle('active',(module==='integration'&&i===0)||(module==='sso'&&i===1));});const lbl=document.getElementById('moduleLabel');if(module==='integration'){if(lbl)lbl.textContent='/ Integration Tracker';showDashboard();}else if(module==='sso'){if(lbl)lbl.textContent='/ SSO Tracker';showSSO();}}
+
+// SSO
+const SSO_KEY='crx_sso_data';
+let editingSSOId=null,ssoSortAsc=true;
+function loadSSO(){try{return JSON.parse(localStorage.getItem(SSO_KEY))||[];}catch{return[];}}
+function saveSSO_data(entries){localStorage.setItem(SSO_KEY,JSON.stringify(entries));const cfg=getGhConfig();if(cfg){const db=loadDB();db._sso=entries;syncToGitHub(db);}}
+function showSSO(){renderSSO();showView('viewSSO');rebuildHeaderActions();}
+function ssoSortToggle(){ssoSortAsc=!ssoSortAsc;const btn=document.getElementById('ssoSortBtn');if(btn)btn.textContent=ssoSortAsc?'\u21c5 Client A\u2013Z':'\u21c5 Client Z\u2013A';renderSSO();}
+function getActiveSSOFilters(){const ns=document.getElementById('ssoFilterNS'),ip=document.getElementById('ssoFilterIP'),done=document.getElementById('ssoFilterDone'),nr=document.getElementById('ssoFilterNR');if(!ip)return null;const f=[];if(ns&&ns.checked)f.push('Not Started');if(ip.checked)f.push('In Progress');if(done.checked)f.push('Completed');if(nr.checked)f.push('Not Required');return f.length===4?null:f;}
+function renderSSO(){let entries=loadSSO();const tbody=document.getElementById('ssoTableBody'),empty=document.getElementById('ssoEmpty');if(!tbody)return;entries=entries.slice().sort(function(a,b){return ssoSortAsc?a.clientName.localeCompare(b.clientName):b.clientName.localeCompare(a.clientName);});const filters=getActiveSSOFilters();if(filters)entries=entries.filter(function(e){return filters.includes(e.ssoStatus||'In Progress');});if(!entries.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';const ss={'Not Started':'background:var(--ns);color:var(--ns-text);','In Progress':'background:var(--ip);color:var(--ip-text);','Completed':'background:var(--done);color:var(--done-text);','Not Required':'background:var(--nr);color:var(--nr-text);'};tbody.innerHTML=entries.map(function(e){const s=ss[e.ssoStatus||'In Progress']||ss['In Progress'];return'<tr><td style="font-weight:600;">'+esc(e.clientName)+'</td><td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--surface3);color:var(--text);">'+esc(e.loginType||'\u2014')+'</span></td><td style="font-size:12px;color:var(--text3);">'+esc(e.setupDate||'\u2014')+'</td><td><span style="display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;'+s+'">'+esc(e.ssoStatus||'Not Started')+'</span></td><td style="font-size:12px;color:var(--text2);">'+esc(e.comments||'\u2014')+'</td><td style="display:flex;gap:5px;"><button class="btn btn-ghost btn-xs" onclick="openEditSSOModal(\''+e.id+'\')">Edit</button><button class="btn btn-danger btn-xs" onclick="deleteSSO(\''+e.id+'\')">&#215;</button></td></tr>';}).join('');}
+function openAddSSOModal(){editingSSOId=null;document.getElementById('ssoModalTitle').textContent='Add SSO Entry';document.getElementById('ssoModalSaveBtn').textContent='Save Entry';['fSsoClient','fSsoComments','fSsoSetupDate'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('fSsoLoginType').value='Password';document.getElementById('fSsoStatus').value='Not Started';openModal('ssoModal');}
+function openEditSSOModal(id){const e=loadSSO().find(function(x){return x.id===id;});if(!e)return;editingSSOId=id;document.getElementById('ssoModalTitle').textContent='Edit SSO Entry';document.getElementById('ssoModalSaveBtn').textContent='Save Changes';document.getElementById('fSsoClient').value=e.clientName||'';document.getElementById('fSsoLoginType').value=e.loginType||'Password';document.getElementById('fSsoStatus').value=e.ssoStatus||'In Progress';document.getElementById('fSsoSetupDate').value=e.setupDate||'';document.getElementById('fSsoComments').value=e.comments||'';openModal('ssoModal');}
+function saveSSO(){const clientName=document.getElementById('fSsoClient').value.trim();if(!clientName){showToast('Client name is required.','error');return;}const entries=loadSSO();const entry={id:editingSSOId||'sso_'+Date.now(),clientName,loginType:document.getElementById('fSsoLoginType').value,ssoStatus:document.getElementById('fSsoStatus').value,setupDate:document.getElementById('fSsoSetupDate').value,comments:document.getElementById('fSsoComments').value.trim(),updatedAt:new Date().toISOString()};if(editingSSOId){const i=entries.findIndex(function(x){return x.id===editingSSOId;});if(i>-1)entries[i]=entry;}else entries.push(entry);saveSSO_data(entries);closeModal('ssoModal');renderSSO();showToast(editingSSOId?'Entry updated.':'Entry added!','success');}
+function deleteSSO(id){saveSSO_data(loadSSO().filter(function(x){return x.id!==id;}));renderSSO();}
+
+// INIT
+applyFontSize(currentFontSize);
+renderDashboard();
+
+// APPLY VIEWER MODE
+if(VIEWER_MODE){
+  // Hide edit/action buttons
+  ['btnExportPdf','btnExportXl','btnNewClient','ssoAddBtn'].forEach(function(id){const el=document.getElementById(id);if(el)el.style.display='none';});
+  document.querySelectorAll('#detailEditBtns, #docsToolbar, #notifInputArea, #globalInputArea').forEach(function(el){if(el)el.style.display='none';});
+  // Disable all status selects and inputs when rendered (use MutationObserver)
+  const obs=new MutationObserver(function(){
+    document.querySelectorAll('.status-select,.checklist-comment-input,input[type=text],textarea').forEach(function(el){
+      if(!el.closest('#clientModal,#commentModal,#docModal,#githubModal,#ssoModal,#excelModal,#pdfModal')){
+        el.disabled=true;el.style.pointerEvents='none';el.style.opacity='0.7';
+      }
+    });
+    // Hide delete buttons in docs and sso edit/delete
+    document.querySelectorAll('.btn-danger.btn-xs,.btn-ghost.btn-xs').forEach(function(el){el.style.display='none';});
+    // Hide comment "Add comment" buttons, keep count badges
+    document.querySelectorAll('.comment-btn').forEach(function(el){
+      if(!el.querySelector('.comment-count'))el.style.display='none';
+    });
+  });
+  obs.observe(document.body,{childList:true,subtree:true});
+}
+
 </script>
 </body>
 </html>
