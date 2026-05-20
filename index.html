@@ -207,6 +207,8 @@
   .checklist-comment-input:focus{border-color:var(--accent);}
   @media print{.app-header,.breadcrumb,.tabs,.header-actions,.card-actions,.btn{display:none!important;}body{background:#fff;color:#000;}.detail-view{padding:0;}}
 </style>
+
+<style id="viewerCss"></style>
 </head>
 <body>
 
@@ -681,7 +683,7 @@ function renderStats(c){
 
 function renderSections(c){
   const cont=document.getElementById('integrationSections');
-  cont.innerHTML=c.sections.map(sec=>'<div class="section-card"><div class="section-title">'+esc(sec.label)+'</div>'+sec.phases.map(ph=>'<div><div style="padding:8px 14px 3px;font-size:11px;color:var(--accent2);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">'+esc(ph.label)+'</div><table><thead><tr><th style="width:26%">Task</th><th style="width:22%">Status</th><th>Comments</th></tr></thead><tbody>'+ph.tasks.map(t=>{const comments=t.comments||[];const cc=comments.length;const latest=cc>0?comments[comments.length-1]:null;const previewHtml=latest?'<div class="comment-preview visible"><span class="comment-preview-author">'+esc(latest.author||'Anon')+':</span>'+esc(latest.text)+'</div>':'';return'<tr><td class="task-name">'+esc(t.name)+'</td><td><select class="status-select '+statusClass(t.status)+'" onchange="updateTaskStatus(\''+sec.id+'\',\''+ph.id+'\',\''+t.id+'\',this.value);updateSelectStyle(this)">'+statusOptions(t.status)+'</select></td><td><div class="comment-cell"><button class="comment-btn" onclick="openCommentModal(\''+sec.id+'\',\''+ph.id+'\',\''+t.id+'\')">&#128172; '+(cc>0?'<span class="comment-count">'+cc+'</span>':'Add comment')+'</button>'+previewHtml+'</div></td></tr>';}).join('')+'</tbody></table></div>').join('')+'</div>').join('');
+  cont.innerHTML=c.sections.map(sec=>'<div class="section-card"><div class="section-title">'+esc(sec.label)+'</div>'+sec.phases.map(ph=>'<div><div style="padding:8px 14px 3px;font-size:11px;color:var(--accent2);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">'+esc(ph.label)+'</div><table><thead><tr><th style="width:26%">Task</th><th style="width:22%">Status</th><th>Comments</th></tr></thead><tbody>'+ph.tasks.map(t=>{const comments=t.comments||[];const cc=comments.length;const latest=cc>0?comments[comments.length-1]:null;const previewHtml=latest?'<div class="comment-preview visible"><span class="comment-preview-author">'+esc(latest.author||'Anon')+':</span>'+esc(latest.text)+'</div>':'';const vSel=VIEWER_MODE?' disabled style="pointer-events:none;opacity:0.85;"':'';const vBtn=VIEWER_MODE?(cc>0?'<button class="comment-btn" onclick="openCommentModal(\''+sec.id+'\',\''+ph.id+'\',\''+t.id+'\')">&#128172; <span class="comment-count">'+cc+'</span></button>':''):'<button class="comment-btn" onclick="openCommentModal(\''+sec.id+'\',\''+ph.id+'\',\''+t.id+'\')">&#128172; '+(cc>0?'<span class="comment-count">'+cc+'</span>':'Add comment')+'</button>';return'<tr><td class="task-name">'+esc(t.name)+'</td><td><select class="status-select '+statusClass(t.status)+'"'+vSel+' onchange="updateTaskStatus(\''+sec.id+'\',\''+ph.id+'\',\''+t.id+'\',this.value);updateSelectStyle(this)">'+statusOptions(t.status)+'</select></td><td><div class="comment-cell">'+vBtn+previewHtml+'</div></td></tr>';}).join('')+'</tbody></table></div>').join('')+'</div>').join('');
 }
 
 // CHECKLIST
@@ -722,8 +724,8 @@ function renderChecklist(c){
           html+='<tr>'
             +'<td style="color:var(--text2);font-size:12px;">'+esc(item.action)+'</td>'
             +'<td><span class="action-by-badge '+abClass+'">'+esc(item.actionBy)+'</span></td>'
-            +'<td><select class="status-select '+sClass+'" onchange="updateChecklistStatus(\''+stage.id+'\',\''+ph.id+'\',\''+step.id+'\',\''+item.id+'\',this.value,this)">'+checklistStatusOptions(item.status)+'</select></td>'
-            +'<td><input type="text" class="checklist-comment-input" value="'+esc(item.comment||'')+'" placeholder="Add note\u2026" onblur="updateChecklistComment(\''+stage.id+'\',\''+ph.id+'\',\''+step.id+'\',\''+item.id+'\',this.value)"></td>'
+            +'<td><select class="status-select '+sClass+'"'+(VIEWER_MODE?' disabled style="pointer-events:none;opacity:0.85;"':'')+' onchange="updateChecklistStatus(\''+stage.id+'\',\''+ph.id+'\',\''+step.id+'\',\''+item.id+'\',this.value,this)">'+checklistStatusOptions(item.status)+'</select></td>'
+            +'<td><input type="text" class="checklist-comment-input" value="'+esc(item.comment||'')+'"'+(VIEWER_MODE?' disabled style="pointer-events:none;opacity:0.85;" placeholder=""':' placeholder="Add note\u2026"')+' onblur="updateChecklistComment(\''+stage.id+'\',\''+ph.id+'\',\''+step.id+'\',\''+item.id+'\',this.value)"></td>'
             +'</tr>';
         });
         html+='</tbody></table>';
@@ -797,7 +799,7 @@ function renderNotifications(c){const msgs=document.getElementById('notifMessage
 function openAddDocModal(){openModal('docModal');['fDocType','fDocName','fDocLink','fDocNotes'].forEach(id=>document.getElementById(id).value='');}
 function saveDoc(){const name=document.getElementById('fDocName').value.trim();if(!name){showToast('Document name is required.','error');return;}const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);if(!c.docs)c.docs=[];c.docs.push({type:document.getElementById('fDocType').value.trim(),name,link:document.getElementById('fDocLink').value.trim(),notes:document.getElementById('fDocNotes').value.trim(),date:new Date().toLocaleDateString()});c.updatedAt=new Date().toISOString();saveDB(db);closeModal('docModal');renderDocs(c);}
 function deleteDoc(idx){const db=loadDB();const c=db.clients.find(x=>x.id===currentClientId);c.docs.splice(idx,1);c.updatedAt=new Date().toISOString();saveDB(db);renderDocs(c);}
-function renderDocs(c){const docs=c.docs||[];const tbody=document.getElementById('docsTableBody');const empty=document.getElementById('docsEmpty');if(!docs.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';tbody.innerHTML=docs.map((d,i)=>'<tr><td><span class="doc-type-badge">'+esc(d.type||'\u2014')+'</span></td><td>'+(d.link?'<a class="doc-link" href="'+esc(d.link)+'" target="_blank">'+esc(d.name||d.link)+'</a>':esc(d.name||'\u2014'))+'</td><td class="doc-date">'+esc(d.date||'\u2014')+'</td><td style="font-size:12px;color:var(--text2)">'+esc(d.notes||'')+'</td><td><button class="btn btn-danger btn-xs" onclick="deleteDoc('+i+')">\u2715</button></td></tr>').join('');}
+function renderDocs(c){const docs=c.docs||[];const tbody=document.getElementById('docsTableBody');const empty=document.getElementById('docsEmpty');if(!docs.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';tbody.innerHTML=docs.map((d,i)=>'<tr><td><span class="doc-type-badge">'+esc(d.type||'\u2014')+'</span></td><td>'+(d.link?'<a class="doc-link" href="'+esc(d.link)+'" target="_blank">'+esc(d.name||d.link)+'</a>':esc(d.name||'\u2014'))+'</td><td class="doc-date">'+esc(d.date||'\u2014')+'</td><td style="font-size:12px;color:var(--text2)">'+esc(d.notes||'')+'</td><td>'+(VIEWER_MODE?'':'<button class="btn btn-danger btn-xs" onclick="deleteDoc('+i+')">\u2715</button>')+'</td></tr>').join('');}
 
 // DELETE CLIENT
 function confirmDeleteClient(){openModal('confirmOverlay');document.getElementById('confirmDesc').textContent='Delete "'+loadDB().clients.find(x=>x.id===currentClientId)?.name+'"? This cannot be undone.';}
@@ -906,7 +908,7 @@ const FONT_KEY='crx_font_size';
 let currentFontSize=parseInt(localStorage.getItem(FONT_KEY)||'16');
 function applyFontSize(size){currentFontSize=Math.min(22,Math.max(12,size));document.documentElement.style.setProperty('--page-font-size',currentFontSize+'px');localStorage.setItem(FONT_KEY,currentFontSize);const lbl=document.getElementById('fontSizeLabel');if(lbl)lbl.textContent=currentFontSize;}
 function adjustFont(delta){applyFontSize(currentFontSize+delta);}
-function rebuildHeaderActions(){const el=document.getElementById('headerActions');if(!el)return;el.innerHTML='<div class="font-toggle"><button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button><span class="font-size-label" id="fontSizeLabel">'+currentFontSize+'</span><button class="font-toggle-btn" onclick="adjustFont(1)">A+</button></div><span class="sync-status" id="syncStatus" onclick="openGithubSetup()"><span class="sync-dot"></span><span id="syncLabel">Not synced</span></span><button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">&#9881; GitHub</button><button class="btn btn-primary btn-sm" onclick="openAddClientModal()">+ New Client</button>';const cfg=getGhConfig();if(cfg)setSyncStatus('synced','GitHub configured');}
+function rebuildHeaderActions(){const el=document.getElementById('headerActions');if(!el)return;if(VIEWER_MODE){el.innerHTML='<div class="font-toggle"><button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button><span class="font-size-label" id="fontSizeLabel">'+currentFontSize+'</span><button class="font-toggle-btn" onclick="adjustFont(1)">A+</button></div><span style="font-size:11px;background:rgba(79,124,255,0.15);color:var(--accent);border:1px solid rgba(79,124,255,0.3);border-radius:20px;padding:3px 12px;font-weight:700;">&#128274; View Only</span><span class="sync-status" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Loading…</span></span>';const cfg=getGhConfig();if(cfg){setSyncStatus('synced','GitHub synced');}return;}el.innerHTML='<div class="font-toggle"><button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button><span class="font-size-label" id="fontSizeLabel">'+currentFontSize+'</span><button class="font-toggle-btn" onclick="adjustFont(1)">A+</button></div><span class="sync-status" id="syncStatus" onclick="openGithubSetup()"><span class="sync-dot"></span><span id="syncLabel">Not synced</span></span><button class="btn btn-ghost btn-sm" onclick="openGithubSetup()">&#9881; GitHub</button><button class="btn btn-primary btn-sm" onclick="openAddClientModal()">+ New Client</button>';const cfg=getGhConfig();if(cfg)setSyncStatus('synced','GitHub configured');}
 
 // MODULE SWITCHING
 let currentModule='integration';
@@ -934,24 +936,9 @@ renderDashboard();
 
 // APPLY VIEWER MODE
 if(VIEWER_MODE){
-  // Hide edit/action buttons
-  ['btnExportPdf','btnExportXl','btnNewClient','ssoAddBtn'].forEach(function(id){const el=document.getElementById(id);if(el)el.style.display='none';});
-  document.querySelectorAll('#detailEditBtns, #docsToolbar, #notifInputArea, #globalInputArea').forEach(function(el){if(el)el.style.display='none';});
-  // Disable all status selects and inputs when rendered (use MutationObserver)
-  const obs=new MutationObserver(function(){
-    document.querySelectorAll('.status-select,.checklist-comment-input,input[type=text],textarea').forEach(function(el){
-      if(!el.closest('#clientModal,#commentModal,#docModal,#githubModal,#ssoModal,#excelModal,#pdfModal')){
-        el.disabled=true;el.style.pointerEvents='none';el.style.opacity='0.7';
-      }
-    });
-    // Hide delete buttons in docs and sso edit/delete
-    document.querySelectorAll('.btn-danger.btn-xs,.btn-ghost.btn-xs').forEach(function(el){el.style.display='none';});
-    // Hide comment "Add comment" buttons, keep count badges
-    document.querySelectorAll('.comment-btn').forEach(function(el){
-      if(!el.querySelector('.comment-count'))el.style.display='none';
-    });
-  });
-  obs.observe(document.body,{childList:true,subtree:true});
+  // Inject CSS to hide all editor-only elements
+  const vcss=document.getElementById('viewerCss');
+  if(vcss)vcss.textContent='#btnExportPdf,#btnExportXl,#btnNewClient,#ssoAddBtn,#detailEditBtns,#docsToolbar,#notifInputArea,#globalInputArea{display:none!important;}';
 }
 
 </script>
