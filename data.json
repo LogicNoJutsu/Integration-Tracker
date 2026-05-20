@@ -1007,7 +1007,7 @@
       "startDate": "2026-02-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:40:26.352Z",
-      "updatedAt": "2026-05-19T14:32:10.044Z",
+      "updatedAt": "2026-05-20T12:57:26.028Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1137,7 +1137,8 @@
           "timestamp": "May 7, 2026, 2:23 PM",
           "isTask": true,
           "_ts": 1778178227775,
-          "taskStatus": "shared-dev"
+          "taskStatus": "shared-dev",
+          "dueDate": "2026-05-22"
         },
         {
           "author": "VG",
