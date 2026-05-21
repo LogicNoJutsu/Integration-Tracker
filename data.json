@@ -1365,7 +1365,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:36:37.004Z",
-      "updatedAt": "2026-05-21T11:00:56.006Z",
+      "updatedAt": "2026-05-21T11:01:20.427Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1529,7 +1529,7 @@
                       "id": "c1",
                       "action": "Share Test URL of the CMMS system",
                       "actionBy": "Client",
-                      "status": "not-started",
+                      "status": "completed",
                       "comment": ""
                     },
                     {
