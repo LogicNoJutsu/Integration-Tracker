@@ -1365,7 +1365,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:36:37.004Z",
-      "updatedAt": "2026-05-21T11:01:20.427Z",
+      "updatedAt": "2026-05-21T11:01:42.126Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1536,7 +1536,7 @@
                       "id": "c2",
                       "action": "Share User ID and Password for CMMS frontend",
                       "actionBy": "Client",
-                      "status": "not-started",
+                      "status": "completed",
                       "comment": ""
                     },
                     {
