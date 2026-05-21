@@ -2032,7 +2032,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:12.397Z",
-      "updatedAt": "2026-05-19T14:41:06.526Z",
+      "updatedAt": "2026-05-21T14:24:40.134Z",
       "sections": [
         {
           "id": "test_instance",
@@ -2180,6 +2180,13 @@
           "timestamp": "May 19, 2026, 10:41 AM",
           "isTask": true,
           "_ts": 1779201666526
+        },
+        {
+          "author": "VG",
+          "text": "So this mentioned that it will be hard for them to update the asset support categories so we at CRx side will use the asset categories to do the asset mapping",
+          "timestamp": "May 21, 2026, 10:24 AM",
+          "isTask": true,
+          "_ts": 1779373480134
         }
       ],
       "checklist": [
