@@ -4,12 +4,12 @@
       "id": "c_1778167727055",
       "name": "Tidal Health",
       "cmmsType": "TMS",
-      "crxConsultant": "Kevin, Clay",
+      "crxConsultant": "Kevin, Connor",
       "clientPoc": "Glenn, Michael Polito",
       "overallStatus": "Active",
       "startDate": "2026-03-02",
       "createdAt": "2026-05-07T15:28:47.055Z",
-      "updatedAt": "2026-05-08T11:12:40.993Z",
+      "updatedAt": "2026-06-02T13:53:31.170Z",
       "sections": [
         {
           "id": "test_instance",
@@ -664,7 +664,8 @@
             }
           ]
         }
-      ]
+      ],
+      "clientPocEmail": ""
     },
     {
       "id": "c_1778171753549",
