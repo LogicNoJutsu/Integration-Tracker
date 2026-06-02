@@ -2716,7 +2716,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:49.957Z",
-      "updatedAt": "2026-06-02T13:50:25.928Z",
+      "updatedAt": "2026-06-02T14:48:55.138Z",
       "sections": [
         {
           "id": "test_instance",
@@ -2881,7 +2881,7 @@
           "timestamp": "May 7, 2026, 2:38 PM",
           "isTask": true,
           "_ts": 1778179109043,
-          "taskStatus": "shared-dev"
+          "taskStatus": "completed"
         },
         {
           "author": "VG",
