@@ -2716,7 +2716,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:49.957Z",
-      "updatedAt": "2026-06-02T14:48:55.138Z",
+      "updatedAt": "2026-06-02T14:49:01.105Z",
       "sections": [
         {
           "id": "test_instance",
@@ -2889,7 +2889,7 @@
           "timestamp": "May 8, 2026, 7:29 AM",
           "isTask": true,
           "_ts": 1778239787087,
-          "taskStatus": "pending-client"
+          "taskStatus": "completed"
         },
         {
           "author": "VG",
