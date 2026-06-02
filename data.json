@@ -2716,7 +2716,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:49.957Z",
-      "updatedAt": "2026-06-02T14:49:01.105Z",
+      "updatedAt": "2026-06-02T14:49:06.920Z",
       "sections": [
         {
           "id": "test_instance",
@@ -2896,7 +2896,8 @@
           "text": "The Exit Signs / Exit Lights have been moved from the Lighting Fixtures type into the Exit Signs type. The Emergency Lights under the Electrical type have been moved to Lighting Fixtures so that Lighting Fixtures only contains Emergency Lights. Additionally, per your request I have added the new subtype named Kitchen Hoods. I have not attached any kitchen hood assets to this subtype yet. Please let me know if you need anything else.",
           "timestamp": "May 8, 2026, 4:03 PM",
           "isTask": true,
-          "_ts": 1778270587306
+          "_ts": 1778270587306,
+          "taskStatus": "completed"
         }
       ],
       "checklist": [
