@@ -9,7 +9,7 @@
       "overallStatus": "Active",
       "startDate": "2026-03-02",
       "createdAt": "2026-05-07T15:28:47.055Z",
-      "updatedAt": "2026-06-02T13:53:31.170Z",
+      "updatedAt": "2026-06-08T12:37:31.604Z",
       "sections": [
         {
           "id": "test_instance",
@@ -145,6 +145,13 @@
           "isTask": true,
           "_ts": 1778178060459,
           "taskStatus": "pending-client"
+        },
+        {
+          "author": "VG",
+          "text": "password is now updated for all Tidal health instances.",
+          "timestamp": "Jun 8, 2026, 8:37 AM",
+          "isTask": false,
+          "_ts": 1780922251604
         }
       ],
       "expectedDate": "",
