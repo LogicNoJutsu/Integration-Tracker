@@ -9,7 +9,7 @@
       "overallStatus": "Active",
       "startDate": "2026-03-02",
       "createdAt": "2026-05-07T15:28:47.055Z",
-      "updatedAt": "2026-06-08T12:37:31.604Z",
+      "updatedAt": "2026-06-08T12:39:04.563Z",
       "sections": [
         {
           "id": "test_instance",
@@ -152,6 +152,13 @@
           "timestamp": "Jun 8, 2026, 8:37 AM",
           "isTask": false,
           "_ts": 1780922251604
+        },
+        {
+          "author": "VG",
+          "text": "Password was changed to Beach.2026",
+          "timestamp": "Jun 8, 2026, 8:39 AM",
+          "isTask": false,
+          "_ts": 1780922344563
         }
       ],
       "expectedDate": "",
