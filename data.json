@@ -2054,7 +2054,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:12.397Z",
-      "updatedAt": "2026-06-02T13:58:31.129Z",
+      "updatedAt": "2026-06-11T15:46:45.935Z",
       "sections": [
         {
           "id": "test_instance",
@@ -2215,6 +2215,13 @@
           "timestamp": "May 21, 2026, 10:24 AM",
           "isTask": true,
           "_ts": 1779373480134
+        },
+        {
+          "author": "VG",
+          "text": "For the building reports we have send a query to the Building Reports team requesting the API",
+          "timestamp": "Jun 11, 2026, 11:46 AM",
+          "isTask": false,
+          "_ts": 1781192805935
         }
       ],
       "checklist": [
