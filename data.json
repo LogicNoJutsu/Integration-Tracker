@@ -2054,7 +2054,7 @@
       "startDate": "2026-04-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:38:12.397Z",
-      "updatedAt": "2026-06-11T15:46:45.935Z",
+      "updatedAt": "2026-06-11T15:48:17.642Z",
       "sections": [
         {
           "id": "test_instance",
@@ -2184,6 +2184,13 @@
           "link": "https://hcfcompliancecom.sharepoint.com/:w:/r/sites/CRxSupport/_layouts/15/doc2.aspx?sourcedoc=%7BFFB68475-8003-4595-BDAF-9607A8B16C6E%7D&file=Building%20Reports.docx&action=default&mobileredirect=true&CID=fd236482-3825-404d-aebd-effdcdc8dda3",
           "notes": "Call Notes for 5/15/26 Post NDA Signature",
           "date": "5/18/2026"
+        },
+        {
+          "type": "Login Credentials",
+          "name": "Building reports",
+          "link": "https://www.buildingreports.com/",
+          "notes": "User Name: KChadwick1\nPassword: CRx@2026",
+          "date": "6/11/2026"
         }
       ],
       "globalComments": [
