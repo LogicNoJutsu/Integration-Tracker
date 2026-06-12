@@ -1119,6 +1119,7 @@ async function doLogin() {
   bootApp();
 }
 
+
 function doLogout() {
   logAudit('login', 'Signed out', '');
   clearSession();
@@ -2419,6 +2420,96 @@ function deleteSSO(id){saveSSO_data(loadSSO().filter(x=>x.id!==id));renderSSO();
 // ══════════════════════════════════════════════════════════════
 //  INIT — check for existing session
 // ══════════════════════════════════════════════════════════════
+// Expose all button-callable functions to window scope
+window.doLogin = doLogin;
+window.doLogout = doLogout;
+window.showDashboard = showDashboard;
+window.showDetail = showDetail;
+window.openAddClientModal = openAddClientModal;
+window.openEditClientModal = openEditClientModal;
+window.saveClient = saveClient;
+window.confirmDeleteClient = confirmDeleteClient;
+window.deleteCurrentClient = deleteCurrentClient;
+window.switchTab = switchTab;
+window.switchAdminTab = switchAdminTab;
+window.switchModule = switchModule;
+window.toggleModuleMenu = toggleModuleMenu;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.adjustFont = adjustFont;
+window.openGithubSetup = openGithubSetup;
+window.showAuditLog = showAuditLog;
+window.openAddUserModal = openAddUserModal;
+window.saveUser = saveUser;
+window.openEditUserModal = openEditUserModal;
+window.deleteUser = deleteUser;
+window.openNotifPanel = openNotifPanel;
+window.closeNotifPanel = closeNotifPanel;
+window.openSendNotifModal = openSendNotifModal;
+window.sendInAppNotification = sendInAppNotification;
+window.openNotifThread = openNotifThread;
+window.replyToNotification = replyToNotification;
+window.openEmailStatusModal = openEmailStatusModal;
+window.addCustomEmailRecipient = addCustomEmailRecipient;
+window.sendStatusEmail = sendStatusEmail;
+window.renderTaskView = renderTaskView;
+window.showTaskView = showTaskView;
+window.openPdfModal = openPdfModal;
+window.openExcelModal = openExcelModal;
+window.pdfSelectAll = pdfSelectAll;
+window.excelSelectAll = excelSelectAll;
+window.generateSelectedPDF = generateSelectedPDF;
+window.generateExcel = generateExcel;
+window.openAddDocModal = openAddDocModal;
+window.saveDoc = saveDoc;
+window.deleteDoc = deleteDoc;
+window.addGlobalComment = addGlobalComment;
+window.addNotification = addNotification;
+window.openCommentModal = openCommentModal;
+window.saveComment = saveComment;
+window.updateTaskStatus = updateTaskStatus;
+window.updateSelectStyle = updateSelectStyle;
+window.updateChecklistStatus = updateChecklistStatus;
+window.updateChecklistComment = updateChecklistComment;
+window.updateCmTaskStatus = updateCmTaskStatus;
+window.updateCmDueDate = updateCmDueDate;
+window.saveChecklistTemplate = saveChecklistTemplate;
+window.resetChecklistTemplate = resetChecklistTemplate;
+window.saveSectionsTemplate = saveSectionsTemplate;
+window.resetSectionsTemplate = resetSectionsTemplate;
+window.addChecklistStageAdmin = addChecklistStageAdmin;
+window.addSectionAdmin = addSectionAdmin;
+window.renderDropdownsAdmin = renderDropdownsAdmin;
+window.addDropdownValue = addDropdownValue;
+window.updateDropdownValue = updateDropdownValue;
+window.removeDropdownValue = removeDropdownValue;
+window.saveSystemSettings = saveSystemSettings;
+window.saveFieldSettings = saveFieldSettings;
+window.addCustomField = addCustomField;
+window.removeCustomField = removeCustomField;
+window.saveNotifSettings = saveNotifSettings;
+window.showSSO = showSSO;
+window.openAddSSOModal = openAddSSOModal;
+window.openEditSSOModal = openEditSSOModal;
+window.saveSSO = saveSSO;
+window.deleteSSO = deleteSSO;
+window.ssoSortToggle = ssoSortToggle;
+window.renderSSO = renderSSO;
+window.addBuilderItem = addBuilderItem;
+window.removeBuilderItem = removeBuilderItem;
+window.addBuilderStep = addBuilderStep;
+window.removeBuilderStep = removeBuilderStep;
+window.addBuilderPhase = addBuilderPhase;
+window.removeBuilderPhase = removeBuilderPhase;
+window.removeBuilderStage = removeBuilderStage;
+window.updateBuilderField = updateBuilderField;
+window.addSecTask = addSecTask;
+window.removeSecTask = removeSecTask;
+window.addSecPhase = addSecPhase;
+window.removeSecPhase = removeSecPhase;
+window.removeSecSection = removeSecSection;
+window.updateSecBuilderField = updateSecBuilderField;
+
 (function init(){
   applyFontSize(currentFontSize);
   const session = getSession();
