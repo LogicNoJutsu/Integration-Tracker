@@ -268,33 +268,13 @@
     </div>
     <div class="form-group">
       <label>Password</label>
-      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" id="loginPass">
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
     </div>
     <button class="btn btn-primary" style="width:100%;padding:11px;" id="loginBtn">Sign In</button>
     <div class="login-footer">Contact your admin to reset your password</div>
   </div>
 </div>
-<script>
-// Attach login handlers immediately when this script tag is parsed
-(function() {
-  function attachLogin() {
-    var btn = document.getElementById('loginBtn');
-    var pass = document.getElementById('loginPass');
-    var user = document.getElementById('loginUser');
-    if (btn) {
-      btn.onclick = function() { doLogin(); };
-    }
-    if (pass) {
-      pass.onkeydown = function(e) { if(e.key === 'Enter') doLogin(); };
-    }
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', attachLogin);
-  } else {
-    attachLogin();
-  }
-})();
-</script>
+
 
 <!-- ══════════════════════════════════════════════
      APP SHELL (hidden until login)
@@ -2434,29 +2414,20 @@ function deleteSSO(id){saveSSO_data(loadSSO().filter(x=>x.id!==id));renderSSO();
 // ══════════════════════════════════════════════════════════════
 (function init(){
   applyFontSize(currentFontSize);
-
-  // Attach login events via JS (not inline onclick - works on GitHub Pages)
-  document.addEventListener('DOMContentLoaded', function() {
-    const btn = document.getElementById('loginBtn');
-    if (btn) btn.addEventListener('click', doLogin);
-    const pass = document.getElementById('loginPass');
-    if (pass) pass.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
-  });
-  // Also attach immediately in case DOM is already ready
-  setTimeout(function() {
-    const btn = document.getElementById('loginBtn');
-    if (btn && !btn._bound) { btn.addEventListener('click', doLogin); btn._bound = true; }
-    const pass = document.getElementById('loginPass');
-    if (pass && !pass._bound) { pass.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); }); pass._bound = true; }
-  }, 100);
-
   const session = getSession();
   if (session) {
     currentUser = session;
     bootApp();
   }
-  // else login screen is already visible
 })();
+
+// Login button binding — runs after full page load
+window.addEventListener('load', function() {
+  var btn = document.getElementById('loginBtn');
+  var pass = document.getElementById('loginPass');
+  if (btn) btn.addEventListener('click', doLogin);
+  if (pass) pass.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+});
 
 // ══════════════════════════════════════════════════════════════
 //  IN-APP NOTIFICATION SYSTEM
