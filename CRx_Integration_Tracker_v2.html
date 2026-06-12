@@ -269,18 +269,62 @@ function doLogin() {
     <div class="login-logo">CRx</div>
     <div class="login-sub">Integration Tracker &mdash; Sign in to continue</div>
     <div class="login-err" id="loginErr">Invalid username or password.</div>
-    <div class="form-group">
-      <label>Username</label>
-      <input type="text" id="loginUser" placeholder="your.name" autocomplete="username">
-    </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <button class="btn btn-primary" style="width:100%;padding:11px;" id="loginBtn" onclick="doLogin()">Sign In</button>
+    <form id="loginForm" onsubmit="return false;">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="your.name" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;padding:11px;">Sign In</button>
+    </form>
     <div class="login-footer">Contact your admin to reset your password</div>
   </div>
 </div>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var username = document.getElementById('loginUser').value.trim();
+  var password = document.getElementById('loginPass').value;
+  var err = document.getElementById('loginErr');
+  err.style.display = 'none';
+
+  // Fetch users from Supabase directly
+  try {
+    var res = await fetch('https://hzucpetgipcscwvxmwqo.supabase.co/rest/v1/users?select=*', {
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6dWNwZXRnaXBjc2N3dnhtd3FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjc2NjUsImV4cCI6MjA5Njg0MzY2NX0.4h_SvrcEPZcvQTv24sG1LrRWyr26UrLiuOYHkP6gFFE',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6dWNwZXRnaXBjc2N3dnhtd3FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjc2NjUsImV4cCI6MjA5Njg0MzY2NX0.4h_SvrcEPZcvQTv24sG1LrRWyr26UrLiuOYHkP6gFFE'
+      }
+    });
+    var users = await res.json();
+    var user = users.find(function(u) { return u.username === username && u.password === password && u.status === 'active'; });
+    if (!user) { err.style.display = 'block'; return; }
+
+    // Store session
+    localStorage.setItem('crx_session', JSON.stringify({id: user.id, username: user.username, name: user.name, role: user.role}));
+
+    // Hide login, show app
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').style.display = 'block';
+
+    // Trigger boot if main script ready
+    if (typeof bootApp === 'function') {
+      window._currentUser = user;
+      bootApp();
+    } else {
+      // Reload page - session is saved, will auto-login
+      location.reload();
+    }
+  } catch(err2) {
+    console.error('Login error:', err2);
+    err.style.display = 'block';
+    err.textContent = 'Connection error. Please try again.';
+  }
+});
+</script>
 
 
 <!-- ══════════════════════════════════════════════
@@ -1129,6 +1173,8 @@ function doLogout() {
 }
 
 function bootApp() {
+  // Accept user from login form if passed directly
+  if (window._currentUser && !currentUser) currentUser = window._currentUser;
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appShell').style.display = 'block';
 
@@ -2512,6 +2558,7 @@ window.updateSecBuilderField = updateSecBuilderField;
 
 (function init(){
   applyFontSize(currentFontSize);
+  // Check for session saved by login form
   const session = getSession();
   if (session) {
     currentUser = session;
