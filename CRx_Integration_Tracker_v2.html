@@ -310,13 +310,13 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appShell').style.display = 'block';
 
-    // Trigger boot if main script ready
+    // Set global currentUser and boot
+    window.currentUser = user;
+    currentUser = user;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').style.display = 'block';
     if (typeof bootApp === 'function') {
-      window._currentUser = user;
       bootApp();
-    } else {
-      // Reload page - session is saved, will auto-login
-      location.reload();
     }
   } catch(err2) {
     console.error('Login error:', err2);
@@ -2558,10 +2558,12 @@ window.updateSecBuilderField = updateSecBuilderField;
 
 (function init(){
   applyFontSize(currentFontSize);
-  // Check for session saved by login form
   const session = getSession();
   if (session) {
     currentUser = session;
+    // Show app shell immediately before async load
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').style.display = 'block';
     bootApp();
   }
 })();
