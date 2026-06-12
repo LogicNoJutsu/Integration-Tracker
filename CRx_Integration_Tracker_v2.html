@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CRx Integration Tracker</title>
+<script>
+// Stub so onclick="doLogin()" never throws ReferenceError before main script loads
+function doLogin() {
+  // Will be overwritten by main script - retry after short delay
+  setTimeout(function() { doLogin(); }, 200);
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -268,9 +275,9 @@
     </div>
     <div class="form-group">
       <label>Password</label>
-      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
-    <button class="btn btn-primary" style="width:100%;padding:11px;" id="loginBtn">Sign In</button>
+    <button class="btn btn-primary" style="width:100%;padding:11px;" id="loginBtn" onclick="doLogin()">Sign In</button>
     <div class="login-footer">Contact your admin to reset your password</div>
   </div>
 </div>
@@ -2421,13 +2428,7 @@ function deleteSSO(id){saveSSO_data(loadSSO().filter(x=>x.id!==id));renderSSO();
   }
 })();
 
-// Login button binding — runs after full page load
-window.addEventListener('load', function() {
-  var btn = document.getElementById('loginBtn');
-  var pass = document.getElementById('loginPass');
-  if (btn) btn.addEventListener('click', doLogin);
-  if (pass) pass.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
-});
+
 
 // ══════════════════════════════════════════════════════════════
 //  IN-APP NOTIFICATION SYSTEM
