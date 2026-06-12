@@ -310,14 +310,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appShell').style.display = 'block';
 
-    // Set global currentUser and boot
-    window.currentUser = user;
-    currentUser = user;
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appShell').style.display = 'block';
-    if (typeof bootApp === 'function') {
-      bootApp();
-    }
+    // Set session and reload cleanly - bootApp will pick up session on reload
+    localStorage.setItem('crx_session', JSON.stringify({id: user.id, username: user.username, name: user.name, role: user.role}));
+    location.reload();
   } catch(err2) {
     console.error('Login error:', err2);
     err.style.display = 'block';
@@ -1175,6 +1170,11 @@ function doLogout() {
 function bootApp() {
   // Accept user from login form if passed directly
   if (window._currentUser && !currentUser) currentUser = window._currentUser;
+  // Show app, hide login immediately
+  var ls = document.getElementById('loginScreen');
+  var as = document.getElementById('appShell');
+  if (ls) ls.style.display = 'none';
+  if (as) as.style.display = 'block';
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appShell').style.display = 'block';
 
@@ -1205,21 +1205,27 @@ function bootApp() {
 async function loadFromSupabase() {
   setSyncStatus('syncing', 'Loading…');
   try {
-    // Load clients into cache
-    _clientCache = await sbLoadAllClients();
-    _storageSet(DB_KEY, JSON.stringify({ clients: _clientCache }));
+    // Load clients
+    const clients = await sbLoadAllClients();
+    if (clients && clients.length >= 0) {
+      _clientCache = clients;
+      _storageSet(DB_KEY, JSON.stringify({ clients: _clientCache }));
+    }
 
-    // Load users into cache
-    _userCache = await sbLoadUsers();
-    _storageSet('crx_users', JSON.stringify(_userCache));
+    // Load users
+    const users = await sbLoadUsers();
+    if (users && users.length > 0) {
+      _userCache = users;
+      _storageSet('crx_users', JSON.stringify(_userCache));
+    }
 
     setSyncStatus('synced', 'Supabase ✓');
-    setTimeout(() => setSyncStatus('synced', 'Connected'), 2500);
+    setTimeout(function() { setSyncStatus('synced', 'Connected'); }, 2500);
     renderDashboard();
+    applyRolePermissions();
   } catch(e) {
     console.error('Supabase load error:', e);
-    setSyncStatus('error', 'Load error');
-    // Fallback to localStorage
+    setSyncStatus('error', 'Load error — ' + e.message);
     renderDashboard();
   }
 }
@@ -2561,9 +2567,6 @@ window.updateSecBuilderField = updateSecBuilderField;
   const session = getSession();
   if (session) {
     currentUser = session;
-    // Show app shell immediately before async load
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appShell').style.display = 'block';
     bootApp();
   }
 })();
