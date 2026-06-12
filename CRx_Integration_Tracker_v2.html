@@ -274,6 +274,27 @@
     <div class="login-footer">Contact your admin to reset your password</div>
   </div>
 </div>
+<script>
+// Attach login handlers immediately when this script tag is parsed
+(function() {
+  function attachLogin() {
+    var btn = document.getElementById('loginBtn');
+    var pass = document.getElementById('loginPass');
+    var user = document.getElementById('loginUser');
+    if (btn) {
+      btn.onclick = function() { doLogin(); };
+    }
+    if (pass) {
+      pass.onkeydown = function(e) { if(e.key === 'Enter') doLogin(); };
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachLogin);
+  } else {
+    attachLogin();
+  }
+})();
+</script>
 
 <!-- ══════════════════════════════════════════════
      APP SHELL (hidden until login)
