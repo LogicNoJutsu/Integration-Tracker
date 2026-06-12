@@ -282,10 +282,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   e.preventDefault();
   var username = document.getElementById('loginUser').value.trim();
   var password = document.getElementById('loginPass').value;
-  var err = document.getElementById('loginErr');
-  err.style.display = 'none';
+  var errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+  errEl.textContent = 'Invalid username or password.';
 
-  // Fetch users from Supabase directly
   try {
     var res = await fetch('https://hzucpetgipcscwvxmwqo.supabase.co/rest/v1/users?select=*', {
       headers: {
@@ -294,23 +294,33 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       }
     });
     var users = await res.json();
-    var user = users.find(function(u) { return u.username === username && u.password === password && u.status === 'active'; });
-    if (!user) { err.style.display = 'block'; return; }
+    var user = users.find(function(u) {
+      return u.username === username && u.password === password && u.status === 'active';
+    });
+    if (!user) { errEl.style.display = 'block'; return; }
 
-    // Store session
-    localStorage.setItem('crx_session', JSON.stringify({id: user.id, username: user.username, name: user.name, role: user.role}));
+    // Save session to localStorage
+    var session = {id: user.id, username: user.username, name: user.name, role: user.role};
+    localStorage.setItem('crx_session', JSON.stringify(session));
 
-    // Hide login, show app
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appShell').style.display = 'block';
+    // Wait for main script functions to be available, then boot
+    var attempts = 0;
+    var tryBoot = setInterval(function() {
+      attempts++;
+      if (typeof bootApp === 'function' && typeof renderDashboard === 'function') {
+        clearInterval(tryBoot);
+        window.currentUser = session;
+        bootApp();
+      } else if (attempts > 50) {
+        clearInterval(tryBoot);
+        location.reload(); // last resort
+      }
+    }, 100);
 
-    // Set session and reload cleanly - bootApp will pick up session on reload
-    localStorage.setItem('crx_session', JSON.stringify({id: user.id, username: user.username, name: user.name, role: user.role}));
-    location.reload();
   } catch(err2) {
     console.error('Login error:', err2);
-    err.style.display = 'block';
-    err.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+    errEl.textContent = 'Connection error. Please try again.';
   }
 });
 </script>
@@ -1162,13 +1172,9 @@ function doLogout() {
 }
 
 function bootApp() {
-  // Accept user from login form if passed directly
-  if (window._currentUser && !currentUser) currentUser = window._currentUser;
-  // Show app, hide login immediately
-  var ls = document.getElementById('loginScreen');
-  var as = document.getElementById('appShell');
-  if (ls) ls.style.display = 'none';
-  if (as) as.style.display = 'block';
+  // Accept user passed directly from login form
+  if (window.currentUser && !currentUser) currentUser = window.currentUser;
+  // Show app shell, hide login
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appShell').style.display = 'block';
 
