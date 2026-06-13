@@ -338,11 +338,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <span class="logo-slash">/</span>
       <span class="logo-module-name" id="moduleLabel">Integration Tracker</span>
       <div class="switch-wrapper" id="moduleDropdown">
-        <button class="switch-btn" onclick="toggleModuleMenu()">Switch &#9662;</button>
+        <button class="switch-btn" onclick="_call('toggleModuleMenu')">Switch &#9662;</button>
         <div class="module-menu" id="moduleMenu">
-          <div class="module-menu-item active" onclick="switchModule('integration')">&#128268; Integration Tracker</div>
-          <div class="module-menu-item" onclick="switchModule('sso')">&#128272; SSO Tracker</div>
-          <div class="module-menu-item" id="menuAdmin" style="display:none;" onclick="switchModule('admin')">&#9881; Admin Settings</div>
+          <div class="module-menu-item active" onclick="_call('switchModule',['integration'])">&#128268; Integration Tracker</div>
+          <div class="module-menu-item" onclick="_call('switchModule',['sso'])">&#128272; SSO Tracker</div>
+          <div class="module-menu-item" id="menuAdmin" style="display:none;" onclick="_call('switchModule',['admin'])">&#9881; Admin Settings</div>
         </div>
       </div>
     </div>
@@ -353,14 +353,14 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     </span>
   </div>
   <div class="header-actions" id="headerActions">
-    <div class="font-toggle"><button class="font-toggle-btn" onclick="adjustFont(-1)">A&#8722;</button><span class="font-size-label" id="fontSizeLabel">16</span><button class="font-toggle-btn" onclick="adjustFont(1)">A+</button></div>
+    <div class="font-toggle"><button class="font-toggle-btn" onclick="_call('adjustFont',[-1])">A&#8722;</button><span class="font-size-label" id="fontSizeLabel">16</span><button class="font-toggle-btn" onclick="_call('adjustFont',[1])">A+</button></div>
     <span class="sync-status" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Connecting…</span></span>
-    <button class="btn btn-ghost btn-sm" id="btnAuditLog" onclick="showAuditLog()" style="color:#7070c8;border-color:#7070c8;">&#128203; Audit Log</button>
-    <button class="btn btn-ghost btn-sm" id="btnNotifBell" onclick="openNotifPanel()" style="position:relative;color:var(--pfc-text);border-color:var(--pfc-text);">
+    <button class="btn btn-ghost btn-sm" id="btnAuditLog" onclick="_call('showAuditLog')" style="color:#7070c8;border-color:#7070c8;">&#128203; Audit Log</button>
+    <button class="btn btn-ghost btn-sm" id="btnNotifBell" onclick="_call('openNotifPanel')" style="position:relative;color:var(--pfc-text);border-color:var(--pfc-text);">
       &#128276; <span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ff4f4f;color:#fff;border-radius:50%;font-size:9px;width:16px;height:16px;display:none;align-items:center;justify-content:center;font-weight:700;" id="notifBadge">0</span>
     </button>
-    <button class="btn btn-ghost btn-sm" onclick="doLogout()" style="color:var(--cbd-text);border-color:var(--cbd-text);">Sign Out</button>
-    <button class="btn btn-primary btn-sm" id="btnNewClientHeader" onclick="openAddClientModal()">+ New Client</button>
+    <button class="btn btn-ghost btn-sm" onclick="_call('doLogout')" style="color:var(--cbd-text);border-color:var(--cbd-text);">Sign Out</button>
+    <button class="btn btn-primary btn-sm" id="btnNewClientHeader" onclick="_call('openAddClientModal')">+ New Client</button>
   </div>
 </header>
 
@@ -370,10 +370,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     <div class="dash-top">
       <div><div class="dash-title">Integration Dashboard</div><div class="dash-sub">All active client integrations &middot; Click a card to manage</div></div>
       <div class="dash-actions" id="dashActions">
-        <button class="btn btn-sm" style="background:transparent;color:#ff9800;border-color:#ff9800;" onclick="showTaskView()">&#128203; View Tasks</button>
-        <button class="btn btn-accent2" onclick="openPdfModal(null)" id="btnExportPdf">&#8595; Export All PDF</button>
-        <button class="btn btn-ghost" onclick="openExcelModal(null)" style="color:#00c853;border-color:#00c853;" id="btnExportXl">&#8595; Export Excel</button>
-        <button class="btn btn-primary" onclick="openAddClientModal()" id="btnNewClient">+ New Client</button>
+        <button class="btn btn-sm" style="background:transparent;color:#ff9800;border-color:#ff9800;" onclick="_call('showTaskView')">&#128203; View Tasks</button>
+        <button class="btn btn-accent2" onclick="_call('openPdfModal',[null])" id="btnExportPdf">&#8595; Export All PDF</button>
+        <button class="btn btn-ghost" onclick="_call('openExcelModal',[null])" style="color:#00c853;border-color:#00c853;" id="btnExportXl">&#8595; Export Excel</button>
+        <button class="btn btn-primary" onclick="_call('openAddClientModal')" id="btnNewClient">+ New Client</button>
       </div>
     </div>
     <div id="clientGrid"></div>
@@ -384,7 +384,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   <div class="dashboard">
     <div class="dash-top">
       <div><div class="dash-title">&#128203; Task View</div><div class="dash-sub">All comments flagged as tasks across all clients</div></div>
-      <button class="btn btn-ghost btn-sm" onclick="showDashboard()">&#8592; Dashboard</button>
+      <button class="btn btn-ghost btn-sm" onclick="_call('showDashboard')">&#8592; Dashboard</button>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
       <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;">
@@ -401,18 +401,18 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
 <div id="viewDetail" class="view">
   <div class="detail-view">
-    <div class="breadcrumb"><a onclick="showDashboard()">Dashboard</a><span>/</span><span id="breadcrumbName">Client</span></div>
+    <div class="breadcrumb"><a onclick="_call('showDashboard')">Dashboard</a><span>/</span><span id="breadcrumbName">Client</span></div>
     <div class="detail-header">
       <div class="detail-header-top">
         <div class="detail-name" id="detailName">&#8212;</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span class="last-updated-badge" id="detailUpdated">&#8212;</span>
           <span id="detailEditBtns">
-            <button class="btn btn-ghost btn-sm" id="btnEditInfo" onclick="openEditClientModal()">Edit Info</button>
-            <button class="btn btn-accent2 btn-sm" onclick="openPdfModal('current')">&#8595; PDF</button>
-            <button class="btn btn-sm" style="color:#00c853;border-color:#00c853;background:transparent;" onclick="openExcelModal('current')">&#8595; Excel</button>
-            <button class="btn btn-sm" style="color:#ff9800;border-color:#ff9800;background:transparent;" onclick="openEmailStatusModal()">&#9993; Email Status</button>
-            <button class="btn btn-danger btn-sm" id="btnDeleteClient" onclick="confirmDeleteClient()">Delete</button>
+            <button class="btn btn-ghost btn-sm" id="btnEditInfo" onclick="_call('openEditClientModal')">Edit Info</button>
+            <button class="btn btn-accent2 btn-sm" onclick="_call('openPdfModal',['current'])">&#8595; PDF</button>
+            <button class="btn btn-sm" style="color:#00c853;border-color:#00c853;background:transparent;" onclick="_call('openExcelModal',['current'])">&#8595; Excel</button>
+            <button class="btn btn-sm" style="color:#ff9800;border-color:#ff9800;background:transparent;" onclick="_call('openEmailStatusModal')">&#9993; Email Status</button>
+            <button class="btn btn-danger btn-sm" id="btnDeleteClient" onclick="_call('confirmDeleteClient')">Delete</button>
           </span>
         </div>
       </div>
@@ -426,11 +426,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       </div>
     </div>
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('tabIntegration',this)">Integration Status</button>
-      <button class="tab" onclick="switchTab('tabClientInfo',this)">Client Information</button>
-      <button class="tab" onclick="switchTab('tabChecklist',this)">&#10003; Check List</button>
-      <button class="tab" onclick="switchTab('tabNotifications',this)">Client Notifications</button>
-      <button class="tab" onclick="switchTab('tabComments',this)">Client Notes</button>
+      <button class="tab active" onclick="_call('switchTab',['tabIntegration',this])">Integration Status</button>
+      <button class="tab" onclick="_call('switchTab',['tabClientInfo',this])">Client Information</button>
+      <button class="tab" onclick="_call('switchTab',['tabChecklist',this])">&#10003; Check List</button>
+      <button class="tab" onclick="_call('switchTab',['tabNotifications',this])">Client Notifications</button>
+      <button class="tab" onclick="_call('switchTab',['tabComments',this])">Client Notes</button>
     </div>
     <div id="tabIntegration" class="tab-content active">
       <div class="overview-stats" id="overviewStats"></div>
@@ -438,7 +438,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     </div>
     <div id="tabClientInfo" class="tab-content">
       <div class="docs-panel">
-        <div class="docs-toolbar" id="docsToolbar"><button class="btn btn-primary btn-sm" onclick="openAddDocModal()">+ Add Entry</button></div>
+        <div class="docs-toolbar" id="docsToolbar"><button class="btn btn-primary btn-sm" onclick="_call('openAddDocModal')">+ Add Entry</button></div>
         <table><thead><tr><th>Information Type</th><th>Name / Link</th><th>Date Added</th><th>Notes</th><th></th></tr></thead><tbody id="docsTableBody"></tbody></table>
         <div id="docsEmpty" class="no-comments" style="display:none;">No entries added yet.</div>
       </div>
@@ -451,7 +451,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         <div class="chat-messages" id="notifMessages" style="background:rgba(51,37,0,0.15);"><div class="no-comments">No notifications yet.</div></div>
         <div class="chat-input-area" id="notifInputArea">
           <div class="chat-row"><input type="text" id="notifAuthor" placeholder="Your name"><textarea id="notifText" placeholder="Add a client notification..."></textarea></div>
-          <div style="display:flex;justify-content:flex-end;"><button class="btn btn-sm" style="background:#ff9800;color:#fff;border-color:#ff9800;" onclick="addNotification()">Post Notification</button></div>
+          <div style="display:flex;justify-content:flex-end;"><button class="btn btn-sm" style="background:#ff9800;color:#fff;border-color:#ff9800;" onclick="_call('addNotification')">Post Notification</button></div>
         </div>
       </div>
     </div>
@@ -462,7 +462,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
           <div class="chat-row"><input type="text" id="globalAuthor" placeholder="Your name" style="flex:0 0 200px;"><textarea id="globalComment" placeholder="Add a note..." style="flex:1;min-height:48px;"></textarea></div>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400;cursor:pointer;"><input type="checkbox" id="globalIsTask" style="width:14px;height:14px;accent-color:#ff9800;cursor:pointer;"> Mark as Task</label>
-            <button class="btn btn-primary btn-sm" onclick="addGlobalComment()">Post Note</button>
+            <button class="btn btn-primary btn-sm" onclick="_call('addGlobalComment')">Post Note</button>
           </div>
         </div>
       </div>
@@ -477,18 +477,18 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   <div class="dashboard">
     <div class="dash-top">
       <div><div class="dash-title">&#9881; Admin Settings</div><div class="dash-sub">Manage users, checklist items, and system configuration</div></div>
-      <button class="btn btn-ghost btn-sm" onclick="showDashboard()">&#8592; Dashboard</button>
+      <button class="btn btn-ghost btn-sm" onclick="_call('showDashboard')">&#8592; Dashboard</button>
     </div>
 
     <!-- TABS -->
     <div class="tabs" style="margin-bottom:24px;flex-wrap:wrap;">
-      <button class="tab active" onclick="switchAdminTab('adminTabUsers',this)">&#128100; Users</button>
-      <button class="tab" onclick="switchAdminTab('adminTabChecklist',this)">&#10003; Checklist</button>
-      <button class="tab" onclick="switchAdminTab('adminTabSections',this)">&#128268; Sections</button>
-      <button class="tab" onclick="switchAdminTab('adminTabDropdowns',this)">&#9660; Dropdowns</button>
-      <button class="tab" onclick="switchAdminTab('adminTabSystem',this)">&#9881; System</button>
-      <button class="tab" onclick="switchAdminTab('adminTabFields',this)">&#128203; Client Fields</button>
-      <button class="tab" onclick="switchAdminTab('adminTabNotifSettings',this)">&#128276; Notifications</button>
+      <button class="tab active" onclick="_call('switchAdminTab',['adminTabUsers',this])">&#128100; Users</button>
+      <button class="tab" onclick="_call('switchAdminTab',['adminTabChecklist',this])">&#10003; Checklist</button>
+      <button class="tab" onclick="_call('switchAdminTab',['adminTabSections',this])">&#128268; Sections</button>
+      <button class="tab" onclick="_call('switchAdminTab',['adminTabDropdowns',this])">&#9660; Dropdowns</button>
+      <button class="tab" onclick="_call('switchAdminTab',['adminTabSystem',this])">&#9881; System</button>
+      <button class="tab" onclick="_call('switchAdminTab',['adminTabFields',this])">&#128203; Client Fields</button>
+      <button class="tab" onclick="_call('switchAdminTab',['adminTabNotifSettings',this])">&#128276; Notifications</button>
     </div>
 
     <!-- USER MANAGEMENT -->
@@ -496,7 +496,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <div class="admin-section">
         <div class="admin-section-header">
           <span class="admin-section-title">System Users</span>
-          <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
+          <button class="btn btn-primary btn-sm" onclick="_call('openAddUserModal')">+ Add User</button>
         </div>
         <div style="padding:0;">
           <div class="user-row" style="background:var(--surface3);font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);font-weight:700;">
@@ -540,12 +540,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <div style="font-size:13px;color:var(--text2);">Add, remove, or reorder checklist items. Changes apply to all <strong style="color:var(--text);">new clients</strong> created after saving. Existing clients are not affected.</div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-ghost btn-sm" onclick="resetChecklistTemplate()">Reset to Default</button>
-          <button class="btn btn-primary btn-sm" onclick="saveChecklistTemplate()">Save Template</button>
+          <button class="btn btn-ghost btn-sm" onclick="_call('resetChecklistTemplate')">Reset to Default</button>
+          <button class="btn btn-primary btn-sm" onclick="_call('saveChecklistTemplate')">Save Template</button>
         </div>
       </div>
       <div id="checklistBuilder"></div>
-      <button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="addChecklistStageAdmin()">+ Add Stage</button>
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="_call('addChecklistStageAdmin')">+ Add Stage</button>
     </div>
 
     <!-- INTEGRATION SECTIONS BUILDER -->
@@ -553,12 +553,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <div style="font-size:13px;color:var(--text2);">Manage integration section names and task labels. Changes apply to <strong style="color:var(--text);">new clients</strong> only.</div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-ghost btn-sm" onclick="resetSectionsTemplate()">Reset to Default</button>
-          <button class="btn btn-primary btn-sm" onclick="saveSectionsTemplate()">Save Template</button>
+          <button class="btn btn-ghost btn-sm" onclick="_call('resetSectionsTemplate')">Reset to Default</button>
+          <button class="btn btn-primary btn-sm" onclick="_call('saveSectionsTemplate')">Save Template</button>
         </div>
       </div>
       <div id="sectionsBuilder"></div>
-      <button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="addSectionAdmin()">+ Add Section</button>
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="_call('addSectionAdmin')">+ Add Section</button>
     </div>
 
     <!-- DROPDOWN VALUES MANAGER -->
@@ -608,8 +608,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
-        <button class="btn btn-ghost btn-sm" onclick="loadSystemSettings()">Reset</button>
-        <button class="btn btn-primary btn-sm" onclick="saveSystemSettings()">Save Settings</button>
+        <button class="btn btn-ghost btn-sm" onclick="_call('loadSystemSettings')">Reset</button>
+        <button class="btn btn-primary btn-sm" onclick="_call('saveSystemSettings')">Save Settings</button>
       </div>
     </div>
 
@@ -623,13 +623,13 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <div class="admin-section">
         <div class="admin-section-header">
           <span class="admin-section-title">Custom Fields</span>
-          <button class="btn btn-primary btn-sm" onclick="addCustomField()">+ Add Field</button>
+          <button class="btn btn-primary btn-sm" onclick="_call('addCustomField')">+ Add Field</button>
         </div>
         <div id="customFieldsList" style="padding:8px 0;"></div>
         <div id="customFieldsEmpty" class="no-comments" style="display:none;">No custom fields added yet.</div>
       </div>
       <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-        <button class="btn btn-primary btn-sm" onclick="saveFieldSettings()">Save Field Settings</button>
+        <button class="btn btn-primary btn-sm" onclick="_call('saveFieldSettings')">Save Field Settings</button>
       </div>
     </div>
 
@@ -682,7 +682,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-        <button class="btn btn-primary btn-sm" onclick="saveNotifSettings()">Save Settings</button>
+        <button class="btn btn-primary btn-sm" onclick="_call('saveNotifSettings')">Save Settings</button>
       </div>
     </div>
 
@@ -704,7 +704,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
           <option value="comment">Comments</option>
           <option value="checklist">Checklist</option>
         </select>
-        <button class="btn btn-ghost btn-sm" onclick="showDashboard()">&#8592; Dashboard</button>
+        <button class="btn btn-ghost btn-sm" onclick="_call('showDashboard')">&#8592; Dashboard</button>
       </div>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
@@ -729,8 +729,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterDone" checked onchange="renderSSO()" style="width:13px;height:13px;"> Completed</label>
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;"><input type="checkbox" id="ssoFilterNR" checked onchange="renderSSO()" style="width:13px;height:13px;"> Not Required</label>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="ssoSortToggle()" id="ssoSortBtn">&#8597; Client A&#8211;Z</button>
-        <button class="btn btn-primary btn-sm" onclick="openAddSSOModal()" id="ssoAddBtn">+ Add Client</button>
+        <button class="btn btn-ghost btn-sm" onclick="_call('ssoSortToggle')" id="ssoSortBtn">&#8597; Client A&#8211;Z</button>
+        <button class="btn btn-primary btn-sm" onclick="_call('openAddSSOModal')" id="ssoAddBtn">+ Add Client</button>
       </div>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
@@ -745,7 +745,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 ══════════════════════════════════════════════ -->
 <div class="modal-overlay" id="clientModal">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('clientModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['clientModal'])">&#215;</button>
     <div class="modal-title" id="clientModalTitle">New Client Integration</div>
     <div class="form-row">
       <div class="form-group"><label>Client Name *</label><input type="text" id="fClientName" placeholder="e.g. Geisinger Health"></div>
@@ -757,53 +757,53 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <div class="form-group"><label>Start Date</label><input type="date" id="fStartDate"></div>
       <div class="form-group full"><label>Expected Completion Date</label><input type="date" id="fExpectedDate"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('clientModal')">Cancel</button><button class="btn btn-primary" id="clientModalSaveBtn" onclick="saveClient()">Create Client</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="_call('closeModal',['clientModal'])">Cancel</button><button class="btn btn-primary" id="clientModalSaveBtn" onclick="_call('saveClient')">Create Client</button></div>
   </div>
 </div>
 
 <div class="modal-overlay comment-modal" id="commentModal">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('commentModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['commentModal'])">&#215;</button>
     <div class="modal-title" id="commentModalTitle">Comments</div>
     <div class="comment-thread" id="commentThread"></div>
     <div class="comment-input-row"><input type="text" class="name-in" id="commentAuthor" placeholder="Your name"><textarea id="commentText" placeholder="Add a comment..."></textarea></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('commentModal')">Close</button><button class="btn btn-primary" onclick="saveComment()">Post Comment</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="_call('closeModal',['commentModal'])">Close</button><button class="btn btn-primary" onclick="_call('saveComment')">Post Comment</button></div>
   </div>
 </div>
 
 <div class="modal-overlay" id="docModal">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('docModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['docModal'])">&#215;</button>
     <div class="modal-title">Add Client Information</div>
     <div class="form-group"><label>Information Type</label><select id="fDocType"><option>Document</option><option>Login Credentials</option><option>API Documentation</option><option>Notes</option><option>Additional Documents</option></select></div>
     <div class="form-group"><label>Document Name</label><input type="text" id="fDocName" placeholder="Document title"></div>
     <div class="form-group"><label>Document Link (URL)</label><input type="url" id="fDocLink" placeholder="https://..."></div>
     <div class="form-group"><label>Notes</label><textarea id="fDocNotes" placeholder="Any notes..."></textarea></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('docModal')">Cancel</button><button class="btn btn-primary" onclick="saveDoc()">Save Entry</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="_call('closeModal',['docModal'])">Cancel</button><button class="btn btn-primary" onclick="_call('saveDoc')">Save Entry</button></div>
   </div>
 </div>
 
 <div class="modal-overlay pdf-modal" id="pdfModal">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('pdfModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['pdfModal'])">&#215;</button>
     <div class="modal-title">Export to PDF</div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Select clients to include.</p>
-    <div class="pdf-select-all"><button class="btn btn-ghost btn-xs" onclick="pdfSelectAll(true)">Select All</button><button class="btn btn-ghost btn-xs" onclick="pdfSelectAll(false)">Deselect All</button></div>
+    <div class="pdf-select-all"><button class="btn btn-ghost btn-xs" onclick="_call('pdfSelectAll',[true])">Select All</button><button class="btn btn-ghost btn-xs" onclick="_call('pdfSelectAll',[false])">Deselect All</button></div>
     <div class="client-checklist" id="pdfClientList"></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('pdfModal')">Cancel</button><button class="btn btn-accent2" onclick="generateSelectedPDF()">&#8595; Generate PDF</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="_call('closeModal',['pdfModal'])">Cancel</button><button class="btn btn-accent2" onclick="_call('generateSelectedPDF')">&#8595; Generate PDF</button></div>
   </div>
 </div>
 
 <div class="modal-overlay excel-modal" id="excelModal">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('excelModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['excelModal'])">&#215;</button>
     <div class="modal-title">&#8595; Export to Excel</div>
     <p style="font-size:13px;color:var(--text2);">Each client gets its own worksheet. Checklist data is included.</p>
     <div class="excel-section-label">Select Clients</div>
-    <div class="pdf-select-all"><button class="btn btn-ghost btn-xs" onclick="excelSelectAll('client',true)">Select All</button><button class="btn btn-ghost btn-xs" onclick="excelSelectAll('client',false)">Deselect All</button></div>
+    <div class="pdf-select-all"><button class="btn btn-ghost btn-xs" onclick="_call('excelSelectAll',['client',true])">Select All</button><button class="btn btn-ghost btn-xs" onclick="_call('excelSelectAll',['client',false])">Deselect All</button></div>
     <div class="client-checklist" id="excelClientList"></div>
     <div class="excel-section-label">Filter by Status</div>
-    <div class="pdf-select-all"><button class="btn btn-ghost btn-xs" onclick="excelSelectAll('status',true)">Select All</button><button class="btn btn-ghost btn-xs" onclick="excelSelectAll('status',false)">Deselect All</button></div>
+    <div class="pdf-select-all"><button class="btn btn-ghost btn-xs" onclick="_call('excelSelectAll',['status',true])">Select All</button><button class="btn btn-ghost btn-xs" onclick="_call('excelSelectAll',['status',false])">Deselect All</button></div>
     <div class="status-filter-grid">
       <label class="status-filter-item sfi-ns"><input type="checkbox" name="excelStatus" value="not-started" checked> Not Started</label>
       <label class="status-filter-item sfi-ip"><input type="checkbox" name="excelStatus" value="in-progress" checked> In Progress</label>
@@ -812,39 +812,39 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <label class="status-filter-item sfi-cbd"><input type="checkbox" name="excelStatus" value="cannot-be-done" checked> Cannot Be Done</label>
       <label class="status-filter-item sfi-nr"><input type="checkbox" name="excelStatus" value="not-required" checked> Not Required</label>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('excelModal')">Cancel</button><button class="btn btn-sm" style="background:#00c853;color:#fff;border-color:#00c853;" onclick="generateExcel()">&#8595; Generate Excel</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="_call('closeModal',['excelModal'])">Cancel</button><button class="btn btn-sm" style="background:#00c853;color:#fff;border-color:#00c853;" onclick="_call('generateExcel')">&#8595; Generate Excel</button></div>
   </div>
 </div>
 
 <div class="modal-overlay" id="githubModal">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('githubModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['githubModal'])">&#215;</button>
     <div class="modal-title">&#9881; GitHub Sync Setup</div>
     <div class="github-info">Data saved as <code>data.json</code> in your repo on every change.<br><br><strong>Token setup:</strong> Go to <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a>, check <code>repo</code> scope, generate and paste below.</div>
     <div class="form-group"><label>GitHub Username</label><input type="text" id="fGhUser" placeholder="your-github-username"></div>
     <div class="form-group"><label>Repository Name</label><input type="text" id="fGhRepo" placeholder="crx-integration-tracker"></div>
     <div class="form-group"><label>Personal Access Token</label><input type="password" id="fGhToken" placeholder="ghp_xxxxxxxxxxxx"></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('githubModal')">Cancel</button><button class="btn btn-ghost" onclick="clearGithubConfig()">Clear Config</button><button class="btn btn-primary" onclick="saveGithubConfig()">Save &amp; Test</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="_call('closeModal',['githubModal'])">Cancel</button><button class="btn btn-ghost" onclick="_call('clearGithubConfig')">Clear Config</button><button class="btn btn-primary" onclick="_call('saveGithubConfig')">Save &amp; Test</button></div>
   </div>
 </div>
 
 <div class="modal-overlay" id="ssoModal">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('ssoModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['ssoModal'])">&#215;</button>
     <div class="modal-title" id="ssoModalTitle">Add SSO Entry</div>
     <div class="form-group"><label>Client Name *</label><input type="text" id="fSsoClient" placeholder="Client name"></div>
     <div class="form-group"><label>Login Type</label><select id="fSsoLoginType"><option>Password</option><option>Single Sign On - Microsoft</option><option>Single Sign On - Others</option><option>ADFS</option><option>SAML</option><option>OAuth 2.0</option></select></div>
     <div class="form-group"><label>Status</label><select id="fSsoStatus"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Not Required</option></select></div>
     <div class="form-group"><label>Date of SSO Setup</label><input type="date" id="fSsoSetupDate"></div>
     <div class="form-group"><label>Comments</label><textarea id="fSsoComments" placeholder="Any additional notes..."></textarea></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('ssoModal')">Cancel</button><button class="btn btn-primary" id="ssoModalSaveBtn" onclick="saveSSO()">Save Entry</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="_call('closeModal',['ssoModal'])">Cancel</button><button class="btn btn-primary" id="ssoModalSaveBtn" onclick="_call('saveSSO')">Save Entry</button></div>
   </div>
 </div>
 
 <!-- ADD USER MODAL -->
 <div class="modal-overlay" id="userModal">
   <div class="modal" style="width:480px;">
-    <button class="modal-close" onclick="closeModal('userModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['userModal'])">&#215;</button>
     <div class="modal-title" id="userModalTitle">Add User</div>
     <div class="form-group"><label>Full Name</label><input type="text" id="fUserName" placeholder="e.g. Sarah Johnson"></div>
     <div class="form-group"><label>Username *</label><input type="text" id="fUserUsername" placeholder="e.g. sarah.johnson"></div>
@@ -860,7 +860,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     <div class="form-group"><label>Status</label>
       <select id="fUserStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('userModal')">Cancel</button><button class="btn btn-primary" id="userModalSaveBtn" onclick="saveUser()">Create User</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="_call('closeModal',['userModal'])">Cancel</button><button class="btn btn-primary" id="userModalSaveBtn" onclick="_call('saveUser')">Create User</button></div>
   </div>
 </div>
 
@@ -868,7 +868,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   <div class="confirm-box">
     <div class="confirm-title">Delete Client?</div>
     <div class="confirm-desc" id="confirmDesc">This will permanently remove the client and all data.</div>
-    <div class="confirm-actions"><button class="btn btn-ghost" onclick="closeModal('confirmOverlay')">Cancel</button><button class="btn btn-danger" onclick="deleteCurrentClient()">Yes, Delete</button></div>
+    <div class="confirm-actions"><button class="btn btn-ghost" onclick="_call('closeModal',['confirmOverlay'])">Cancel</button><button class="btn btn-danger" onclick="_call('deleteCurrentClient')">Yes, Delete</button></div>
   </div>
 </div>
 
@@ -876,7 +876,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 <!-- ══════════════════════════════════════════════
      NOTIFICATION PANEL (slide-in)
 ══════════════════════════════════════════════ -->
-<div id="notifPanelOverlay" style="display:none;position:fixed;inset:0;z-index:400;" onclick="closeNotifPanel()"></div>
+<div id="notifPanelOverlay" style="display:none;position:fixed;inset:0;z-index:400;" onclick="_call('closeNotifPanel')"></div>
 <div id="notifPanel" style="position:fixed;top:0;right:-420px;width:420px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:401;display:flex;flex-direction:column;transition:right 0.25s ease;box-shadow:-8px 0 32px rgba(0,0,0,0.4);">
   <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--surface2);">
     <div>
@@ -884,8 +884,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <div style="font-size:11px;color:var(--text3);margin-top:2px;">Messages sent to you</div>
     </div>
     <div style="display:flex;gap:8px;">
-      <button class="btn btn-primary btn-sm" onclick="openSendNotifModal()">+ Send</button>
-      <button class="btn btn-ghost btn-sm" onclick="closeNotifPanel()">&#215;</button>
+      <button class="btn btn-primary btn-sm" onclick="_call('openSendNotifModal')">+ Send</button>
+      <button class="btn btn-ghost btn-sm" onclick="_call('closeNotifPanel')">&#215;</button>
     </div>
   </div>
   <div id="notifPanelList" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;"></div>
@@ -894,7 +894,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 <!-- SEND NOTIFICATION MODAL -->
 <div class="modal-overlay" id="sendNotifModal">
   <div class="modal" style="width:520px;">
-    <button class="modal-close" onclick="closeModal('sendNotifModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['sendNotifModal'])">&#215;</button>
     <div class="modal-title">&#128276; Send Notification</div>
     <div class="form-group">
       <label>To (System Users)</label>
@@ -911,8 +911,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <textarea id="notifMessage" placeholder="Type your notification..." style="min-height:100px;"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('sendNotifModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="sendInAppNotification()">Send Notification</button>
+      <button class="btn btn-ghost" onclick="_call('closeModal',['sendNotifModal'])">Cancel</button>
+      <button class="btn btn-primary" onclick="_call('sendInAppNotification')">Send Notification</button>
     </div>
   </div>
 </div>
@@ -920,15 +920,15 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 <!-- NOTIFICATION THREAD MODAL (for replies) -->
 <div class="modal-overlay comment-modal" id="notifThreadModal">
   <div class="modal" style="width:560px;">
-    <button class="modal-close" onclick="closeModal('notifThreadModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['notifThreadModal'])">&#215;</button>
     <div class="modal-title" id="notifThreadTitle">Notification</div>
     <div class="comment-thread" id="notifThreadBody" style="max-height:360px;"></div>
     <div class="comment-input-row">
       <textarea id="notifReplyText" placeholder="Reply..." style="flex:1;min-height:60px;"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('notifThreadModal')">Close</button>
-      <button class="btn btn-primary" onclick="replyToNotification()">Reply</button>
+      <button class="btn btn-ghost" onclick="_call('closeModal',['notifThreadModal'])">Close</button>
+      <button class="btn btn-primary" onclick="_call('replyToNotification')">Reply</button>
     </div>
   </div>
 </div>
@@ -936,7 +936,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 <!-- EMAIL STATUS MODAL -->
 <div class="modal-overlay" id="emailStatusModal">
   <div class="modal" style="width:580px;">
-    <button class="modal-close" onclick="closeModal('emailStatusModal')">&#215;</button>
+    <button class="modal-close" onclick="_call('closeModal',['emailStatusModal'])">&#215;</button>
     <div class="modal-title">&#9993; Send Status Report by Email</div>
     <div style="font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:18px;line-height:1.7;">
       This will generate a full status PDF for this client and open your default email app (Outlook) with it attached, ready to send.
@@ -949,7 +949,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <label>To — Add Custom Email Address</label>
       <div style="display:flex;gap:8px;">
         <input type="email" id="emailCustomAddr" placeholder="client@company.com" style="flex:1;">
-        <button class="btn btn-ghost btn-sm" onclick="addCustomEmailRecipient()">Add</button>
+        <button class="btn btn-ghost btn-sm" onclick="_call('addCustomEmailRecipient')">Add</button>
       </div>
       <div id="emailCustomList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
     </div>
@@ -962,8 +962,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       <textarea id="emailBody" placeholder="Hi team, please find the latest integration status report attached." style="min-height:80px;"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('emailStatusModal')">Cancel</button>
-      <button class="btn btn-accent2" onclick="sendStatusEmail()">&#9993; Open in Email App</button>
+      <button class="btn btn-ghost" onclick="_call('closeModal',['emailStatusModal'])">Cancel</button>
+      <button class="btn btn-accent2" onclick="_call('sendStatusEmail')">&#9993; Open in Email App</button>
     </div>
   </div>
 </div>
@@ -973,6 +973,27 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 <div class="toast" id="toast"><span id="toastIcon">&#10003;</span><span id="toastMsg"></span></div>
 
 <script>
+// ══════════════════════════════════════════════════════════════
+//  GLOBAL FUNCTION PROXY
+//  Makes all onclick= attributes work even before functions are defined
+// ══════════════════════════════════════════════════════════════
+var _fnReady = false;
+var _fnQueue = [];
+function _call(name, args) {
+  if (_fnReady && window[name]) {
+    window[name].apply(window, args || []);
+  } else {
+    _fnQueue.push({name: name, args: args});
+  }
+}
+function _flushQueue() {
+  _fnReady = true;
+  _fnQueue.forEach(function(item) {
+    if (window[item.name]) window[item.name].apply(window, item.args || []);
+  });
+  _fnQueue = [];
+}
+
 // ══════════════════════════════════════════════════════════════
 //  SUPABASE CONFIG
 // ══════════════════════════════════════════════════════════════
@@ -1172,8 +1193,11 @@ function doLogout() {
 }
 
 function bootApp() {
-  // Accept user from login form if passed directly
+  try {
+  // Accept user from login form
+  if (window.currentUser && !currentUser) currentUser = window.currentUser;
   if (window._currentUser && !currentUser) currentUser = window._currentUser;
+  if (!currentUser) { console.error('[CRx] bootApp: no currentUser'); return; }
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appShell').style.display = 'block';
 
@@ -1197,11 +1221,12 @@ function bootApp() {
   applyFontSize(currentFontSize);
   updateNotifBadge();
 
-  // Load data from Supabase - small delay to ensure all functions ready
+  // Load data from Supabase
   setTimeout(function() {
     console.log('[CRx] Starting loadFromSupabase, currentUser:', currentUser);
     loadFromSupabase().catch(function(e) { console.error('[CRx] loadFromSupabase error:', e); });
   }, 200);
+  } catch(e) { console.error('[CRx] bootApp crashed:', e); }
 }
 
 async function loadFromSupabase() {
@@ -2563,6 +2588,9 @@ window.addSecPhase = addSecPhase;
 window.removeSecPhase = removeSecPhase;
 window.removeSecSection = removeSecSection;
 window.updateSecBuilderField = updateSecBuilderField;
+
+// All functions now on window - flush any queued calls
+_flushQueue();
 
 (function init(){
   applyFontSize(currentFontSize);
