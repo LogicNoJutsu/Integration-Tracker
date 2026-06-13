@@ -1172,8 +1172,10 @@ function doLogout() {
 }
 
 function bootApp() {
+  try {
   // Accept user passed directly from login form
   if (window.currentUser && !currentUser) currentUser = window.currentUser;
+  if (!currentUser) { console.error('bootApp: no currentUser'); return; }
   // Show app shell, hide login
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appShell').style.display = 'block';
@@ -1200,6 +1202,7 @@ function bootApp() {
 
   // Load data from Supabase
   loadFromSupabase();
+  } catch(e) { console.error('bootApp crashed:', e); }
 }
 
 async function loadFromSupabase() {
