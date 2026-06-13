@@ -286,23 +286,22 @@
     var password = document.getElementById('loginPass').value || '';
     var errEl = document.getElementById('loginErr');
     var statusEl = document.getElementById('loginStatus');
-    errEl.style.display = 'none';
-    statusEl.style.display = 'block';
-    statusEl.textContent = 'Signing in...';
+    if (errEl) errEl.style.display = 'none';
+    if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = 'Signing in...'; }
 
     fetch(SB_URL + '/rest/v1/users?select=*', {
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
     })
     .then(function(r) { return r.json(); })
     .then(function(users) {
-      statusEl.style.display = 'none';
+      if (statusEl) statusEl.style.display = 'none';
       var user = null;
       for (var i = 0; i < users.length; i++) {
         if (users[i].username === username && users[i].password === password && users[i].status === 'active') {
           user = users[i]; break;
         }
       }
-      if (!user) { errEl.style.display = 'block'; return; }
+      if (!user) { if (errEl) { errEl.style.display = 'block'; } return; }
 
       var session = {id: user.id, username: user.username, name: user.name, role: user.role};
       try { localStorage.setItem('crx_session', JSON.stringify(session)); } catch(e) {}
@@ -329,9 +328,8 @@
       }, 50);
     })
     .catch(function(e) {
-      statusEl.style.display = 'none';
-      errEl.style.display = 'block';
-      errEl.textContent = 'Connection error: ' + e.message;
+      if (statusEl) statusEl.style.display = 'none';
+      if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Connection error: ' + e.message; }
       console.error('Login fetch error:', e);
     });
   }
