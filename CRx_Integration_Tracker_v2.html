@@ -1197,8 +1197,11 @@ function bootApp() {
   applyFontSize(currentFontSize);
   updateNotifBadge();
 
-  // Load data from Supabase
-  loadFromSupabase();
+  // Load data from Supabase - small delay to ensure all functions ready
+  setTimeout(function() {
+    console.log('[CRx] Starting loadFromSupabase, currentUser:', currentUser);
+    loadFromSupabase().catch(function(e) { console.error('[CRx] loadFromSupabase error:', e); });
+  }, 200);
 }
 
 async function loadFromSupabase() {
@@ -2466,6 +2469,12 @@ function deleteSSO(id){saveSSO_data(loadSSO().filter(x=>x.id!==id));renderSSO();
 //  INIT — check for existing session
 // ══════════════════════════════════════════════════════════════
 // Expose all button-callable functions to window scope
+window.sbLoadAllClients = sbLoadAllClients;
+window.sbSaveClient = sbSaveClient;
+window.sbDeleteClient = sbDeleteClient;
+window.sbLoadUsers = sbLoadUsers;
+window.sbSaveUser = sbSaveUser;
+window.loadFromSupabase = loadFromSupabase;
 window.doLogin = doLogin;
 window.doLogout = doLogout;
 window.showDashboard = showDashboard;
