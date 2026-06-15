@@ -2594,11 +2594,13 @@ _flushQueue();
 
 (function init(){
   applyFontSize(currentFontSize);
-  // Check for session saved by login form
-  const session = getSession();
-  if (session) {
-    currentUser = session;
-    bootApp();
+  // Only auto-login if the login form has not already handled it
+  if (!window.currentUser) {
+    const session = getSession();
+    if (session) {
+      currentUser = session;
+      bootApp();
+    }
   }
 })();
 
