@@ -1408,7 +1408,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:36:37.004Z",
-      "updatedAt": "2026-06-15T14:33:06.731Z",
+      "updatedAt": "2026-06-15T14:33:14.189Z",
       "sections": [
         {
           "id": "test_instance",
@@ -1600,7 +1600,7 @@
                       "id": "c5",
                       "action": "Share Segments information (if applicable)",
                       "actionBy": "Client",
-                      "status": "not-started",
+                      "status": "not-required",
                       "comment": ""
                     },
                     {
