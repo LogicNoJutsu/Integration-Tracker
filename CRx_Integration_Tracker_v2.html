@@ -1221,11 +1221,8 @@ function bootApp() {
   applyFontSize(currentFontSize);
   updateNotifBadge();
 
-  // Load data from Supabase
-  setTimeout(function() {
-    console.log('[CRx] Starting loadFromSupabase, currentUser:', currentUser);
-    loadFromSupabase().catch(function(e) { console.error('[CRx] loadFromSupabase error:', e); });
-  }, 200);
+  // Load data from Supabase immediately (no delay)
+  loadFromSupabase().catch(function(e) { console.error('[CRx] loadFromSupabase error:', e); });
   } catch(e) { console.error('[CRx] bootApp crashed:', e); }
 }
 
@@ -1234,6 +1231,7 @@ async function loadFromSupabase() {
   try {
     // Load clients into cache
     _clientCache = await sbLoadAllClients();
+    console.log('[CRx] Clients loaded:', _clientCache ? _clientCache.length : 0);
     _storageSet(DB_KEY, JSON.stringify({ clients: _clientCache }));
 
     // Load users into cache
