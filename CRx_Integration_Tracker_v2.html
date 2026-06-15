@@ -1221,8 +1221,11 @@ function bootApp() {
   applyFontSize(currentFontSize);
   updateNotifBadge();
 
-  // Load data from Supabase immediately (no delay)
-  loadFromSupabase().catch(function(e) { console.error('[CRx] loadFromSupabase error:', e); });
+  // Load data from Supabase
+  setTimeout(function() {
+    console.log('[CRx] Starting loadFromSupabase, currentUser:', currentUser);
+    loadFromSupabase().catch(function(e) { console.error('[CRx] loadFromSupabase error:', e); });
+  }, 200);
   } catch(e) { console.error('[CRx] bootApp crashed:', e); }
 }
 
@@ -1231,7 +1234,7 @@ async function loadFromSupabase() {
   try {
     // Load clients into cache
     _clientCache = await sbLoadAllClients();
-    console.log('[CRx] Clients loaded:', _clientCache ? _clientCache.length : 0);
+    console.log('[CRx] Clients loaded from Supabase:', _clientCache ? _clientCache.length : 0);
     _storageSet(DB_KEY, JSON.stringify({ clients: _clientCache }));
 
     // Load users into cache
@@ -1240,6 +1243,7 @@ async function loadFromSupabase() {
 
     setSyncStatus('synced', 'Supabase ✓');
     setTimeout(() => setSyncStatus('synced', 'Connected'), 2500);
+    // Force render with the freshly loaded cache
     renderDashboard();
   } catch(e) {
     console.error('Supabase load error:', e);
@@ -2090,6 +2094,7 @@ function showTaskView() { renderTaskView(); showView('viewTasks'); }
 // ══════════════════════════════════════════════════════════════
 function renderDashboard() {
   const db=loadDB();
+  console.log('[CRx] renderDashboard called, clients:', db.clients ? db.clients.length : 0);
   const grid=document.getElementById('clientGrid');
   if (!db.clients.length) {
     grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128268;</div><div class="empty-title">No integrations yet</div><div class="empty-desc">Create your first client integration to get started.</div>'
