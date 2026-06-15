@@ -691,7 +691,7 @@
       "startDate": "2026-05-01",
       "expectedDate": "",
       "createdAt": "2026-05-07T16:35:53.549Z",
-      "updatedAt": "2026-06-15T14:23:32.731Z",
+      "updatedAt": "2026-06-15T14:24:23.786Z",
       "sections": [
         {
           "id": "test_instance",
@@ -857,6 +857,13 @@
           "name": "Test Base URL",
           "link": "https://oyatehc832aims3test.aimsasp.net/",
           "notes": "",
+          "date": "6/15/2026"
+        },
+        {
+          "type": "Login Credentials",
+          "name": "Test Base URL",
+          "link": "https://oyatehc832aims3test.aimsasp.net/",
+          "notes": "API Key: d64a2ea2-12e0-49dc-b1b2-25397a193793",
           "date": "6/15/2026"
         }
       ],
