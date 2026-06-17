@@ -376,14 +376,14 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         <button class="btn btn-primary" onclick="_call('openAddClientModal')" id="btnNewClient">+ New Client</button>
       </div>
     </div>
-    <div id="dashFilterBar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
-      <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap;">Filter:</span>
-      <select id="filterConsultant" onchange="applyDashFilters()" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;min-width:160px;"><option value="">All Consultants</option></select>
-      <select id="filterCmms" onchange="applyDashFilters()" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;min-width:140px;"><option value="">All CMMS Types</option></select>
-      <select id="filterStatus" onchange="applyDashFilters()" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;min-width:140px;"><option value="">All Statuses</option><option value="Not Started">Not Started</option><option value="Active">Active</option><option value="Upcoming">Upcoming</option><option value="On Hold">On Hold</option><option value="Completed">Completed</option><option value="Not Applicable">Not Applicable</option></select>
-      <select id="filterOverdue" onchange="applyDashFilters()" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;min-width:140px;"><option value="">All Clients</option><option value="overdue">Has Overdue Items</option></select>
-      <button class="btn btn-ghost btn-xs" onclick="clearDashFilters()" style="margin-left:auto;">&#10005; Clear</button>
-      <span id="filterCount" style="font-size:11px;color:var(--text3);"></span>
+    <div id="dashFilterBar" style="display:flex;gap:8px;align-items:center;flex-wrap:nowrap;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;overflow-x:auto;">
+      <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap;">Filter:</span>
+      <select id="filterConsultant" onchange="applyDashFilters()" style="padding:3px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;font-size:11px;outline:none;height:26px;width:120px;flex-shrink:0;"><option value="">All Consultants</option></select>
+      <select id="filterCmms" onchange="applyDashFilters()" style="padding:3px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;font-size:11px;outline:none;height:26px;width:100px;flex-shrink:0;"><option value="">All CMMS</option></select>
+      <select id="filterStatus" onchange="applyDashFilters()" style="padding:3px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;font-size:11px;outline:none;height:26px;width:100px;flex-shrink:0;"><option value="">All Statuses</option><option value="Not Started">Not Started</option><option value="Active">Active</option><option value="Upcoming">Upcoming</option><option value="On Hold">On Hold</option><option value="Completed">Completed</option><option value="Not Applicable">Not Applicable</option></select>
+      <select id="filterOverdue" onchange="applyDashFilters()" style="padding:3px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;font-size:11px;outline:none;height:26px;width:110px;flex-shrink:0;"><option value="">All Clients</option><option value="overdue">Has Overdue</option></select>
+      <button class="btn btn-ghost btn-xs" onclick="clearDashFilters()" style="white-space:nowrap;flex-shrink:0;font-size:10px;padding:2px 8px;">&#10005; Clear</button>
+      <span id="filterCount" style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0;"></span>
     </div>
     <div id="clientGrid"></div>
   </div>
@@ -2159,6 +2159,7 @@ function renderDetail() {
   document.getElementById('detailStatus').textContent=c.overallStatus||'Active';
   document.getElementById('detailExpected').textContent=c.expectedDate||'—';
   document.getElementById('detailUpdated').textContent='Updated: '+new Date(c.updatedAt||c.createdAt).toLocaleDateString();
+  if(!c.sections||!c.sections.length){c.sections=defaultSections();const db=loadDB();const cc=db.clients.find(x=>x.id===currentClientId);if(cc){cc.sections=c.sections;saveDB(db);sbSaveClient(cc);}}
   renderStats(c); renderSections(c); renderDocs(c); renderNotifications(c); renderGlobalComments(c); renderChecklist(c);
 }
 
@@ -2189,8 +2190,8 @@ function renderSections(c) {
 // ══════════════════════════════════════════════════════════════
 function renderChecklist(c) {
   const cont=document.getElementById('checklistContainer'); if(!cont)return;
-  const cl=c.checklist||defaultChecklist();
-  if(!c.checklist){const db=loadDB();const cc=db.clients.find(x=>x.id===currentClientId);if(cc){cc.checklist=cl;saveDB(db);}}
+  const cl=(c.checklist&&c.checklist.length)?c.checklist:defaultChecklist();
+  if(!c.checklist||!c.checklist.length){const db=loadDB();const cc=db.clients.find(x=>x.id===currentClientId);if(cc){cc.checklist=cl;saveDB(db);sbSaveClient(cc);}}
   const isQA = currentUser?.role === 'qa';
   let totalAll=0,doneAll=0,ipAll=0,pendAll=0;
   cl.forEach(st=>st.phases.forEach(ph=>ph.steps.forEach(step=>step.items.forEach(it=>{totalAll++;if(it.status==='completed')doneAll++;else if(it.status==='in-progress')ipAll++;else if(it.status==='pending-client')pendAll++;}))));
