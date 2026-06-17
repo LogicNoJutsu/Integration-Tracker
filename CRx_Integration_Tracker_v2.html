@@ -376,6 +376,31 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         <button class="btn btn-primary" onclick="_call('openAddClientModal')" id="btnNewClient">+ New Client</button>
       </div>
     </div>
+    <!-- FILTER BAR -->
+    <div id="dashFilterBar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
+      <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap;">Filter:</span>
+      <select id="filterConsultant" onchange="applyDashFilters()" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;min-width:160px;">
+        <option value="">All Consultants</option>
+      </select>
+      <select id="filterCmms" onchange="applyDashFilters()" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;min-width:140px;">
+        <option value="">All CMMS Types</option>
+      </select>
+      <select id="filterStatus" onchange="applyDashFilters()" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;min-width:140px;">
+        <option value="">All Statuses</option>
+        <option value="Not Started">Not Started</option>
+        <option value="Active">Active</option>
+        <option value="Upcoming">Upcoming</option>
+        <option value="On Hold">On Hold</option>
+        <option value="Completed">Completed</option>
+        <option value="Not Applicable">Not Applicable</option>
+      </select>
+      <select id="filterOverdue" onchange="applyDashFilters()" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none;height:30px;min-width:140px;">
+        <option value="">All Clients</option>
+        <option value="overdue">Has Overdue Items</option>
+      </select>
+      <button class="btn btn-ghost btn-xs" onclick="clearDashFilters()" style="margin-left:auto;">&#10005; Clear</button>
+      <span id="filterCount" style="font-size:11px;color:var(--text3);"></span>
+    </div>
     <div id="clientGrid"></div>
   </div>
 </div>
@@ -1128,6 +1153,7 @@ let _userCache = null;
 
 async function getClients(force=false) {
   if (!_clientCache || force) _clientCache = await sbLoadAllClients();
+    console.log('[CRx] Clients loaded from Supabase:', _clientCache ? _clientCache.length : 0);
   return _clientCache;
 }
 
@@ -1234,7 +1260,6 @@ async function loadFromSupabase() {
   try {
     // Load clients into cache
     _clientCache = await sbLoadAllClients();
-    console.log('[CRx] Clients loaded from Supabase:', _clientCache ? _clientCache.length : 0);
     _storageSet(DB_KEY, JSON.stringify({ clients: _clientCache }));
 
     // Load users into cache
@@ -1243,7 +1268,6 @@ async function loadFromSupabase() {
 
     setSyncStatus('synced', 'Supabase ✓');
     setTimeout(() => setSyncStatus('synced', 'Connected'), 2500);
-    // Force render with the freshly loaded cache
     renderDashboard();
   } catch(e) {
     console.error('Supabase load error:', e);
@@ -2094,7 +2118,6 @@ function showTaskView() { renderTaskView(); showView('viewTasks'); }
 // ══════════════════════════════════════════════════════════════
 function renderDashboard() {
   const db=loadDB();
-  console.log('[CRx] renderDashboard called, clients:', db.clients ? db.clients.length : 0);
   const grid=document.getElementById('clientGrid');
   if (!db.clients.length) {
     grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128268;</div><div class="empty-title">No integrations yet</div><div class="empty-desc">Create your first client integration to get started.</div>'
@@ -2111,11 +2134,15 @@ function renderDashboard() {
     const sc=statusColors[c.overallStatus]||'var(--text2)';
     const clStats=computeChecklistStats(c);
     const clBadge=clStats.total>0?'<span style="font-size:10px;color:var(--accent2);background:rgba(0,229,192,0.1);border:1px solid rgba(0,229,192,0.2);border-radius:4px;padding:2px 7px;">&#10003; Checklist '+clStats.completed+'/'+clStats.total+'</span>':'';
+    const overdueTasks = (c.sections||[]).reduce((acc,s)=>acc+s.phases.reduce((a2,p)=>a2+p.tasks.filter(t=>t.dueDate&&new Date(t.dueDate)<new Date()&&t.status!=='completed'&&t.status!=='not-required'&&t.status!=='cannot-be-done').length,0),0);
+    const overdueChecklist = (c.checklist||[]).reduce((acc,st)=>acc+st.phases.reduce((a2,ph)=>a2+ph.steps.reduce((a3,step)=>a3+step.items.filter(it=>it.dueDate&&new Date(it.dueDate)<new Date()&&it.status!=='completed').length,0),0),0);
+    const totalOverdue = overdueTasks + overdueChecklist;
+    const overdueBadge = totalOverdue>0?'<span style="font-size:10px;font-weight:700;color:var(--cbd-text);background:var(--cbd);border:1px solid rgba(255,79,79,0.3);border-radius:4px;padding:2px 7px;">&#9888; '+totalOverdue+' Overdue</span>':'';
     return '<div class="client-card" onclick="showDetail(\''+c.id+'\')">'
       +'<div class="card-header"><div class="card-name">'+esc(c.name)+'</div><span class="card-cmms">'+esc(c.cmmsType||'—')+'</span></div>'
       +'<div class="card-meta"><strong>CRx Consultant:</strong> '+esc(c.crxConsultant||'—')+'<br><strong>Client POC:</strong> '+esc(c.clientPoc||'—')+(c.expectedDate?'<br><strong>Expected:</strong> '+esc(c.expectedDate):'')+'</div>'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;"><div class="card-last-updated">&#128336; '+esc(upd)+'</div>'
-      +'<span style="font-size:10px;font-weight:600;color:'+sc+';background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">'+esc(c.overallStatus||'Active')+'</span>'+clBadge+'</div>'
+      +'<span style="font-size:10px;font-weight:600;color:'+sc+';background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">'+esc(c.overallStatus||'Active')+'</span>'+clBadge+overdueBadge+'</div>'
       +'<div class="progress-section"><div class="progress-label"><span>Completion</span><span>'+pct+'%</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div></div>'
       +'<div class="status-pills">'+pills+'</div>'
       +'<div class="card-actions" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="showDetail(\''+c.id+'\')">Open &#8594;</button>'+(stats.inProgress>0?'<span style="font-size:10px;color:#fff;padding:2px 7px;background:var(--ip);border-radius:4px;">'+stats.inProgress+' In Progress</span>':'')+'</div></div>';
@@ -2127,6 +2154,7 @@ function renderDashboard() {
     html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;opacity:0.75;">'+doneClients.map(buildCard).join('')+'</div>';
   }
   grid.innerHTML = html;
+  populateDashFilters();
 }
 
 function computeChecklistStats(client) { const cl=client.checklist||[]; let total=0,completed=0; cl.forEach(st=>st.phases.forEach(ph=>ph.steps.forEach(step=>step.items.forEach(it=>{total++;if(it.status==='completed')completed++;})))); return{total,completed}; }
@@ -2159,56 +2187,17 @@ function renderStats(c) {
 function renderSections(c) {
   const isQA = currentUser?.role === 'qa';
   const cont=document.getElementById('integrationSections');
-  cont.innerHTML=c.sections.map(sec=>'<div class="section-card"><div class="section-title">'+esc(sec.label)+'</div>'+sec.phases.map(ph=>'<div><div style="padding:8px 14px 3px;font-size:11px;color:var(--accent2);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">'+esc(ph.label)+'</div><table><thead><tr><th style="width:26%">Task</th><th style="width:22%">Status</th><th>Comments</th></tr></thead><tbody>'+ph.tasks.map(t=>{
+  cont.innerHTML=c.sections.map(sec=>'<div class="section-card"><div class="section-title">'+esc(sec.label)+'</div>'+sec.phases.map(ph=>'<div><div style="padding:8px 14px 3px;font-size:11px;color:var(--accent2);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">'+esc(ph.label)+'</div><table><thead><tr><th style="width:24%">Task</th><th style="width:18%">Status</th><th style="width:13%">Due Date</th><th>Comments</th></tr></thead><tbody>'+ph.tasks.map(t=>{
     const comments=t.comments||[]; const cc=comments.length;
     const latest=cc>0?comments[comments.length-1]:null;
     const previewHtml=latest?'<div class="comment-preview visible"><span class="comment-preview-author">'+esc(latest.author||'Anon')+':</span>'+esc(latest.text)+'</div>':'';
     const disabled = isQA ? ' disabled style="pointer-events:none;opacity:0.7;"' : '';
-    return '<tr><td class="task-name">'+esc(t.name)+'</td>'
-      +'<td><select class="status-select '+statusClass(t.status)+'"'+disabled+' onchange="updateTaskStatus(\''+sec.id+'\',\''+ph.id+'\',\''+t.id+'\',this.value);updateSelectStyle(this)">'+statusOptions(t.status)+'</select></td>'
-      +'<td><div class="comment-cell"><button class="comment-btn" onclick="openCommentModal(\''+sec.id+'\',\''+ph.id+'\',\''+t.id+'\')">&#128172; '+(cc>0?'<span class="comment-count">'+cc+'</span>':'Add comment')+'</button>'+previewHtml+'</div></td></tr>';
-  }).join('')+'</tbody></table></div>').join('')+'</div>').join('');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  CHECKLIST
-// ══════════════════════════════════════════════════════════════
-function renderChecklist(c) {
-  const cont=document.getElementById('checklistContainer'); if(!cont)return;
-  const cl=c.checklist||defaultChecklist();
-  if(!c.checklist){const db=loadDB();const cc=db.clients.find(x=>x.id===currentClientId);if(cc){cc.checklist=cl;saveDB(db);}}
-  const isQA = currentUser?.role === 'qa';
-  let totalAll=0,doneAll=0,ipAll=0,pendAll=0;
-  cl.forEach(st=>st.phases.forEach(ph=>ph.steps.forEach(step=>step.items.forEach(it=>{totalAll++;if(it.status==='completed')doneAll++;else if(it.status==='in-progress')ipAll++;else if(it.status==='pending-client')pendAll++;}))));
-  const pctAll=totalAll?Math.round(doneAll/totalAll*100):0;
-  let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">'
-    +'<div style="font-family:var(--font-display);font-size:16px;font-weight:800;">&#10003; Integration Checklist</div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
-    +'<span style="font-size:11px;background:var(--done);color:var(--done-text);border:1px solid rgba(0,212,138,0.3);border-radius:20px;padding:3px 12px;font-weight:700;">'+doneAll+' Done</span>'
-    +'<span style="font-size:11px;background:var(--ip);color:var(--ip-text);border:1px solid rgba(79,159,255,0.3);border-radius:20px;padding:3px 12px;font-weight:700;">'+ipAll+' In Progress</span>'
-    +'<span style="font-size:11px;background:var(--pfc);color:var(--pfc-text);border:1px solid rgba(255,176,32,0.3);border-radius:20px;padding:3px 12px;font-weight:700;">'+pendAll+' Pending Client</span>'
-    +'<span style="font-size:12px;color:var(--accent2);font-weight:800;background:rgba(0,229,192,0.1);border:1px solid rgba(0,229,192,0.25);border-radius:20px;padding:4px 14px;">'+pctAll+'% Complete</span>'
-    +'</div></div>';
-  cl.forEach(stage=>{
-    let stageDone=0,stageTotal=0;
-    stage.phases.forEach(ph=>ph.steps.forEach(step=>step.items.forEach(it=>{stageTotal++;if(it.status==='completed')stageDone++;})));
-    const stagePct=stageTotal?Math.round(stageDone/stageTotal*100):0;
-    html+='<div class="checklist-stage"><div class="checklist-stage-header"><div class="checklist-stage-title">'+esc(stage.label)+'</div><span class="checklist-stage-pct">'+stagePct+'% — '+stageDone+'/'+stageTotal+' done</span></div>';
-    stage.phases.forEach(ph=>{
-      html+='<div class="checklist-phase"><div class="checklist-phase-header">'+esc(ph.label)+'</div>';
-      ph.steps.forEach(step=>{
-        html+='<div class="checklist-step-header">'+esc(step.label)+'</div>'
-          +'<table class="checklist-table"><thead><tr><th style="width:45%">Action Item</th><th style="width:12%">Action By</th><th style="width:18%">Status</th><th>Comment</th></tr></thead><tbody>';
-        step.items.forEach(item=>{
-          const abClass=item.actionBy==='Client'?'ab-client':'ab-crx';
-          const sClass=checklistStatusClass(item.status);
-          const disabled = isQA ? ' disabled style="pointer-events:none;opacity:0.7;"' : '';
-          html+='<tr>'
-            +'<td style="color:var(--text2);font-size:12px;">'+esc(item.action)+'</td>'
-            +'<td><span class="action-by-badge '+abClass+'">'+esc(item.actionBy)+'</span></td>'
-            +'<td><select class="status-select '+sClass+'"'+disabled+' onchange="updateChecklistStatus(\''+stage.id+'\',\''+ph.id+'\',\''+step.id+'\',\''+item.id+'\',this.value,this)">'+checklistStatusOptions(item.status)+'</select></td>'
-            +'<td><input type="text" class="checklist-comment-input" value="'+esc(item.comment||'')+'"'+(isQA?' disabled style="pointer-events:none;opacity:0.7;" placeholder=""':' placeholder="Add note…"')+' onblur="updateChecklistComment(\''+stage.id+'\',\''+ph.id+'\',\''+step.id+'\',\''+item.id+'\',this.value)"></td>'
-            +'</tr>';
+    const tDue = t.dueDate||'';
+    const tOverdue = tDue && new Date(tDue) < new Date() && t.status !== 'completed' && t.status !== 'not-required' && t.status !== 'cannot-be-done';
+    return '<tr><td class="task-name">'+esc(t.name)+(tOverdue?'<span style="font-size:9px;background:var(--cbd);color:var(--cbd-text);padding:1px 5px;border-radius:3px;margin-left:6px;">OVERDUE</span>':'')+'</td>'
+      +'<td><select class="status-select '+statusClass(t.status)+'"'+disabled+' onchange="updateTaskStatus(''+sec.id+'',''+ph.id+'',''+t.id+'',this.value);updateSelectStyle(this)">'+statusOptions(t.status)+'</select></td>'
+      +'<td><input type="date" value="'+esc(tDue)+'"'+(isQA?' disabled':'')+' style="font-size:11px;padding:4px 6px;background:var(--surface2);border:1px solid '+(tOverdue?'var(--cbd-text)':'var(--border)')+';border-radius:6px;color:'+(tOverdue?'var(--cbd-text)':'var(--text)')+';" onchange="updateTaskDueDate(''+sec.id+'',''+ph.id+'',''+t.id+'',this.value)"></td>'
+      +'<td><div class="comment-cell"><button class="comment-btn" onclick="openCommentModal(''+sec.id+'',''+ph.id+'',''+t.id+'')">&#128172; '+(cc>0?'<span class="comment-count">'+cc+'</span>':'Add comment')+'</button>'+previewHtml+'</div></td></tr>';
         });
         html+='</tbody></table>';
       });
@@ -2577,6 +2566,10 @@ window.saveSSO = saveSSO;
 window.deleteSSO = deleteSSO;
 window.ssoSortToggle = ssoSortToggle;
 window.renderSSO = renderSSO;
+window.applyDashFilters = applyDashFilters;
+window.clearDashFilters = clearDashFilters;
+window.updateTaskDueDate = updateTaskDueDate;
+window.updateChecklistDueDate = updateChecklistDueDate;
 window.addBuilderItem = addBuilderItem;
 window.removeBuilderItem = removeBuilderItem;
 window.addBuilderStep = addBuilderStep;
@@ -2899,6 +2892,137 @@ function sendStatusEmail() {
   closeModal('emailStatusModal');
   showToast('Email app opened. PDF downloaded \u2014 attach it manually.', 'success');
 }
+
+// ══════════════════════════════════════════════════════════════
+//  DASHBOARD FILTERS
+// ══════════════════════════════════════════════════════════════
+function populateDashFilters() {
+  const db = loadDB();
+  const consultants = [...new Set(db.clients.map(c => c.crxConsultant).filter(Boolean))].sort();
+  const cmmsTypes = [...new Set(db.clients.map(c => c.cmmsType).filter(Boolean))].sort();
+
+  const fc = document.getElementById('filterConsultant');
+  const fm = document.getElementById('filterCmms');
+  if (!fc || !fm) return;
+
+  const prevC = fc.value, prevM = fm.value;
+  fc.innerHTML = '<option value="">All Consultants</option>' + consultants.map(c => `<option value="${esc(c)}"${c===prevC?' selected':''}>${esc(c)}</option>`).join('');
+  fm.innerHTML = '<option value="">All CMMS Types</option>' + cmmsTypes.map(m => `<option value="${esc(m)}"${m===prevM?' selected':''}>${esc(m)}</option>`).join('');
+}
+
+function applyDashFilters() {
+  const db = loadDB();
+  const fc = document.getElementById('filterConsultant')?.value || '';
+  const fm = document.getElementById('filterCmms')?.value || '';
+  const fs = document.getElementById('filterStatus')?.value || '';
+  const fo = document.getElementById('filterOverdue')?.value || '';
+
+  let filtered = db.clients;
+  if (fc) filtered = filtered.filter(c => c.crxConsultant === fc);
+  if (fm) filtered = filtered.filter(c => c.cmmsType === fm);
+  if (fs) filtered = filtered.filter(c => c.overallStatus === fs);
+  if (fo === 'overdue') {
+    filtered = filtered.filter(c => {
+      const od1 = (c.sections||[]).some(s=>s.phases.some(p=>p.tasks.some(t=>t.dueDate&&new Date(t.dueDate)<new Date()&&t.status!=='completed'&&t.status!=='not-required'&&t.status!=='cannot-be-done')));
+      const od2 = (c.checklist||[]).some(st=>st.phases.some(ph=>ph.steps.some(step=>step.items.some(it=>it.dueDate&&new Date(it.dueDate)<new Date()&&it.status!=='completed'))));
+      return od1 || od2;
+    });
+  }
+
+  const countEl = document.getElementById('filterCount');
+  const hasFilter = fc || fm || fs || fo;
+  if (countEl) countEl.textContent = hasFilter ? filtered.length + ' of ' + db.clients.length + ' clients' : '';
+
+  renderFilteredDashboard(filtered);
+}
+
+function clearDashFilters() {
+  ['filterConsultant','filterCmms','filterStatus','filterOverdue'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const countEl = document.getElementById('filterCount');
+  if (countEl) countEl.textContent = '';
+  renderDashboard();
+}
+
+function renderFilteredDashboard(clients) {
+  const grid = document.getElementById('clientGrid');
+  if (!clients.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128269;</div><div class="empty-title">No clients match your filters</div><div class="empty-desc">Try adjusting or clearing the filters above.</div><button class="btn btn-ghost" onclick="clearDashFilters()">Clear Filters</button></div>';
+    return;
+  }
+  const activeClients = clients.filter(c => c.overallStatus !== 'Completed' && c.overallStatus !== 'Not Applicable');
+  const doneClients = clients.filter(c => c.overallStatus === 'Completed' || c.overallStatus === 'Not Applicable');
+  const statusColors = {'Not Started':'var(--ns-text)','Active':'var(--done-text)','Upcoming':'var(--ip-text)','On Hold':'var(--pfc-text)','Completed':'var(--text3)','Not Applicable':'var(--text3)'};
+
+  function buildCard(c) {
+    const stats = computeStats(c); const pct = stats.total ? Math.round(stats.completed/stats.total*100) : 0;
+    const pills = Object.entries(stats.byStatus).filter(([,n])=>n>0).map(([s,n])=>'<span class="pill '+statusClass(s)+'">'+statusLabel(s)+': '+n+'</span>').join('');
+    const upd = (c.updatedAt||c.createdAt) ? 'Updated '+timeAgo(new Date(c.updatedAt||c.createdAt)) : '—';
+    const sc = statusColors[c.overallStatus]||'var(--text2)';
+    const clStats = computeChecklistStats(c);
+    const clBadge = clStats.total>0?'<span style="font-size:10px;color:var(--accent2);background:rgba(0,229,192,0.1);border:1px solid rgba(0,229,192,0.2);border-radius:4px;padding:2px 7px;">&#10003; Checklist '+clStats.completed+'/'+clStats.total+'</span>':'';
+    const overdueTasks = (c.sections||[]).reduce((acc,s)=>acc+s.phases.reduce((a2,p)=>a2+p.tasks.filter(t=>t.dueDate&&new Date(t.dueDate)<new Date()&&t.status!=='completed'&&t.status!=='not-required'&&t.status!=='cannot-be-done').length,0),0);
+    const overdueChecklist = (c.checklist||[]).reduce((acc,st)=>acc+st.phases.reduce((a2,ph)=>a2+ph.steps.reduce((a3,step)=>a3+step.items.filter(it=>it.dueDate&&new Date(it.dueDate)<new Date()&&it.status!=='completed').length,0),0),0);
+    const totalOverdue = overdueTasks + overdueChecklist;
+    const overdueBadge = totalOverdue>0?'<span style="font-size:10px;font-weight:700;color:var(--cbd-text);background:var(--cbd);border:1px solid rgba(255,79,79,0.3);border-radius:4px;padding:2px 7px;">&#9888; '+totalOverdue+' Overdue</span>':'';
+    return '<div class="client-card" onclick="showDetail(\''+c.id+'\')">'
+      +'<div class="card-header"><div class="card-name">'+esc(c.name)+'</div><span class="card-cmms">'+esc(c.cmmsType||'—')+'</span></div>'
+      +'<div class="card-meta"><strong>CRx Consultant:</strong> '+esc(c.crxConsultant||'—')+'<br><strong>Client POC:</strong> '+esc(c.clientPoc||'—')+(c.expectedDate?'<br><strong>Expected:</strong> '+esc(c.expectedDate):'')+'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;"><div class="card-last-updated">&#128336; '+esc(upd)+'</div>'
+      +'<span style="font-size:10px;font-weight:600;color:'+sc+';background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">'+esc(c.overallStatus||'Active')+'</span>'+clBadge+overdueBadge+'</div>'
+      +'<div class="progress-section"><div class="progress-label"><span>Completion</span><span>'+pct+'%</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div></div>'
+      +'<div class="status-pills">'+pills+'</div>'
+      +'<div class="card-actions" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="showDetail(\''+c.id+'\')">Open &#8594;</button>'+(stats.inProgress>0?'<span style="font-size:10px;color:#fff;padding:2px 7px;background:var(--ip);border-radius:4px;">'+stats.inProgress+' In Progress</span>':'')+'</div></div>';
+  }
+
+  let html = '';
+  if (activeClients.length) html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">'+activeClients.map(buildCard).join('')+'</div>';
+  if (doneClients.length) {
+    html += '<div style="display:flex;align-items:center;gap:12px;margin:28px 0 16px;"><div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;">Completed &amp; Not Applicable</span><div style="flex:1;height:1px;background:var(--border);"></div></div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;opacity:0.75;">'+doneClients.map(buildCard).join('')+'</div>';
+  }
+  grid.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DUE DATE SAVE FUNCTIONS
+// ══════════════════════════════════════════════════════════════
+function updateTaskDueDate(secId, phId, taskId, newDate) {
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  if (!c) return;
+  const sec = c.sections.find(s => s.id === secId);
+  if (!sec) return;
+  const ph = sec.phases.find(p => p.id === phId);
+  if (!ph) return;
+  const task = ph.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  task.dueDate = newDate;
+  c.updatedAt = new Date().toISOString();
+  saveDB(db);
+  sbSaveClient(c);
+}
+
+function updateChecklistDueDate(stageId, phaseId, stepId, itemId, newDate) {
+  const db = loadDB();
+  const c = db.clients.find(x => x.id === currentClientId);
+  if (!c || !c.checklist) return;
+  const stage = c.checklist.find(s => s.id === stageId);
+  if (!stage) return;
+  const ph = stage.phases.find(p => p.id === phaseId);
+  if (!ph) return;
+  const step = ph.steps.find(s => s.id === stepId);
+  if (!step) return;
+  const item = step.items.find(i => i.id === itemId);
+  if (!item) return;
+  item.dueDate = newDate;
+  c.updatedAt = new Date().toISOString();
+  saveDB(db);
+  sbSaveClient(c);
+}
+
 </script>
 </body>
 </html>
